@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Typography,
   Box,
@@ -13,7 +13,6 @@ import {
   Chip,
   Divider,
   useTheme,
-  useMediaQuery,
   Card,
   CardContent,
   CircularProgress,
@@ -52,14 +51,12 @@ interface Weapon {
 
 export function WeaponList() {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { items, loading, error } = useItems('weapon');
-  const { tagCategories, tagValues, loading: tagsLoading, error: tagsError } = useTags('weapon');
+  const { items, loading, error, toggleItem, selectedItems: selectedWeapons } = useItems('weapon');
+  const { tagCategories, tagValues } = useTags('weapon');
   
   // 状態管理
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(true);
-  const [selectedWeapons, setSelectedWeapons] = useState<string[]>([]);
   const [filters, setFilters] = useState({
     elements: [] as string[],
     weaponTypes: [] as string[],
@@ -101,17 +98,17 @@ export function WeaponList() {
   const weapons = useMemo(() => {
     return items.map(item => {
       // タグからメタデータを抽出
-      const elementTag = item.tags?.find(tag => {
+      const elementTag = item.tags?.find((tag: any) => {
         const category = tagCategories.find(c => c.id === tag.categoryId);
         return category && category.name.toLowerCase() === '属性';
       });
       
-      const weaponTypeTag = item.tags?.find(tag => {
+      const weaponTypeTag = item.tags?.find((tag: any) => {
         const category = tagCategories.find(c => c.id === tag.categoryId);
         return category && category.name.toLowerCase() === '武器種';
       });
       
-      const rarityTag = item.tags?.find(tag => {
+      const rarityTag = item.tags?.find((tag: any) => {
         const category = tagCategories.find(c => c.id === tag.categoryId);
         return category && category.name.toLowerCase() === 'レアリティ';
       });
@@ -237,21 +234,7 @@ export function WeaponList() {
 
   // 武器選択処理
   const handleWeaponSelect = (id: string, selected: boolean) => {
-    setSelectedWeapons((prev) =>
-      selected ? [...prev, id] : prev.filter((weaponId) => weaponId !== id)
-    );
-  };
-
-  // 画像出力処理
-  const handleExport = () => {
-    // TODO: 画像出力の実装
-    console.log('Export selected weapons:', selectedWeapons);
-  };
-
-  // 共有処理
-  const handleShare = () => {
-    // TODO: 共有機能の実装
-    console.log('Share selected weapons:', selectedWeapons);
+    toggleItem(id);
   };
 
   // フィルターセクションのレンダリング
@@ -294,24 +277,6 @@ export function WeaponList() {
 
   return (
     <Box sx={{ pb: 8 }}>
-      {/* ヘッダー */}
-      <Paper
-        elevation={0}
-        sx={{
-          p: { xs: 2, sm: 3 },
-          mb: 2,
-          borderRadius: 2,
-          backgroundImage: 'linear-gradient(135deg, #1976d2 0%, #0d47a1 100%)',
-          color: 'white',
-        }}
-      >
-        <Typography variant="h5" gutterBottom fontWeight="bold">
-          武器一覧
-        </Typography>
-        <Typography variant="body2">
-          所持武器を選択してください。フィルターを使用して目的の武器を見つけることができます。
-        </Typography>
-      </Paper>
 
       {/* 検索・フィルターエリア */}
       <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 2 }}>
@@ -497,8 +462,6 @@ export function WeaponList() {
       {/* エクスポートパネル */}
       <ExportPanel
         selectedCount={selectedWeapons.length}
-        onExport={handleExport}
-        onShare={handleShare}
       />
     </Box>
   );

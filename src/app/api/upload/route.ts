@@ -1,30 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { uploadImage, deleteImage } from '@/lib/db';
 
-export async function GET(request: NextRequest) {
-  try {
-    const searchParams = request.nextUrl.searchParams;
-    const path = searchParams.get('path');
-
-    if (!path) {
-      return NextResponse.json(
-        { error: 'Path parameter is required' },
-        { status: 400 }
-      );
-    }
-
-    // 画像URLにリダイレクト
-    // Vercel BlobはパブリックURLを提供しているので、直接リダイレクトできる
-    return NextResponse.redirect(path);
-  } catch (error) {
-    console.error('Error in GET handler:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    );
-  }
-}
-
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();

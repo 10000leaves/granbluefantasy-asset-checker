@@ -15,7 +15,6 @@ import {
   InputAdornment,
   Card,
   CardContent,
-  CardMedia,
   CardActionArea,
   useTheme,
   useMediaQuery,
@@ -35,8 +34,14 @@ import {
   Diamond as DiamondIcon,
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
-import { useSession } from '@/hooks/useSession';
+import { useAtom } from 'jotai';
+import { inputValuesAtom } from '@/atoms';
 import { useInputItems } from '@/hooks/useInputItems';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+
+import { CharacterList } from './characters/CharacterList';
+import { WeaponList } from './weapons/WeaponList';
+import { SummonList } from './summons/SummonList';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -71,8 +76,11 @@ export default function Home() {
   const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { createSession } = useSession();
+  const [inputValues, setInputValues] = useAtom(inputValuesAtom);
   const { loading, error, inputGroups } = useInputItems();
+  
+  // ローカルストレージとの連携
+  useLocalStorage();
 
   // タブの状態
   const [tabValue, setTabValue] = useState(0);
@@ -114,6 +122,10 @@ export default function Home() {
 
   // タブの切り替え
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    // タブ0（ユーザー情報）から他のタブに移動する場合、入力値を保存
+    if (tabValue === 0 && newValue !== 0) {
+      setInputValues(formData);
+    }
     setTabValue(newValue);
   };
 
@@ -138,18 +150,14 @@ export default function Home() {
   };
 
   // フォーム送信処理
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    try {
-      // セッションを作成
-      const session = await createSession(formData, []);
-      
-      // キャラクター選択タブに切り替え
-      setTabValue(1);
-    } catch (error) {
-      console.error('Error creating session:', error);
-    }
+    // 入力値を保存
+    setInputValues(formData);
+    
+    // キャラ選択タブに切り替え
+    setTabValue(1);
   };
 
   // 入力項目のレンダリング
@@ -245,10 +253,10 @@ export default function Home() {
           }}
         >
           <Typography variant="h4" component="h1" gutterBottom>
-            グランブルーファンタジー所持チェッカー
+            グラブル所持チェッカー
           </Typography>
           <Typography variant="body1">
-            キャラクター、武器、召喚石の所持状況を記録して画像として共有できます。
+            キャラ、武器、召喚石の所持状況を共有できます。
           </Typography>
         </Box>
 
@@ -261,7 +269,7 @@ export default function Home() {
             scrollButtons="auto"
           >
             <Tab label="ユーザー情報" {...a11yProps(0)} />
-            <Tab label="キャラクター" {...a11yProps(1)} />
+            <Tab label="キャラ" {...a11yProps(1)} />
             <Tab label="武器" {...a11yProps(2)} />
             <Tab label="召喚石" {...a11yProps(3)} />
           </Tabs>
@@ -326,18 +334,29 @@ export default function Home() {
         <TabPanel value={tabValue} index={1}>
           <Box sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              キャラクター選択
+              キャラ選択
             </Typography>
             <Typography variant="body1" paragraph>
-              所持キャラクターを選択してください。
+              所持キャラを選択してください。
             </Typography>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => setTabValue(2)}
-            >
-              次へ進む
-            </Button>
+            {/* キャラリスト */}
+            <CharacterList />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={() => setTabValue(0)}
+              >
+                戻る
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => setTabValue(2)}
+              >
+                次へ進む
+              </Button>
+            </Box>
           </Box>
         </TabPanel>
 
@@ -349,13 +368,24 @@ export default function Home() {
             <Typography variant="body1" paragraph>
               所持武器を選択してください。
             </Typography>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => setTabValue(3)}
-            >
-              次へ進む
-            </Button>
+            {/* 武器リスト */}
+            <WeaponList />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={() => setTabValue(1)}
+              >
+                戻る
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => setTabValue(3)}
+              >
+                次へ進む
+              </Button>
+            </Box>
           </Box>
         </TabPanel>
 
@@ -367,13 +397,17 @@ export default function Home() {
             <Typography variant="body1" paragraph>
               所持召喚石を選択してください。
             </Typography>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => console.log('完了')}
-            >
-              完了
-            </Button>
+            {/* 召喚石リスト */}
+            <SummonList />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={() => setTabValue(2)}
+              >
+                戻る
+              </Button>
+            </Box>
           </Box>
         </TabPanel>
       </Paper>
@@ -397,21 +431,25 @@ export default function Home() {
               }
             }}
           >
-            <CardActionArea onClick={() => setTabValue(1)} sx={{ height: '100%' }}>
+            <CardActionArea onClick={() => {
+              // 入力値を保存してからタブを切り替え
+              setInputValues(formData);
+              setTabValue(1);
+            }} sx={{ height: '100%' }}>
               <Box sx={{ position: 'relative', height: 160, width: 280 }}>
                 <Image
                   src="/assets/characters-banner.jpg"
-                  alt="キャラクター"
+                  alt="キャラ"
                   fill
                   style={{ objectFit: 'cover' }}
                 />
               </Box>
               <CardContent>
                 <Typography gutterBottom variant="h6" component="div">
-                  キャラクター
+                  キャラ
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  所持キャラクターを選択して管理します
+                  所持キャラを選択して管理します
                 </Typography>
               </CardContent>
             </CardActionArea>
@@ -431,7 +469,11 @@ export default function Home() {
               }
             }}
           >
-            <CardActionArea onClick={() => setTabValue(2)} sx={{ height: '100%' }}>
+            <CardActionArea onClick={() => {
+              // 入力値を保存してからタブを切り替え
+              setInputValues(formData);
+              setTabValue(2);
+            }} sx={{ height: '100%' }}>
               <Box sx={{ position: 'relative', height: 160, width: 280 }}>
                 <Image
                   src="/assets/weapons-banner.jpg"
@@ -465,7 +507,11 @@ export default function Home() {
               }
             }}
           >
-            <CardActionArea onClick={() => setTabValue(3)} sx={{ height: '100%' }}>
+            <CardActionArea onClick={() => {
+              // 入力値を保存してからタブを切り替え
+              setInputValues(formData);
+              setTabValue(3);
+            }} sx={{ height: '100%' }}>
               <Box sx={{ position: 'relative', height: 160, width: 280 }}>
                 <Image
                   src="/assets/summons-banner.jpg"

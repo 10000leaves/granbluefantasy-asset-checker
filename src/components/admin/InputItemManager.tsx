@@ -48,15 +48,12 @@ export function InputItemManager() {
     createItem,
     updateItem,
     deleteItem,
-    refreshInputGroups,
   } = useInputItems();
 
   // ダイアログの状態
   const [openGroupDialog, setOpenGroupDialog] = useState(false);
   const [openItemDialog, setOpenItemDialog] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
-  const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
   // フォームの状態
   const [groupName, setGroupName] = useState('');
@@ -90,7 +87,6 @@ export function InputItemManager() {
   // 項目ダイアログを開く（新規作成）
   const handleOpenItemDialog = (groupId: string) => {
     setIsEditMode(false);
-    setSelectedGroupId(groupId);
     setItemForm({
       id: '',
       name: '',
@@ -105,7 +101,6 @@ export function InputItemManager() {
   // 項目ダイアログを開く（編集）
   const handleOpenEditItemDialog = (item: any, groupId: string) => {
     setIsEditMode(true);
-    setSelectedGroupId(groupId);
     setItemForm({
       id: item.id,
       name: item.name,
@@ -120,7 +115,6 @@ export function InputItemManager() {
   // 項目ダイアログを閉じる
   const handleCloseItemDialog = () => {
     setOpenItemDialog(false);
-    setSelectedItem(null);
   };
 
   // グループを作成

@@ -1,13 +1,10 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Typography,
   Box,
   Paper,
-  FormGroup,
-  FormControlLabel,
-  Checkbox,
   TextField,
   InputAdornment,
   IconButton,
@@ -15,8 +12,6 @@ import {
   Grid,
   Chip,
   Divider,
-  useTheme,
-  useMediaQuery,
   Card,
   CardContent,
   CircularProgress,
@@ -43,9 +38,7 @@ const elementMap = {
 };
 
 export function CharacterList() {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { items: characters, loading, error, selectedItems, setSelectedItems, toggleItem } = useItems('character');
+  const { items: characters, loading, error, selectedItems, toggleItem } = useItems('character');
   const { tagCategories, tagValues } = useTags('character');
 
   // 状態管理
@@ -114,7 +107,7 @@ export function CharacterList() {
     0
   );
 
-  // キャラクターのタグを取得
+  // キャラのタグを取得
   const getCharacterTags = (character: any) => {
     if (!character.tags) return {};
     
@@ -137,7 +130,7 @@ export function CharacterList() {
     return tags;
   };
 
-  // キャラクターの属性とレアリティを取得
+  // キャラの属性とレアリティを取得
   const getCharacterAttributes = (character: any) => {
     if (!character.tags) return { element: 'fire', rarity: 'SSR' };
     
@@ -252,21 +245,9 @@ export function CharacterList() {
     }));
   };
 
-  // キャラクター選択処理
+  // キャラ選択処理
   const handleCharacterSelect = (id: string, selected: boolean) => {
     toggleItem(id);
-  };
-
-  // 画像出力処理
-  const handleExport = () => {
-    // TODO: 画像出力の実装
-    console.log('Export selected characters:', selectedItems);
-  };
-
-  // 共有処理
-  const handleShare = () => {
-    // TODO: 共有機能の実装
-    console.log('Share selected characters:', selectedItems);
   };
 
   // フィルターセクションのレンダリング
@@ -325,30 +306,12 @@ export function CharacterList() {
 
   return (
     <Box sx={{ pb: 8 }}>
-      {/* ヘッダー */}
-      <Paper
-        elevation={0}
-        sx={{
-          p: { xs: 2, sm: 3 },
-          mb: 2,
-          borderRadius: 2,
-          backgroundImage: 'linear-gradient(135deg, #1976d2 0%, #0d47a1 100%)',
-          color: 'white',
-        }}
-      >
-        <Typography variant="h5" gutterBottom fontWeight="bold">
-          キャラクター一覧
-        </Typography>
-        <Typography variant="body2">
-          所持キャラクターを選択してください。フィルターを使用して目的のキャラクターを見つけることができます。
-        </Typography>
-      </Paper>
 
       {/* 検索・フィルターエリア */}
       <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 2 }}>
         <Box sx={{ display: 'flex', gap: 1, mb: 1.5 }}>
           <TextField
-            placeholder="キャラクター名で検索"
+            placeholder="キャラ名で検索"
             variant="outlined"
             size="small"
             fullWidth
@@ -528,11 +491,11 @@ export function CharacterList() {
         </Collapse>
       </Paper>
 
-      {/* キャラクター一覧エリア */}
+      {/* キャラ一覧エリア */}
       <Paper sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, alignItems: 'center' }}>
           <Typography variant="h6" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
-            キャラクター一覧 ({filteredCharacters.length})
+            キャラ一覧 ({filteredCharacters.length})
           </Typography>
           <Chip
             label={`選択中: ${selectedItems.length}`}
@@ -574,8 +537,6 @@ export function CharacterList() {
       {/* エクスポートパネル */}
       <ExportPanel
         selectedCount={selectedItems.length}
-        onExport={handleExport}
-        onShare={handleShare}
       />
     </Box>
   );

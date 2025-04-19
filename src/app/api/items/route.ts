@@ -60,7 +60,17 @@ export async function GET(request: NextRequest) {
     }
 
     const { rows } = await query(sql, params);
-    return NextResponse.json(rows);
+    
+    // image_urlをimageUrlに変換
+    const formattedRows = rows.map(row => {
+      const { image_url, ...rest } = row;
+      return {
+        ...rest,
+        imageUrl: image_url
+      };
+    });
+    
+    return NextResponse.json(formattedRows);
   } catch (error) {
     console.error('Error fetching items:', error);
     return NextResponse.json(

@@ -1,27 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-
-interface InputItem {
-  id: string;
-  name: string;
-  type: string;
-  required: boolean;
-  default_value: string | null;
-  order_index: number;
-}
-
-interface InputGroup {
-  group_id: string;
-  group_name: string;
-  group_order: number;
-  items: InputItem[];
-}
+import { useAtom } from 'jotai';
+import { inputGroupsAtom, inputValuesAtom, InputGroup, InputItem } from '@/atoms';
 
 interface UseInputItemsResult {
   loading: boolean;
   error: string | null;
   inputGroups: InputGroup[];
+  inputValues: Record<string, any>;
+  setInputValue: (id: string, value: any) => void;
   createGroup: (name: string) => Promise<InputGroup>;
   createItem: (item: {
     name: string;
@@ -44,7 +32,8 @@ interface UseInputItemsResult {
 export function useInputItems(): UseInputItemsResult {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [inputGroups, setInputGroups] = useState<InputGroup[]>([]);
+  const [inputGroups, setInputGroups] = useAtom(inputGroupsAtom);
+  const [inputValues, setInputValues] = useAtom(inputValuesAtom);
 
   // 入力グループと項目を取得
   const fetchInputGroups = async () => {
@@ -71,6 +60,14 @@ export function useInputItems(): UseInputItemsResult {
   useEffect(() => {
     fetchInputGroups();
   }, []);
+
+  // 入力値を設定
+  const setInputValue = (id: string, value: any) => {
+    setInputValues(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
 
   // グループを作成
   const createGroup = async (name: string): Promise<InputGroup> => {
@@ -255,6 +252,8 @@ export function useInputItems(): UseInputItemsResult {
     loading,
     error,
     inputGroups,
+    inputValues,
+    setInputValue,
     createGroup,
     createItem,
     updateItem,

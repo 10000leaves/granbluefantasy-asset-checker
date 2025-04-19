@@ -5,7 +5,6 @@ import Image from 'next/image';
 import {
   Card,
   CardContent,
-  CardMedia,
   Typography,
   Box,
   Checkbox,
@@ -13,6 +12,7 @@ import {
   IconButton,
   Tooltip,
   Skeleton,
+  TextField,
 } from '@mui/material';
 import {
   Whatshot as FireIcon,
@@ -22,7 +22,11 @@ import {
   LightMode as LightIcon,
   DarkMode as DarkIcon,
   BrokenImage as BrokenImageIcon,
+  Add as AddIcon,
+  Remove as RemoveIcon,
 } from '@mui/icons-material';
+import { useAtom } from 'jotai';
+import { weaponCountsAtom } from '@/atoms';
 
 interface WeaponCardProps {
   id: string;
@@ -57,6 +61,8 @@ export const WeaponCard = ({
   const ElementIcon = elementIcons[element].icon;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [weaponCounts, setWeaponCounts] = useAtom(weaponCountsAtom);
+  const count = weaponCounts[id] || 0;
 
   const handleImageLoad = () => {
     console.log(`Image loaded: ${name}`);
@@ -74,6 +80,41 @@ export const WeaponCard = ({
     console.log(`Weapon image URL: ${imageUrl}`);
   }, [imageUrl]);
 
+  // 所持数を更新する関数
+  const updateCount = (newCount: number, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    
+    // 0未満にならないようにする
+    const validCount = Math.max(0, newCount);
+    
+    setWeaponCounts(prev => ({
+      ...prev,
+      [id]: validCount
+    }));
+  };
+
+  // 所持数の入力を処理する関数
+  const handleCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    const value = e.target.value;
+    
+    // 空の場合は0にする
+    if (value === '') {
+      updateCount(0);
+      return;
+    }
+    
+    // 数値以外は無視する
+    const numValue = parseInt(value, 10);
+    if (isNaN(numValue)) {
+      return;
+    }
+    
+    updateCount(numValue);
+  };
+
   return (
     <Card
       sx={{
@@ -83,10 +124,12 @@ export const WeaponCard = ({
         display: 'flex',
         flexDirection: 'column',
         margin: '0 auto',
+        cursor: 'pointer',
         '&:hover': {
           boxShadow: 6,
         },
       }}
+      onClick={() => onSelect(id, !selected)}
     >
       <Box sx={{ position: 'relative', height: 160, width: 280 }}>
         {loading && (
@@ -131,7 +174,11 @@ export const WeaponCard = ({
         
         <Checkbox
           checked={selected}
-          onChange={(e) => onSelect(id, e.target.checked)}
+          onChange={(e) => {
+            e.stopPropagation();
+            onSelect(id, e.target.checked);
+          }}
+          onClick={(e) => e.stopPropagation()}
           sx={{
             position: 'absolute',
             top: 8,
@@ -197,6 +244,62 @@ export const WeaponCard = ({
               }}
             />
           </Box>
+        </Box>
+        
+        {/* 所持数入力フィールド */}
+        <Box 
+          sx={{ 
+            mt: 1, 
+            display: 'flex', 
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 1 
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <IconButton 
+            size="small" 
+            onClick={(e) => updateCount(count - 1, e)}
+            disabled={count <= 0}
+            sx={{ 
+              bgcolor: 'action.hover',
+              '&:hover': { bgcolor: 'action.selected' }
+            }}
+          >
+            <RemoveIcon fontSize="small" />
+          </IconButton>
+          
+          <TextField
+            value={count}
+            onChange={handleCountChange}
+            variant="outlined"
+            size="small"
+            type="number"
+            inputProps={{ 
+              min: 0, 
+              style: { textAlign: 'center', padding: '2px 0' } 
+            }}
+            sx={{ 
+              width: '60px',
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: 'divider',
+                },
+              },
+            }}
+            onClick={(e) => e.stopPropagation()}
+          />
+          
+          <IconButton 
+            size="small" 
+            onClick={(e) => updateCount(count + 1, e)}
+            sx={{ 
+              bgcolor: 'action.hover',
+              '&:hover': { bgcolor: 'action.selected' }
+            }}
+          >
+            <AddIcon fontSize="small" />
+          </IconButton>
         </Box>
       </CardContent>
     </Card>

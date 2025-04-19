@@ -1,4 +1,4 @@
--- キャラクターのタグカテゴリとタグ値
+-- キャラのタグカテゴリとタグ値
 WITH inserted_categories AS (
   INSERT INTO tag_categories (name, item_type, multiple_select, required, order_index)
   VALUES

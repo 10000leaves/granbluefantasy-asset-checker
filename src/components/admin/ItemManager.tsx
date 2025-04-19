@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import {
   Box,
@@ -15,7 +15,6 @@ import {
   IconButton,
   Grid,
   Card,
-  CardMedia,
   CardContent,
   CardActions,
   FormControl,
@@ -26,8 +25,6 @@ import {
   CircularProgress,
   Alert,
   Snackbar,
-  FormControlLabel,
-  Checkbox,
   Tabs,
   Tab,
 } from '@mui/material';
@@ -73,7 +70,7 @@ function a11yProps(index: number) {
 
 export function ItemManager() {
   const { items, loading, error, createItem, updateItem, deleteItem, refreshItems } = useItems();
-  const { tagCategories, tagValues, loading: tagsLoading, error: tagsError, refreshTags } = useTags();
+  const { tagCategories, tagValues, loading: tagsLoading, error: tagsError } = useTags();
   const { uploadImage, uploading } = useImageUpload();
 
   // タブの状態
@@ -356,7 +353,7 @@ export function ItemManager() {
   const getCategoryName = (category: string) => {
     switch (category) {
       case 'character':
-        return 'キャラクター';
+        return 'キャラ';
       case 'weapon':
         return '武器';
       case 'summon':
@@ -445,7 +442,7 @@ export function ItemManager() {
           variant="scrollable"
           scrollButtons="auto"
         >
-          <Tab label="キャラクター" {...a11yProps(0)} />
+          <Tab label="キャラ" {...a11yProps(0)} />
           <Tab label="武器" {...a11yProps(1)} />
           <Tab label="召喚石" {...a11yProps(2)} />
         </Tabs>
@@ -455,7 +452,7 @@ export function ItemManager() {
         {characterItems.length === 0 ? (
           <Paper sx={{ p: 3, textAlign: 'center' }}>
             <Typography color="textSecondary">
-              キャラクターがありません。「アイテムを追加」ボタンをクリックして作成してください。
+              キャラがありません。「アイテムを追加」ボタンをクリックして作成してください。
             </Typography>
           </Paper>
         ) : (
@@ -693,7 +690,7 @@ export function ItemManager() {
               onChange={handleCategoryChange}
               label="カテゴリ"
             >
-              <MenuItem value="character">キャラクター</MenuItem>
+              <MenuItem value="character">キャラ</MenuItem>
               <MenuItem value="weapon">武器</MenuItem>
               <MenuItem value="summon">召喚石</MenuItem>
             </Select>

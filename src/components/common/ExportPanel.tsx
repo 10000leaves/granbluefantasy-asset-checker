@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Paper,
@@ -10,43 +10,72 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  CircularProgress,
   useTheme,
   useMediaQuery,
-  Fab,
-  Zoom,
-  Tooltip,
   Snackbar,
   Alert,
   IconButton,
-  Grid,
-  Chip,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  Input,
 } from '@mui/material';
 import {
-  Download as DownloadIcon,
   Share as ShareIcon,
   Close as CloseIcon,
   Image as ImageIcon,
+  PictureAsPdf as PdfIcon,
+  TableChart as CsvIcon,
+  Upload as UploadIcon,
+  FileDownload as FileDownloadIcon,
 } from '@mui/icons-material';
-import { useSession } from '@/hooks/useSession';
+import { useAtom } from 'jotai';
+import { 
+  selectedCharactersAtom, 
+  selectedWeaponsAtom, 
+  selectedSummonsAtom,
+  inputValuesAtom,
+  selectedCharacterItemsAtom,
+  selectedWeaponItemsAtom,
+  selectedSummonItemsAtom,
+  weaponCountsAtom
+} from '@/atoms';
 import { useInputItems } from '@/hooks/useInputItems';
-import { useItems } from '@/hooks/useItems';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import html2canvas from 'html2canvas';
+import { ExportDialogContent } from './ExportDialogContent';
+import { generatePDF, generateCSV, importCSV } from './ExportUtils';
 
 interface ExportPanelProps {
   selectedCount: number;
-  onExport: () => void;
-  onShare: () => void;
 }
 
-export function ExportPanel({ selectedCount, onExport, onShare }: ExportPanelProps) {
+export function ExportPanel({ selectedCount }: ExportPanelProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { shareUrl, loadSession, sessionData } = useSession();
+  // jotaiを使用して状態を管理
+  const [selectedCharacters, setSelectedCharacters] = useAtom(selectedCharactersAtom);
+  const [selectedWeapons, setSelectedWeapons] = useAtom(selectedWeaponsAtom);
+  const [selectedSummons, setSelectedSummons] = useAtom(selectedSummonsAtom);
+  const [inputValues, setInputValues] = useAtom(inputValuesAtom);
+  const [selectedCharacterItems] = useAtom(selectedCharacterItemsAtom);
+  const [selectedWeaponItems] = useAtom(selectedWeaponItemsAtom);
+  const [selectedSummonItems] = useAtom(selectedSummonItemsAtom);
+  const [weaponCounts] = useAtom(weaponCountsAtom);
+  
+  // ローカルストレージとの連携
+  useLocalStorage();
+  
   const { inputGroups } = useInputItems();
-  const { items: characterItems } = useItems('character');
-  const { items: weaponItems } = useItems('weapon');
-  const { items: summonItems } = useItems('summon');
+  
+  // 選択されたアイテムの状態
+  const [selectedItemsState, setSelectedItemsState] = useState<{
+    characters: any[];
+    weapons: any[];
+    summons: any[];
+  }>({ characters: [], weapons: [], summons: [] });
   
   const [isExporting, setIsExporting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -54,42 +83,82 @@ export function ExportPanel({ selectedCount, onExport, onShare }: ExportPanelPro
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+  const [exportMenuAnchorEl, setExportMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [tabValue, setTabValue] = useState(0);
+  const [exportType, setExportType] = useState<'image' | 'pdf' | 'csv'>('image');
 
-  // 選択されたアイテムを取得
-  const getSelectedItems = () => {
-    if (!sessionData) return { characters: [], weapons: [], summons: [] };
+  // 選択されたアイテムを更新
+  useEffect(() => {
+    // 武器に所持数を追加
+    const weaponsWithCounts = selectedWeaponItems.map(weapon => ({
+      ...weapon,
+      count: weaponCounts[weapon.id] || 0
+    }));
     
-    const selectedCharacters = characterItems.filter(item => 
-      sessionData.selectedItems.includes(item.id)
-    );
-    
-    const selectedWeapons = weaponItems.filter(item => 
-      sessionData.selectedItems.includes(item.id)
-    );
-    
-    const selectedSummons = summonItems.filter(item => 
-      sessionData.selectedItems.includes(item.id)
-    );
-    
-    return {
-      characters: selectedCharacters,
-      weapons: selectedWeapons,
-      summons: selectedSummons,
-    };
+    setSelectedItemsState({
+      characters: selectedCharacterItems,
+      weapons: weaponsWithCounts,
+      summons: selectedSummonItems,
+    });
+  }, [selectedCharacterItems, selectedWeaponItems, selectedSummonItems, weaponCounts]);
+
+  // 現在のページに基づいて表示するアイテムを決定
+  const getCurrentPageItems = () => {
+    // エクスポート時には常にすべての情報を含める
+    return selectedItemsState;
   };
 
-  // 画像出力処理
-  const handleExport = async () => {
+  // エクスポートメニューを開く
+  const handleExportMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setExportMenuAnchorEl(event.currentTarget);
+  };
+
+  // エクスポートメニューを閉じる
+  const handleExportMenuClose = () => {
+    setExportMenuAnchorEl(null);
+  };
+
+  // エクスポートタイプを選択
+  const handleExportTypeSelect = (type: 'image' | 'pdf' | 'csv') => {
+    setExportType(type);
+    setExportMenuAnchorEl(null);
+    setIsDialogOpen(true);
+    setTabValue(0);
+  };
+
+  // タブ変更ハンドラー
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
+
+  // エクスポートダイアログが開いたときに実行
+  useEffect(() => {
+    if (isDialogOpen) {
+      // ダイアログが開いたら、少し遅延を入れてから画像を生成
+      if (exportType === 'image') {
+        // 画像出力の場合は既存の画像URLをクリア
+        setExportedImageUrl(null);
+        
+        const timer = setTimeout(() => {
+          captureContent();
+        }, 500);
+        return () => clearTimeout(timer);
+      } else {
+        // PDF/CSV出力の場合も既存の画像URLをクリア
+        setExportedImageUrl(null);
+      }
+    }
+  }, [isDialogOpen, exportType]);
+
+  // コンテンツをキャプチャする関数
+  const captureContent = async () => {
     try {
       setIsExporting(true);
-      setIsDialogOpen(true);
-      
-      // 少し遅延を入れて、ダイアログが表示されるのを待つ
-      await new Promise(resolve => setTimeout(resolve, 500));
       
       // ダイアログ内のコンテンツを画像化
       const element = document.getElementById('export-content');
       if (!element) {
+        console.error('Export content element not found. DOM:', document.body.innerHTML);
         throw new Error('Export content not found');
       }
       
@@ -98,6 +167,7 @@ export function ExportPanel({ selectedCount, onExport, onShare }: ExportPanelPro
         useCORS: true, // 外部画像の読み込みを許可
         allowTaint: true,
         backgroundColor: '#ffffff',
+        logging: false
       });
       
       // 画像をDataURLに変換
@@ -116,13 +186,149 @@ export function ExportPanel({ selectedCount, onExport, onShare }: ExportPanelPro
       setIsExporting(false);
     }
   };
+  
+  // 画像出力処理
+  const handleImageExport = () => {
+    captureContent();
+  };
+
+  // PDF出力処理
+  const handlePdfExport = async () => {
+    try {
+      setIsExporting(true);
+      
+      // 既存の画像URLをクリア
+      setExportedImageUrl(null);
+      
+      // 現在のページのアイテムを取得
+      const pageItems = getCurrentPageItems();
+      
+      // 画像キャプチャを使用してPDFを生成
+      const element = document.getElementById('export-content');
+      if (!element) {
+        throw new Error('Export content not found');
+      }
+      
+      // セッションデータの代わりにinputValuesを使用
+      const sessionDataObj = { inputValues };
+      
+      await generatePDF(element, inputGroups, sessionDataObj, pageItems);
+      
+      setSnackbarMessage('PDFの生成に成功しました');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      setSnackbarMessage('PDFの生成に失敗しました');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // CSV出力処理
+  const handleCsvExport = () => {
+    try {
+      setIsExporting(true);
+      
+      // 既存の画像URLをクリア
+      setExportedImageUrl(null);
+      
+      const pageItems = getCurrentPageItems();
+      
+      // セッションデータの代わりにinputValuesを使用
+      const sessionDataObj = { inputValues };
+      
+      generateCSV(pageItems, inputGroups, sessionDataObj);
+      
+      setSnackbarMessage('CSVの生成に成功しました');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+      setSnackbarMessage('CSVの生成に失敗しました');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // CSVインポート処理
+  const handleCsvImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const csv = e.target?.result as string;
+          
+          // CSVインポート処理を実行
+          const result = importCSV(
+            csv,
+            setSelectedCharacters,
+            setSelectedWeapons,
+            setSelectedSummons,
+            setInputValues,
+            selectedCharacters,
+            selectedWeapons,
+            selectedSummons,
+            inputValues
+          );
+          
+          // 結果に基づいてスナックバーを表示
+          setSnackbarMessage(result.message);
+          setSnackbarSeverity(result.success ? 'success' : 'error');
+          setSnackbarOpen(true);
+          
+        } catch (error) {
+          console.error('Error parsing CSV:', error);
+          setSnackbarMessage('CSVの解析に失敗しました');
+          setSnackbarSeverity('error');
+          setSnackbarOpen(true);
+        }
+      };
+      
+      reader.readAsText(file);
+    } catch (error) {
+      console.error('Error importing CSV:', error);
+      setSnackbarMessage('CSVのインポートに失敗しました');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
+    
+    // ファイル入力をリセット
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // エクスポート処理
+  const handleExport = () => {
+    switch (exportType) {
+      case 'image':
+        handleImageExport();
+        break;
+      case 'pdf':
+        handlePdfExport();
+        break;
+      case 'csv':
+        handleCsvExport();
+        break;
+    }
+  };
 
   // 画像のダウンロード
   const handleDownload = () => {
     if (!exportedImageUrl) return;
     
     const link = document.createElement('a');
-    link.download = `gbf-checker-${new Date().toISOString().slice(0, 10)}.png`;
+    link.download = `granblue-asset-checker-${new Date().toISOString().slice(0, 10)}.png`;
     link.href = exportedImageUrl;
     link.click();
   };
@@ -133,17 +339,17 @@ export function ExportPanel({ selectedCount, onExport, onShare }: ExportPanelPro
       if (navigator.share && exportedImageUrl) {
         // Web Share APIが利用可能な場合
         const blob = await fetch(exportedImageUrl).then(r => r.blob());
-        const file = new File([blob], 'gbf-checker.png', { type: 'image/png' });
+        const file = new File([blob], 'granblue-asset-checker.png', { type: 'image/png' });
         
         await navigator.share({
-          title: 'グランブルーファンタジー所持チェッカー',
+          title: 'グラブル所持チェッカー',
           text: '私の所持キャラ/武器/召喚石リストです',
           files: [file],
         });
-      } else if (shareUrl) {
-        // URLのコピー
-        await navigator.clipboard.writeText(shareUrl);
-        setSnackbarMessage('共有URLをクリップボードにコピーしました');
+      } else {
+        // URLのコピーの代わりに画像をダウンロード
+        handleDownload();
+        setSnackbarMessage('画像をダウンロードしました');
         setSnackbarSeverity('success');
         setSnackbarOpen(true);
       }
@@ -164,20 +370,6 @@ export function ExportPanel({ selectedCount, onExport, onShare }: ExportPanelPro
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
   };
-
-  // 入力項目の値を表示
-  const renderInputValue = (item: any, value: any) => {
-    if (item.type === 'checkbox') {
-      return value ? '✓' : '✗';
-    } else if (item.type === 'number' && item.name === 'キャラ与ダメ') {
-      return `${value}%`;
-    } else {
-      return value || '-';
-    }
-  };
-
-  // 選択されたアイテム
-  const selectedItems = getSelectedItems();
 
   return (
     <>
@@ -212,6 +404,56 @@ export function ExportPanel({ selectedCount, onExport, onShare }: ExportPanelPro
             <Button
               variant="outlined"
               color="primary"
+              startIcon={<UploadIcon />}
+              onClick={() => fileInputRef.current?.click()}
+              size={isMobile ? 'small' : 'medium'}
+            >
+              CSVインポート
+            </Button>
+            <Input
+              type="file"
+              inputRef={fileInputRef}
+              onChange={handleCsvImport}
+              sx={{ display: 'none' }}
+              inputProps={{ accept: '.csv' }}
+            />
+            <Button
+              variant="outlined"
+              color="primary"
+              startIcon={<FileDownloadIcon />}
+              onClick={handleExportMenuOpen}
+              disabled={selectedCount === 0}
+              size={isMobile ? 'small' : 'medium'}
+            >
+              エクスポート
+            </Button>
+            <Menu
+              anchorEl={exportMenuAnchorEl}
+              open={Boolean(exportMenuAnchorEl)}
+              onClose={handleExportMenuClose}
+            >
+              <MenuItem onClick={() => handleExportTypeSelect('image')}>
+                <ListItemIcon>
+                  <ImageIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="画像出力" />
+              </MenuItem>
+              <MenuItem onClick={() => handleExportTypeSelect('pdf')}>
+                <ListItemIcon>
+                  <PdfIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="PDF出力" />
+              </MenuItem>
+              <MenuItem onClick={() => handleExportTypeSelect('csv')}>
+                <ListItemIcon>
+                  <CsvIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="CSV出力" />
+              </MenuItem>
+            </Menu>
+            <Button
+              variant="contained"
+              color="primary"
               startIcon={<ShareIcon />}
               onClick={handleShare}
               disabled={selectedCount === 0}
@@ -219,21 +461,11 @@ export function ExportPanel({ selectedCount, onExport, onShare }: ExportPanelPro
             >
               共有
             </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<ImageIcon />}
-              onClick={handleExport}
-              disabled={selectedCount === 0}
-              size={isMobile ? 'small' : 'medium'}
-            >
-              画像出力
-            </Button>
           </Box>
         </Box>
       </Paper>
 
-      {/* 画像出力ダイアログ */}
+      {/* エクスポートダイアログ */}
       <Dialog
         open={isDialogOpen}
         onClose={handleCloseDialog}
@@ -255,7 +487,10 @@ export function ExportPanel({ selectedCount, onExport, onShare }: ExportPanelPro
             color: 'primary.contrastText',
           }}
         >
-          <Typography variant="h6">画像出力</Typography>
+          <Typography variant="h6">
+            {exportType === 'image' ? '画像出力' : 
+             exportType === 'pdf' ? 'PDF出力' : 'CSV出力'}
+          </Typography>
           <IconButton
             edge="end"
             color="inherit"
@@ -267,190 +502,51 @@ export function ExportPanel({ selectedCount, onExport, onShare }: ExportPanelPro
         </DialogTitle>
         
         <DialogContent sx={{ p: { xs: 2, sm: 3 }, mt: 1 }}>
-          {isExporting ? (
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                py: 8,
-              }}
-            >
-              <CircularProgress size={60} />
-              <Typography variant="h6" sx={{ mt: 2 }}>
-                画像を生成中...
-              </Typography>
-            </Box>
-          ) : exportedImageUrl ? (
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-              }}
-            >
-              <Box
-                component="img"
-                src={exportedImageUrl}
-                alt="Exported image"
-                sx={{
-                  maxWidth: '100%',
-                  maxHeight: '70vh',
-                  objectFit: 'contain',
-                  border: '1px solid #ddd',
-                  borderRadius: 1,
-                }}
-              />
-            </Box>
-          ) : (
-            <Box id="export-content" sx={{ p: 2, bgcolor: 'white' }}>
-              {/* ヘッダー */}
-              <Box
-                sx={{
-                  p: 2,
-                  mb: 2,
-                  borderRadius: 2,
-                  backgroundImage: 'linear-gradient(135deg, #1976d2 0%, #0d47a1 100%)',
-                  color: 'white',
-                  textAlign: 'center',
-                }}
-              >
-                <Typography variant="h5" fontWeight="bold">
-                  グランブルーファンタジー所持チェッカー
-                </Typography>
-              </Box>
-
-              {/* ユーザー情報 */}
-              <Paper sx={{ p: 2, mb: 2, borderRadius: 2 }}>
-                <Typography variant="h6" gutterBottom>
-                  ユーザー情報
-                </Typography>
-                
-                <Grid container spacing={2}>
-                  {inputGroups.map((group) => (
-                    <Grid item xs={12} sm={group.group_name === '基本情報' ? 12 : 4} key={group.group_id}>
-                      <Typography variant="subtitle2" fontWeight="bold">
-                        {group.group_name}
-                      </Typography>
-                      {group.items.map((item) => (
-                        <Typography key={item.id}>
-                          {item.name}: {sessionData?.inputValues && renderInputValue(item, sessionData.inputValues[item.id])}
-                        </Typography>
-                      ))}
-                    </Grid>
-                  ))}
-                </Grid>
-              </Paper>
-
-              {/* 選択アイテム */}
-              <Paper sx={{ p: 2, borderRadius: 2 }}>
-                <Typography variant="h6" gutterBottom>
-                  所持アイテム
-                </Typography>
-                
-                <Grid container spacing={2}>
-                  {/* キャラクター */}
-                  <Grid item xs={12} sm={4}>
-                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                      キャラクター ({selectedItems.characters.length})
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selectedItems.characters.map((character) => (
-                        <Chip
-                          key={character.id}
-                          label={character.name}
-                          size="small"
-                          color="primary"
-                          variant="outlined"
-                        />
-                      ))}
-                    </Box>
-                  </Grid>
-                  
-                  {/* 武器 */}
-                  <Grid item xs={12} sm={4}>
-                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                      武器 ({selectedItems.weapons.length})
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selectedItems.weapons.map((weapon) => (
-                        <Chip
-                          key={weapon.id}
-                          label={weapon.name}
-                          size="small"
-                          color="primary"
-                          variant="outlined"
-                        />
-                      ))}
-                    </Box>
-                  </Grid>
-                  
-                  {/* 召喚石 */}
-                  <Grid item xs={12} sm={4}>
-                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                      召喚石 ({selectedItems.summons.length})
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selectedItems.summons.map((summon) => (
-                        <Chip
-                          key={summon.id}
-                          label={summon.name}
-                          size="small"
-                          color="primary"
-                          variant="outlined"
-                        />
-                      ))}
-                    </Box>
-                  </Grid>
-                </Grid>
-              </Paper>
-              
-              {/* フッター */}
-              <Box sx={{ mt: 2, textAlign: 'center' }}>
-                <Typography variant="caption" color="text.secondary">
-                  Generated by グランブルーファンタジー所持チェッカー • {new Date().toLocaleDateString()}
-                </Typography>
-              </Box>
-            </Box>
-          )}
+          <ExportDialogContent
+            exportType={exportType}
+            isExporting={isExporting}
+            exportedImageUrl={exportedImageUrl}
+            tabValue={tabValue}
+            handleTabChange={handleTabChange}
+            handleDownload={handleDownload}
+            handleExport={handleExport}
+            selectedItems={selectedItemsState}
+            sessionData={{ inputValues }}
+          />
         </DialogContent>
         
-        {exportedImageUrl && (
-          <DialogActions sx={{ p: 2, pt: 0 }}>
-            <Button
-              variant="outlined"
-              onClick={handleCloseDialog}
-              startIcon={<CloseIcon />}
-            >
-              閉じる
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
+        <DialogActions sx={{ px: 3, py: 2, display: 'flex', justifyContent: 'space-between' }}>
+          <Button onClick={handleCloseDialog} color="inherit">
+            閉じる
+          </Button>
+          {exportType === 'image' && exportedImageUrl ? (
+            <Button 
+              variant="contained" 
+              color="primary" 
+              startIcon={<FileDownloadIcon />} 
               onClick={handleDownload}
-              startIcon={<DownloadIcon />}
             >
               ダウンロード
             </Button>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={handleShare}
-              startIcon={<ShareIcon />}
+          ) : (
+            <Button 
+              variant="contained" 
+              color="primary" 
+              onClick={handleExport}
             >
-              共有
+              {exportType === 'pdf' ? 'PDFを生成' : exportType === 'csv' ? 'CSVを生成' : '画像を生成'}
             </Button>
-          </DialogActions>
-        )}
+          )}
+        </DialogActions>
       </Dialog>
 
-      {/* 通知 */}
+      {/* スナックバー通知 */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        sx={{ mb: 7 }}
       >
         <Alert
           onClose={handleCloseSnackbar}

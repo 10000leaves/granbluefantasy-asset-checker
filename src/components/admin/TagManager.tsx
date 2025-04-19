@@ -570,7 +570,7 @@ export function TagManager({ itemType = 'character', onTagsUpdated }: TagManager
         sx={{ mb: 3 }}
         variant="fullWidth"
       >
-        <Tab label="キャラクター" value="character" />
+        <Tab label="キャラ" value="character" />
         <Tab label="武器" value="weapon" />
         <Tab label="召喚石" value="summon" />
       </Tabs>

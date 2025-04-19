@@ -5,7 +5,6 @@ import Image from 'next/image';
 import {
   Card,
   CardContent,
-  CardMedia,
   Typography,
   Box,
   Checkbox,
@@ -81,10 +80,12 @@ export const SummonCard = ({
         display: 'flex',
         flexDirection: 'column',
         margin: '0 auto',
+        cursor: 'pointer',
         '&:hover': {
           boxShadow: 6,
         },
       }}
+      onClick={() => onSelect(id, !selected)}
     >
       <Box sx={{ position: 'relative', height: 160, width: 280 }}>
         {loading && (
@@ -129,7 +130,11 @@ export const SummonCard = ({
         
         <Checkbox
           checked={selected}
-          onChange={(e) => onSelect(id, e.target.checked)}
+          onChange={(e) => {
+            e.stopPropagation();
+            onSelect(id, e.target.checked);
+          }}
+          onClick={(e) => e.stopPropagation()}
           sx={{
             position: 'absolute',
             top: 8,
