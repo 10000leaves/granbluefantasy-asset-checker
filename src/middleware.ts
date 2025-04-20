@@ -4,8 +4,25 @@ import { NextRequest, NextResponse } from 'next/server';
 const AUTH_USER_TYPE_COOKIE = 'auth_user_type';
 
 export function middleware(req: NextRequest) {
-  // 開発環境では認証をスキップ
+  // 開発環境では認証をスキップするが、クエリパラメータで認証状態をテストできるようにする
   if (process.env.NODE_ENV === 'development') {
+    const url = req.nextUrl;
+    const userType = url.searchParams.get('userType');
+    
+    // クエリパラメータで認証状態をテストする場合
+    if (userType === 'admin' || userType === 'user') {
+      const response = NextResponse.next();
+      response.cookies.set(AUTH_USER_TYPE_COOKIE, userType, {
+        httpOnly: false,
+        sameSite: 'strict',
+        path: '/',
+      });
+      
+      // クエリパラメータを削除してリダイレクト
+      url.searchParams.delete('userType');
+      return NextResponse.redirect(url);
+    }
+    
     return NextResponse.next();
   }
 
@@ -25,7 +42,7 @@ export function middleware(req: NextRequest) {
         const response = NextResponse.next();
         // 管理者タイプをクッキーに保存
         response.cookies.set(AUTH_USER_TYPE_COOKIE, 'admin', {
-          httpOnly: true,
+          httpOnly: false, // JavaScriptからアクセスできるように変更
           sameSite: 'strict',
           path: '/',
         });
@@ -38,7 +55,7 @@ export function middleware(req: NextRequest) {
         const response = NextResponse.next();
         // 一般ユーザータイプをクッキーに保存
         response.cookies.set(AUTH_USER_TYPE_COOKIE, 'user', {
-          httpOnly: true,
+          httpOnly: false, // JavaScriptからアクセスできるように変更
           sameSite: 'strict',
           path: '/',
         });
