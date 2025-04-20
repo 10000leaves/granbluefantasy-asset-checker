@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { validateRequestBody, validateQueryParams, sanitizeObject } from '@/lib/utils/validation';
 
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
+    
+    // クエリパラメータのバリデーション
+    const validation = validateQueryParams(searchParams, ['category']);
+    if (!validation.valid) {
+      return NextResponse.json(
+        { error: validation.error },
+        { status: 400 }
+      );
+    }
+    
     const category = searchParams.get('category');
 
     let sql: string;
@@ -83,7 +94,19 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, category, imageUrl, tags } = body;
+    
+    // リクエストボディのバリデーション
+    const validation = validateRequestBody(body, ['name', 'category']);
+    if (!validation.valid) {
+      return NextResponse.json(
+        { error: validation.error },
+        { status: 400 }
+      );
+    }
+    
+    // 入力値のサニタイズ
+    const sanitizedBody = sanitizeObject(body);
+    const { name, category, imageUrl, tags } = sanitizedBody;
 
     // トランザクションを開始
     await query('BEGIN');
@@ -127,7 +150,19 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, name, category, imageUrl, tags } = body;
+    
+    // リクエストボディのバリデーション
+    const validation = validateRequestBody(body, ['id', 'name', 'category']);
+    if (!validation.valid) {
+      return NextResponse.json(
+        { error: validation.error },
+        { status: 400 }
+      );
+    }
+    
+    // 入力値のサニタイズ
+    const sanitizedBody = sanitizeObject(body);
+    const { id, name, category, imageUrl, tags } = sanitizedBody;
 
     // トランザクションを開始
     await query('BEGIN');
@@ -186,8 +221,18 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
+    
+    // クエリパラメータのバリデーション
+    const validation = validateQueryParams(searchParams, ['id']);
+    if (!validation.valid) {
+      return NextResponse.json(
+        { error: validation.error },
+        { status: 400 }
+      );
+    }
+    
     const id = searchParams.get('id');
-
+    
     if (!id) {
       return NextResponse.json(
         { error: 'ID parameter is required' },

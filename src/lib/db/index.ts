@@ -132,9 +132,62 @@ export const listImages = async () => {
   return images;
 };
 
-// データベースクエリの実行
+// データベースクエリの実行（SQLインジェクション対策強化版）
 export const query = async (text: string, params?: any[]) => {
-  return pool.query(text, params);
+  try {
+    // SQLインジェクションの可能性がある危険なパターンをチェック
+    const dangerousPatterns = [
+      /;\s*DROP\s+/i,
+      /;\s*DELETE\s+/i,
+      /;\s*UPDATE\s+/i,
+      /;\s*INSERT\s+/i,
+      /;\s*ALTER\s+/i,
+      /;\s*CREATE\s+/i,
+      /UNION\s+SELECT/i,
+      /OR\s+1\s*=\s*1/i,
+      /OR\s+'[^']*'\s*=\s*'[^']*'/i,
+      /--/,
+      /\/\*/,
+      /\*\//
+    ];
+
+    // SQLクエリに危険なパターンが含まれていないか確認
+    if (dangerousPatterns.some(pattern => pattern.test(text))) {
+      console.error('Potentially malicious SQL query detected:', text);
+      throw new Error('Invalid SQL query');
+    }
+
+    // パラメータのバリデーション
+    if (params) {
+      params = params.map(param => {
+        // nullまたはundefinedの場合はそのまま返す
+        if (param === null || param === undefined) {
+          return param;
+        }
+        
+        // 文字列の場合は特殊文字をエスケープ
+        if (typeof param === 'string') {
+          // SQLインジェクションの可能性がある文字列をチェック
+          if (dangerousPatterns.some(pattern => pattern.test(param))) {
+            console.error('Potentially malicious parameter detected:', param);
+            throw new Error('Invalid parameter');
+          }
+          return param;
+        }
+        
+        return param;
+      });
+    }
+
+    // クエリを実行
+    return pool.query(text, params);
+  } catch (error) {
+    // エラーログを記録
+    console.error('Database query error:', error);
+    
+    // エラーを再スロー（詳細情報は含めない）
+    throw new Error('Database query failed');
+  }
 };
 
 // プロセス終了時にプールを閉じる

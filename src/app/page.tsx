@@ -453,7 +453,7 @@ export default function Home() {
                   キャラ
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  所持キャラを選択して管理します
+                  所持キャラを選択
                 </Typography>
               </CardContent>
             </CardActionArea>
@@ -491,7 +491,7 @@ export default function Home() {
                   武器
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  所持武器を選択して管理します
+                  所持武器を選択
                 </Typography>
               </CardContent>
             </CardActionArea>
@@ -529,7 +529,7 @@ export default function Home() {
                   召喚石
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  所持召喚石を選択して管理します
+                  所持召喚石を選択
                 </Typography>
               </CardContent>
             </CardActionArea>

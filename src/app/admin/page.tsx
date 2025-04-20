@@ -85,11 +85,11 @@ export default function AdminPage() {
             color: 'primary.contrastText',
           }}
         >
-          <Typography variant="h4" component="h1" gutterBottom>
-            管理者画面
+          <Typography variant="h5" gutterBottom fontWeight="bold">
+            管理者ページ
           </Typography>
-          <Typography variant="body1">
-            アイテム、タグ、ユーザー入力項目を管理します。
+          <Typography variant="body2">
+            アイテム、タグ、ユーザー入力項目を管理できます。
           </Typography>
         </Box>
 
