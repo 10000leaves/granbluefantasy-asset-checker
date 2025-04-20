@@ -29,6 +29,7 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useThemeContext } from './ThemeProvider';
+import { useAuth } from '@/hooks/useAuth';
 
 export const Navigation = () => {
   const pathname = usePathname();
@@ -36,6 +37,7 @@ export const Navigation = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { mode, setMode } = useThemeContext();
+  const { isAdmin } = useAuth();
   
   // テーマメニュー用の状態
   const [themeMenuAnchor, setThemeMenuAnchor] = useState<null | HTMLElement>(null);
@@ -45,12 +47,13 @@ export const Navigation = () => {
     return pathname === path;
   };
 
+  // ナビゲーションアイテム（管理者の場合のみ管理画面へのリンクを表示）
   const navItems = [
     { name: 'ホーム', path: '/' },
     { name: 'キャラ', path: '/characters' },
     { name: '武器', path: '/weapons' },
     { name: '召喚石', path: '/summons' },
-    { name: '管理', path: '/admin' },
+    ...(isAdmin ? [{ name: '管理', path: '/admin' }] : []),
   ];
 
   const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {

@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 import {
   Container,
   Box,
@@ -45,10 +47,33 @@ function a11yProps(index: number) {
 
 export default function AdminPage() {
   const [tabValue, setTabValue] = useState(0);
+  const { isAdmin, isLoading } = useAuth();
+  const router = useRouter();
+
+  // 管理者でない場合はホームページにリダイレクト
+  useEffect(() => {
+    if (!isLoading && !isAdmin) {
+      router.push('/');
+    }
+  }, [isAdmin, isLoading, router]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
+
+  // ローディング中は何も表示しない
+  if (isLoading) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Typography>読み込み中...</Typography>
+      </Container>
+    );
+  }
+
+  // 管理者でない場合は何も表示しない（リダイレクト中）
+  if (!isAdmin) {
+    return null;
+  }
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
