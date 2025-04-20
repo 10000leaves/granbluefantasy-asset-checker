@@ -95,8 +95,12 @@ export default function Home() {
       
       inputGroups.forEach(group => {
         group.items.forEach(item => {
-          // デフォルト値を設定
-          if (item.default_value !== null) {
+          // ローカルストレージから読み込んだ値があればそれを使用
+          if (inputValues[item.id] !== undefined) {
+            initialData[item.id] = inputValues[item.id];
+          }
+          // ローカルストレージに値がない場合はデフォルト値を設定
+          else if (item.default_value !== null) {
             initialData[item.id] = item.type === 'checkbox' 
               ? item.default_value === 'true'
               : item.default_value;
@@ -118,7 +122,7 @@ export default function Home() {
       
       setFormData(initialData);
     }
-  }, [inputGroups]);
+  }, [inputGroups, inputValues]);
 
   // タブの切り替え
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {

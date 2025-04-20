@@ -1,5 +1,6 @@
 import { Navigation } from '@/components/common/Navigation';
 import { ThemeProvider } from '@/components/common/ThemeProvider';
+import { LocalStorageProvider } from '@/components/common/LocalStorageProvider';
 
 export const metadata = {
   title: 'グラブル所持チェッカー',
@@ -15,10 +16,12 @@ export default function RootLayout({
     <html lang="ja">
       <body>
         <ThemeProvider>
-          <Navigation />
-          <main style={{ padding: '20px' }}>
-            {children}
-          </main>
+          <LocalStorageProvider>
+            <Navigation />
+            <main style={{ padding: '20px' }}>
+              {children}
+            </main>
+          </LocalStorageProvider>
         </ThemeProvider>
       </body>
     </html>

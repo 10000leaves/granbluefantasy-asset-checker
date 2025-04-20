@@ -12,6 +12,20 @@ export interface Character {
   tags?: any[];
 }
 
+// 覚醒タイプの定義
+export type AwakeningType = '攻撃' | '防御' | '特殊' | '連撃' | '回復' | '奥義' | 'アビD';
+
+// 覚醒情報の型定義
+export interface Awakening {
+  type: AwakeningType;
+  count: number;
+}
+
+// 武器の覚醒情報の型定義
+export interface WeaponAwakenings {
+  [key: string]: number; // キーは覚醒タイプ、値は本数
+}
+
 export interface Weapon {
   id: string;
   name: string;
@@ -21,6 +35,7 @@ export interface Weapon {
   rarity?: 'SSR' | 'SR' | 'R';
   tags?: any[];
   count?: number;
+  awakenings?: WeaponAwakenings;
 }
 
 export interface Summon {
@@ -58,12 +73,13 @@ export const selectedWeaponsAtom = atom<string[]>([]);
 export const selectedSummonsAtom = atom<string[]>([]);
 
 export const weaponCountsAtom = atom<Record<string, number>>({});
+export const weaponAwakeningsAtom = atom<Record<string, WeaponAwakenings>>({});
 
 export const inputGroupsAtom = atom<InputGroup[]>([]);
 export const inputValuesAtom = atom<Record<string, any>>({});
 
 // テーマ設定用アトム
-export const themeTypeAtom = atom<'light' | 'dark' | 'system'>('system');
+export const themeTypeAtom = atom<'light' | 'dark' | 'system'>('dark');
 
 // 派生アトム
 export const selectedCharacterItemsAtom = atom((get) => {

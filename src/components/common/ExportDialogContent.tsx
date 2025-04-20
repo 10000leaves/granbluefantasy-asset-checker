@@ -13,6 +13,7 @@ import {
 } from '@mui/icons-material';
 import { useInputItems } from '@/hooks/useInputItems';
 import { renderInputValue } from './ExportUtils';
+import { WeaponAwakenings } from '@/atoms';
 
 interface ExportDialogContentProps {
   exportType: 'image' | 'pdf' | 'csv';
@@ -24,7 +25,14 @@ interface ExportDialogContentProps {
   handleExport: () => void;
   selectedItems: {
     characters: any[];
-    weapons: any[];
+    weapons: {
+      id: string;
+      name: string;
+      imageUrl: string;
+      count?: number;
+      awakenings?: WeaponAwakenings;
+      [key: string]: any;
+    }[];
     summons: any[];
   };
   sessionData: any;
@@ -168,6 +176,7 @@ export function ExportDialogContent({
               width: '800px',
               p: 3,
               bgcolor: 'background.paper',
+              color: 'text.primary',
               borderRadius: 1,
               boxShadow: 1,
             }}
@@ -249,21 +258,20 @@ export function ExportDialogContent({
                 <Grid container spacing={1}>
                   {selectedItems.weapons.map(weapon => (
                     <Grid item xs={4} sm={3} md={2} key={weapon.id}>
-                      <Box sx={{ 
-                        position: 'relative',
-                        p: 0.5, 
-                        border: '1px solid', 
-                        borderColor: 'divider', 
-                        borderRadius: 1,
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        height: 60,
-                        width: 60,
-                        margin: '0 auto'
-                      }}>
-                        {weapon.imageUrl ? (
-                          <>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                        {/* 武器画像 */}
+                        <Box sx={{ 
+                          p: 0.5, 
+                          border: '1px solid', 
+                          borderColor: 'divider', 
+                          borderRadius: 1,
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          height: 60,
+                          width: 60
+                        }}>
+                          {weapon.imageUrl ? (
                             <img 
                               src={weapon.imageUrl} 
                               alt={weapon.name} 
@@ -273,14 +281,45 @@ export function ExportDialogContent({
                                 objectFit: 'contain' 
                               }} 
                             />
-                            {weapon.count > 0 && (
+                          ) : (
+                            <Typography variant="caption" noWrap>
+                              {weapon.name}
+                            </Typography>
+                          )}
+                        </Box>
+                        
+                        {/* 所持数と覚醒情報 */}
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 0.5, maxWidth: 80 }}>
+                          {(weapon.count ?? 0) > 0 && (
+                            <Typography 
+                              variant="caption" 
+                              sx={{ 
+                                bgcolor: 'primary.main',
+                                color: 'white',
+                                px: 0.5,
+                                borderRadius: 1,
+                                fontWeight: 'bold',
+                                fontSize: '0.6rem'
+                              }}
+                            >
+                              {weapon.count || 0}本
+                            </Typography>
+                          )}
+                          {weapon.awakenings && Object.keys(weapon.awakenings).length > 0 && (
+                            Object.entries(weapon.awakenings as WeaponAwakenings).map(([type, count]) => (
                               <Typography 
+                                key={type}
                                 variant="caption" 
                                 sx={{ 
-                                  position: 'absolute', 
-                                  bottom: -5, 
-                                  right: -5, 
-                                  bgcolor: 'primary.main',
+                                  bgcolor: 
+                                    type === '攻撃' ? '#FF4444' :
+                                    type === '防御' ? '#44AAFF' :
+                                    type === '特殊' ? '#FFAA44' :
+                                    type === '連撃' ? '#AA44FF' :
+                                    type === '回復' ? '#44FF44' :
+                                    type === '奥義' ? '#FFFF44' :
+                                    type === 'アビD' ? '#FF44FF' :
+                                    '#888888',
                                   color: 'white',
                                   px: 0.5,
                                   borderRadius: 1,
@@ -288,15 +327,11 @@ export function ExportDialogContent({
                                   fontSize: '0.6rem'
                                 }}
                               >
-                                {weapon.count}本
+                                {type}{count}
                               </Typography>
-                            )}
-                          </>
-                        ) : (
-                          <Typography variant="caption" noWrap>
-                            {weapon.name} {weapon.count ? `(${weapon.count}本)` : ''}
-                          </Typography>
-                        )}
+                            ))
+                          )}
+                        </Box>
                       </Box>
                     </Grid>
                   ))}
@@ -523,21 +558,20 @@ export function ExportDialogContent({
               <Grid container spacing={1}>
                 {selectedItems.weapons.map(weapon => (
                   <Grid item xs={4} sm={3} md={2} key={weapon.id}>
-                    <Box sx={{ 
-                      position: 'relative',
-                      p: 0.5, 
-                      border: '1px solid', 
-                      borderColor: 'divider', 
-                      borderRadius: 1,
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      height: 60,
-                      width: 60,
-                      margin: '0 auto'
-                    }}>
-                      {weapon.imageUrl ? (
-                        <>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                      {/* 武器画像 */}
+                      <Box sx={{ 
+                        p: 0.5, 
+                        border: '1px solid', 
+                        borderColor: 'divider', 
+                        borderRadius: 1,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        height: 60,
+                        width: 60
+                      }}>
+                        {weapon.imageUrl ? (
                           <img 
                             src={weapon.imageUrl} 
                             alt={weapon.name} 
@@ -547,14 +581,45 @@ export function ExportDialogContent({
                               objectFit: 'contain' 
                             }} 
                           />
-                          {weapon.count > 0 && (
+                        ) : (
+                          <Typography variant="caption" noWrap>
+                            {weapon.name}
+                          </Typography>
+                        )}
+                      </Box>
+                      
+                      {/* 所持数と覚醒情報 */}
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 0.5, maxWidth: 80 }}>
+                        {(weapon.count ?? 0) > 0 && (
+                          <Typography 
+                            variant="caption" 
+                            sx={{ 
+                              bgcolor: 'primary.main',
+                              color: 'white',
+                              px: 0.5,
+                              borderRadius: 1,
+                              fontWeight: 'bold',
+                              fontSize: '0.6rem'
+                            }}
+                          >
+                            {weapon.count ?? 0}本
+                          </Typography>
+                        )}
+                        {weapon.awakenings && Object.keys(weapon.awakenings).length > 0 && (
+                          Object.entries(weapon.awakenings as WeaponAwakenings).map(([type, count]) => (
                             <Typography 
+                              key={type}
                               variant="caption" 
                               sx={{ 
-                                position: 'absolute', 
-                                bottom: -5, 
-                                right: -5, 
-                                bgcolor: 'primary.main',
+                                bgcolor: 
+                                  type === '攻撃' ? '#FF4444' :
+                                  type === '防御' ? '#44AAFF' :
+                                  type === '特殊' ? '#FFAA44' :
+                                  type === '連撃' ? '#AA44FF' :
+                                  type === '回復' ? '#44FF44' :
+                                  type === '奥義' ? '#FFFF44' :
+                                  type === 'アビD' ? '#FF44FF' :
+                                  '#888888',
                                 color: 'white',
                                 px: 0.5,
                                 borderRadius: 1,
@@ -562,15 +627,11 @@ export function ExportDialogContent({
                                 fontSize: '0.6rem'
                               }}
                             >
-                              {weapon.count}本
+                              {type}{String(count)}
                             </Typography>
-                          )}
-                        </>
-                      ) : (
-                        <Typography variant="caption" noWrap>
-                          {weapon.name} {weapon.count ? `(${weapon.count}本)` : ''}
-                        </Typography>
-                      )}
+                          ))
+                        )}
+                      </Box>
                     </Box>
                   </Grid>
                 ))}

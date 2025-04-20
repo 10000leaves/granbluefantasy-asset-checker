@@ -1,7 +1,7 @@
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import Papa from 'papaparse';
-import { InputItem, InputGroup } from '@/atoms';
+import { InputItem, InputGroup, WeaponAwakenings, AwakeningType } from '@/atoms';
 
 // ExportItemsの型定義（必要なものだけ残す）
 export interface ExportItems {
@@ -32,6 +32,9 @@ export const generatePDF = async (
   sessionData: SessionData,
   pageItems: ExportItems
 ) => {
+  // PDF出力用には常に明るいテーマを使用する（ダークモードでも白背景・黒文字）
+  const isDarkMode = false;
+  
   // HTMLをクローンして、スタイルを適用
   const clonedElement = element.cloneNode(true) as HTMLElement;
   document.body.appendChild(clonedElement);
@@ -40,8 +43,41 @@ export const generatePDF = async (
   clonedElement.style.width = '800px';
   clonedElement.style.padding = '20px';
   clonedElement.style.backgroundColor = 'white';
+  clonedElement.style.color = '#000000';
   clonedElement.style.position = 'absolute';
   clonedElement.style.left = '-9999px';
+  
+  // すべてのテキスト要素の色を黒に
+  const textElements = clonedElement.querySelectorAll('p, h1, h2, h3, h4, h5, h6, span, div, caption');
+  textElements.forEach((el: Element) => {
+    (el as HTMLElement).style.color = '#000000';
+  });
+  
+  // 背景色を持つ要素の背景色を調整
+  const bgElements = clonedElement.querySelectorAll('[style*="background"], [class*="bg-"]');
+  bgElements.forEach((el: Element) => {
+    const bgEl = el as HTMLElement;
+    // 暗い背景色の要素は明るい色に変更
+    if (bgEl.style.backgroundColor === '#121212' || bgEl.style.backgroundColor === 'black') {
+      bgEl.style.backgroundColor = '#f5f5f5';
+    }
+  });
+  
+  // ボーダーの色を調整
+  const borderElements = clonedElement.querySelectorAll('[style*="border"]');
+  borderElements.forEach((el: Element) => {
+    const borderEl = el as HTMLElement;
+    if (borderEl.style.borderColor === '#ffffff' || borderEl.style.borderColor === 'white') {
+      borderEl.style.borderColor = '#000000';
+    }
+  });
+  
+  // MUIのテーマ関連のクラスを持つ要素を調整
+  const themeElements = clonedElement.querySelectorAll('[class*="MuiTypography"], [class*="MuiBox"], [class*="MuiPaper"]');
+  themeElements.forEach((el: Element) => {
+    (el as HTMLElement).style.color = '#000000';
+    (el as HTMLElement).style.backgroundColor = 'white';
+  });
   
   try {
     // HTML2Canvasを使用して、HTMLを画像に変換
@@ -112,12 +148,12 @@ export const generateCSV = (
   
   // セクション区切り - アイテム
   csvData.push(['#SECTION', 'ITEMS']);
-  csvData.push(['タイプ', 'ID', '名前', '所持数']);
+  csvData.push(['タイプ', 'ID', '名前', '所持数', '覚醒']);
   
   // キャラ
   if (pageItems.characters.length > 0) {
     pageItems.characters.forEach(char => {
-      csvData.push(['character', char.id, char.name, '']);
+      csvData.push(['character', char.id, char.name, '', '']);
     });
   }
   
@@ -125,14 +161,26 @@ export const generateCSV = (
   if (pageItems.weapons.length > 0) {
     pageItems.weapons.forEach(weapon => {
       const count = weapon.count || 0;
-      csvData.push(['weapon', weapon.id, weapon.name, count.toString()]);
+      const awakenings = weapon.awakenings || {};
+      let awakeningInfo = '';
+      
+      // 覚醒情報を文字列に変換
+      const awakeningParts = Object.entries(awakenings).map(([type, count]) => {
+        return `${type}${count}`;
+      });
+      
+      if (awakeningParts.length > 0) {
+        awakeningInfo = awakeningParts.join(',');
+      }
+      
+      csvData.push(['weapon', weapon.id, weapon.name, count.toString(), awakeningInfo]);
     });
   }
   
   // 召喚石
   if (pageItems.summons.length > 0) {
     pageItems.summons.forEach(summon => {
-      csvData.push(['summon', summon.id, summon.name, '']);
+      csvData.push(['summon', summon.id, summon.name, '', '']);
     });
   }
   
@@ -153,8 +201,7 @@ export const generateCSV = (
       if (group.items && group.items.length > 0) {
         group.items.forEach(item => {
           const value = sessionData?.inputValues ? sessionData.inputValues[item.id] : null;
-          const displayValue = sessionData?.inputValues ? renderInputValue(item, value) : '-';
-          
+
           // 生の値を保存（インポート時に正確に復元するため）
           csvData.push([
             group.group_id || '', 
@@ -192,10 +239,14 @@ export const importCSV = (
   setSelectedWeapons: (ids: string[]) => void,
   setSelectedSummons: (ids: string[]) => void,
   setInputValues: (values: Record<string, any>) => void,
+  setWeaponCounts: (counts: Record<string, number>) => void,
+  setWeaponAwakenings: (awakenings: Record<string, WeaponAwakenings>) => void,
   currentSelectedCharacters: string[],
   currentSelectedWeapons: string[],
   currentSelectedSummons: string[],
-  currentInputValues: Record<string, any>
+  currentInputValues: Record<string, any>,
+  currentWeaponCounts: Record<string, number>,
+  currentWeaponAwakenings: Record<string, WeaponAwakenings>
 ): { success: boolean; message: string } => {
   try {
     const results = Papa.parse(csvData, { header: false });
@@ -206,6 +257,8 @@ export const importCSV = (
     
     const importedIds: string[] = [];
     const importedUserInfo: Record<string, any> = {};
+    const importedWeaponCounts: Record<string, number> = {};
+    const importedWeaponAwakenings: Record<string, WeaponAwakenings> = {};
     
     // CSVフォーマットのバージョンチェック
     let isValidFormat = false;
@@ -227,15 +280,46 @@ export const importCSV = (
         
         // アイテムセクションの処理
         if (currentSection === 'ITEMS' && row.length >= 3) {
-          const [type, id, name] = row;
+          const [type, id, count, awakening] = row;
           if (id && typeof id === 'string' && !id.startsWith('#') && !id.startsWith('タイプ')) {
             importedIds.push(id);
+            
+            // 武器の場合は所持数と覚醒情報も取得
+            if (type === 'weapon') {
+              // 所持数を取得
+              if (count && !isNaN(Number(count))) {
+                importedWeaponCounts[id] = Number(count);
+              }
+              
+              // 覚醒情報を取得
+              if (awakening) {
+                // 複数の覚醒情報をカンマで区切る
+                const awakeningParts = awakening.split(',');
+                const newAwakenings: WeaponAwakenings = {};
+                
+                for (const part of awakeningParts) {
+                  // 覚醒情報のフォーマット: "タイプ数字" (例: "攻撃3")
+                  const match = part.match(/^(攻撃|防御|特殊|連撃|回復|奥義|アビD)(\d+)$/);
+                  if (match) {
+                    const type = match[1] as AwakeningType;
+                    const count = Number(match[2]);
+                    if (count > 0 && count <= 5) {
+                      newAwakenings[type] = count;
+                    }
+                  }
+                }
+                
+                if (Object.keys(newAwakenings).length > 0) {
+                  importedWeaponAwakenings[id] = newAwakenings;
+                }
+              }
+            }
           }
         }
         
         // ユーザー情報セクションの処理
         if (currentSection === 'USER_INFO' && row.length >= 6) {
-          const [groupId, groupName, itemId, itemName, itemType, value] = row;
+          const [itemId, itemType, value] = row;
           if (itemId && typeof itemId === 'string' && !itemId.startsWith('#') && !itemId.startsWith('グループID')) {
             // 値の型変換
             let typedValue: any = value;
@@ -255,7 +339,7 @@ export const importCSV = (
     if (!isValidFormat) {
       results.data.forEach((row: any) => {
         if (Array.isArray(row) && row.length >= 3) {
-          const [type, id, name] = row;
+          const [id] = row;
           if (id && typeof id === 'string' && !id.startsWith('#')) {
             importedIds.push(id);
           }
@@ -302,6 +386,22 @@ export const importCSV = (
         setInputValues({
           ...currentInputValues,
           ...importedUserInfo
+        });
+      }
+      
+      // 武器所持数を更新
+      if (Object.keys(importedWeaponCounts).length > 0) {
+        setWeaponCounts({
+          ...currentWeaponCounts,
+          ...importedWeaponCounts
+        });
+      }
+      
+      // 武器覚醒情報を更新
+      if (Object.keys(importedWeaponAwakenings).length > 0) {
+        setWeaponAwakenings({
+          ...currentWeaponAwakenings,
+          ...importedWeaponAwakenings
         });
       }
       

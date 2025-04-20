@@ -39,7 +39,9 @@ import {
   selectedCharacterItemsAtom,
   selectedWeaponItemsAtom,
   selectedSummonItemsAtom,
-  weaponCountsAtom
+  weaponCountsAtom,
+  weaponAwakeningsAtom,
+  WeaponAwakenings
 } from '@/atoms';
 import { useInputItems } from '@/hooks/useInputItems';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
@@ -63,7 +65,8 @@ export function ExportPanel({ selectedCount }: ExportPanelProps) {
   const [selectedCharacterItems] = useAtom(selectedCharacterItemsAtom);
   const [selectedWeaponItems] = useAtom(selectedWeaponItemsAtom);
   const [selectedSummonItems] = useAtom(selectedSummonItemsAtom);
-  const [weaponCounts] = useAtom(weaponCountsAtom);
+  const [weaponCounts, setWeaponCounts] = useAtom(weaponCountsAtom);
+  const [weaponAwakenings, setWeaponAwakenings] = useAtom(weaponAwakeningsAtom);
   
   // ローカルストレージとの連携
   useLocalStorage();
@@ -89,18 +92,19 @@ export function ExportPanel({ selectedCount }: ExportPanelProps) {
 
   // 選択されたアイテムを更新
   useEffect(() => {
-    // 武器に所持数を追加
-    const weaponsWithCounts = selectedWeaponItems.map(weapon => ({
+    // 武器に所持数と覚醒情報を追加
+    const weaponsWithCountsAndAwakenings = selectedWeaponItems.map(weapon => ({
       ...weapon,
-      count: weaponCounts[weapon.id] || 0
+      count: weaponCounts[weapon.id] || 0,
+      awakenings: weaponAwakenings[weapon.id] || {}
     }));
     
     setSelectedItemsState({
       characters: selectedCharacterItems,
-      weapons: weaponsWithCounts,
+      weapons: weaponsWithCountsAndAwakenings,
       summons: selectedSummonItems,
     });
-  }, [selectedCharacterItems, selectedWeaponItems, selectedSummonItems, weaponCounts]);
+  }, [selectedCharacterItems, selectedWeaponItems, selectedSummonItems, weaponCounts, weaponAwakenings]);
 
   // 現在のページに基づいて表示するアイテムを決定
   const getCurrentPageItems = () => {
@@ -275,10 +279,14 @@ export function ExportPanel({ selectedCount }: ExportPanelProps) {
             setSelectedWeapons,
             setSelectedSummons,
             setInputValues,
+            setWeaponCounts,
+            setWeaponAwakenings,
             selectedCharacters,
             selectedWeapons,
             selectedSummons,
-            inputValues
+            inputValues,
+            weaponCounts,
+            weaponAwakenings
           );
           
           // 結果に基づいてスナックバーを表示
