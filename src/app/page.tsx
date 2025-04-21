@@ -35,13 +35,19 @@ import {
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useAtom } from 'jotai';
-import { inputValuesAtom } from '@/atoms';
+import { 
+  inputValuesAtom,
+  selectedCharactersAtom,
+  selectedWeaponsAtom,
+  selectedSummonsAtom
+} from '@/atoms';
 import { useInputItems } from '@/hooks/useInputItems';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 import { CharacterList } from './characters/CharacterList';
 import { WeaponList } from './weapons/WeaponList';
 import { SummonList } from './summons/SummonList';
+import { ExportPanel } from '@/components/common/ExportPanel';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -77,6 +83,9 @@ export default function Home() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [inputValues, setInputValues] = useAtom(inputValuesAtom);
+  const [selectedCharacters] = useAtom(selectedCharactersAtom);
+  const [selectedWeapons] = useAtom(selectedWeaponsAtom);
+  const [selectedSummons] = useAtom(selectedSummonsAtom);
   const { loading, error, inputGroups } = useInputItems();
   
   // ローカルストレージとの連携
@@ -280,7 +289,7 @@ export default function Home() {
         </Box>
 
         <TabPanel value={tabValue} index={0}>
-          <Box component="form" onSubmit={handleSubmit} sx={{ p: 3 }}>
+          <Box component="form" onSubmit={handleSubmit} sx={{ p: 3, pb: 8 }}>
             {inputGroups.map((group) => (
               <Accordion key={group.group_id} defaultExpanded>
                 <AccordionSummary
@@ -332,6 +341,9 @@ export default function Home() {
                 次へ進む
               </Button>
             </Box>
+            
+            {/* ユーザー情報タブでもエクスポートパネルを表示 */}
+            <ExportPanel selectedCount={selectedCharacters.length + selectedWeapons.length + selectedSummons.length} />
           </Box>
         </TabPanel>
 
