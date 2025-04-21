@@ -69,6 +69,7 @@ export function ItemManager() {
     category: 'character',
     imageUrl: '',
     imageFile: null as File | null,
+    implementationDate: '',
   });
 
   // タグ選択の状態
@@ -94,12 +95,16 @@ export function ItemManager() {
   // アイテムダイアログを開く（新規作成）
   const handleOpenItemDialog = () => {
     setIsEditMode(false);
+    // 当日の日付をYYYY-MM-DD形式で取得
+    const today = new Date().toISOString().split('T')[0];
+    
     setItemForm({
       id: '',
       name: '',
       category: getCategoryFromTabValue(tabValue),
       imageUrl: '',
       imageFile: null,
+      implementationDate: today,
     });
     setSelectedTags({});
     setOpenItemDialog(true);
@@ -114,6 +119,7 @@ export function ItemManager() {
       category: item.category,
       imageUrl: item.imageUrl,
       imageFile: null,
+      implementationDate: item.implementationDate || '',
     });
     
     // 選択されたタグを設定

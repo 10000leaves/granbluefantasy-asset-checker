@@ -26,6 +26,7 @@ interface ItemFormData {
   category: string;
   imageUrl: string;
   imageFile: File | null;
+  implementationDate: string;
 }
 
 interface ItemDialogProps {
@@ -93,7 +94,7 @@ export function ItemDialog({
 
   // アイテムを保存
   const handleSave = async () => {
-    if (!itemForm.name.trim()) return;
+    if (!itemForm.name.trim() || !itemForm.implementationDate) return;
 
     try {
       let imageUrl = itemForm.imageUrl;
@@ -108,6 +109,7 @@ export function ItemDialog({
         name: itemForm.name,
         category: itemForm.category,
         imageUrl,
+        implementationDate: itemForm.implementationDate || null,
         tags: Object.entries(selectedTags).flatMap(([categoryId, valueIds]) => 
           valueIds.map(valueId => ({ categoryId, valueId }))
         ),
@@ -127,6 +129,7 @@ export function ItemDialog({
           name="name"
           label="アイテム名"
           fullWidth
+          required
           value={itemForm.name}
           onChange={handleItemFormChange}
           sx={{ mb: 2 }}
@@ -144,6 +147,21 @@ export function ItemDialog({
             <MenuItem value="summon">召喚石</MenuItem>
           </Select>
         </FormControl>
+
+        <TextField
+          margin="dense"
+          name="implementationDate"
+          label="実装年月日"
+          type="date"
+          fullWidth
+          required
+          value={itemForm.implementationDate}
+          onChange={handleItemFormChange}
+          InputLabelProps={{
+            shrink: true,
+          }}
+          sx={{ mb: 2 }}
+        />
 
         <Box sx={{ mb: 2 }}>
           <input
@@ -210,7 +228,7 @@ export function ItemDialog({
         <Button
           onClick={handleSave}
           color="primary"
-          disabled={!itemForm.name.trim() || uploading}
+          disabled={!itemForm.name.trim() || !itemForm.implementationDate || uploading}
         >
           {uploading ? '画像アップロード中...' : (isEditMode ? '更新' : '作成')}
         </Button>

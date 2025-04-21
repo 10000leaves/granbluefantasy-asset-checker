@@ -15,6 +15,7 @@ interface CharacterCsvData {
   weapons?: string;
   releaseWeapon?: string;
   obtainMethod?: string;
+  implementationDate?: string;
   [key: string]: string | undefined;
 }
 
@@ -24,6 +25,7 @@ interface WeaponCsvData {
   attribute: string;
   weaponType: string;
   rarity?: string;
+  implementationDate?: string;
   [key: string]: string | undefined;
 }
 
@@ -32,6 +34,7 @@ interface SummonCsvData {
   imageName: string;
   attribute: string;
   rarity?: string;
+  implementationDate?: string;
   [key: string]: string | undefined;
 }
 
@@ -94,8 +97,8 @@ export async function POST(request: NextRequest) {
 
         // アイテムをデータベースに保存
         const { rows: [item] } = await query(
-          'INSERT INTO items (name, image_url, category) VALUES ($1, $2, $3) RETURNING id, name, image_url, category',
-          [record.name, imageUrl, category]
+          'INSERT INTO items (name, image_url, category, implementation_date) VALUES ($1, $2, $3, $4) RETURNING id, name, image_url, category, implementation_date',
+          [record.name, imageUrl, category, record.implementationDate]
         );
 
         // カテゴリに応じたタグを取得

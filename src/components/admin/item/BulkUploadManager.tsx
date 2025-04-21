@@ -226,19 +226,19 @@ export function BulkUploadManager() {
     
     switch (tabValue) {
       case 0: // キャラクター
-        csvContent = 'name,imageName,attribute,rarity,type,race,gender,weapons,releaseWeapon,obtainMethod\n' +
-                    'キャラ名,画像ファイル名.jpg,火/水/土/風/光/闇,SSR/SR/R,攻撃/防御/回復/バランス/特殊,ヒューマン/ドラフ/エルーン/ハーヴィン/その他/星晶獣,♂/♀/不明,剣|槍|斧|弓|杖|短剣|格闘|銃|刀|楽器,剣/槍/斧/弓/杖/短剣/格闘/銃/刀/楽器,恒常/リミテッド/季節限定/コラボ/その他\n' +
-                    'グラン,gran.jpg,火,SSR,バランス,ヒューマン,♂,剣,剣,恒常';
+        csvContent = 'name,imageName,attribute,rarity,type,race,gender,weapons,releaseWeapon,obtainMethod,implementationDate\n' +
+                    'キャラ名,画像ファイル名.jpg,火/水/土/風/光/闇,SSR/SR/R,攻撃/防御/回復/バランス/特殊,ヒューマン/ドラフ/エルーン/ハーヴィン/その他/星晶獣,♂/♀/不明,剣|槍|斧|弓|杖|短剣|格闘|銃|刀|楽器,剣/槍/斧/弓/杖/短剣/格闘/銃/刀/楽器,恒常/リミテッド/季節限定/コラボ/その他,YYYY-MM-DD\n' +
+                    'グラン,gran.jpg,火,SSR,バランス,ヒューマン,♂,剣,剣,恒常,2014-03-10';
         break;
       case 1: // 武器
-        csvContent = 'name,imageName,attribute,weaponType,rarity\n' +
-                    '武器名,画像ファイル名.jpg,火/水/土/風/光/闇,剣/槍/斧/弓/杖/短剣/格闘/銃/刀/楽器,SSR/SR/R\n' +
-                    'ミュルグレス,murgleis.jpg,水,剣,SSR';
+        csvContent = 'name,imageName,attribute,weaponType,rarity,implementationDate\n' +
+                    '武器名,画像ファイル名.jpg,火/水/土/風/光/闇,剣/槍/斧/弓/杖/短剣/格闘/銃/刀/楽器,SSR/SR/R,YYYY-MM-DD\n' +
+                    'ミュルグレス,murgleis.jpg,水,剣,SSR,2016-07-09';
         break;
       case 2: // 召喚石
-        csvContent = 'name,imageName,attribute,rarity\n' +
-                    '召喚石名,画像ファイル名.jpg,火/水/土/風/光/闇,SSR/SR/R\n' +
-                    'バハムート,bahamut.jpg,闇,SSR';
+        csvContent = 'name,imageName,attribute,rarity,implementationDate\n' +
+                    '召喚石名,画像ファイル名.jpg,火/水/土/風/光/闇,SSR/SR/R,YYYY-MM-DD\n' +
+                    'バハムート,bahamut.jpg,闇,SSR,2014-03-10';
         break;
     }
     

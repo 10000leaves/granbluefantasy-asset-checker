@@ -139,6 +139,11 @@ export function ItemList({
             </Box>
             <CardContent sx={{ flexGrow: 1, pb: 1 }}>
               <Typography variant="subtitle2" noWrap>{item.name}</Typography>
+              {item.implementation_date && (
+                <Typography variant="caption" color="text.secondary" display="block">
+                  実装: {new Date(item.implementation_date).toLocaleDateString('ja-JP')}
+                </Typography>
+              )}
               {renderItemTags(item)}
             </CardContent>
             <CardActions sx={{ p: 1, pt: 0 }}>
