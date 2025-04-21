@@ -12,7 +12,6 @@ import {
   Grid,
   Chip,
   Divider,
-  useTheme,
   Card,
   CardContent,
   CircularProgress,
@@ -50,7 +49,6 @@ interface Weapon {
 }
 
 export function WeaponList() {
-  const theme = useTheme();
   const { items, loading, error, toggleItem, selectedItems: selectedWeapons } = useItems('weapon');
   const { tagCategories, tagValues } = useTags('weapon');
   
@@ -438,8 +436,9 @@ export function WeaponList() {
                 sm: 'repeat(3, 1fr)',
                 md: 'repeat(4, 1fr)',
                 lg: 'repeat(5, 1fr)',
+                xl: 'repeat(6, 1fr)',
               },
-              gap: { xs: 1, sm: 2 },
+              gap: { xs: 1, sm: 1.5, md: 2 },
             }}
           >
             {filteredWeapons.map((weapon) => (

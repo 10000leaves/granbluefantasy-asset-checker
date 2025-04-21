@@ -10,7 +10,6 @@ import {
   Tabs,
   Tab,
   Paper,
-  Divider,
 } from '@mui/material';
 import { ItemManager } from '@/components/admin/ItemManager';
 import { TagManager } from '@/components/admin/TagManager';

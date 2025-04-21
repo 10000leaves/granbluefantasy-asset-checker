@@ -12,7 +12,6 @@ import {
   Grid,
   Chip,
   Divider,
-  useTheme,
   Card,
   CardContent,
   CircularProgress,
@@ -49,7 +48,6 @@ interface Summon {
 }
 
 export function SummonList() {
-  const theme = useTheme();
   const { items, loading, error, toggleItem, selectedItems: selectedSummons } = useItems('summon');
   const { tagCategories, tagValues } = useTags('summon');
   
@@ -397,8 +395,9 @@ export function SummonList() {
                 sm: 'repeat(3, 1fr)',
                 md: 'repeat(4, 1fr)',
                 lg: 'repeat(5, 1fr)',
+                xl: 'repeat(6, 1fr)',
               },
-              gap: { xs: 1, sm: 2 },
+              gap: { xs: 1, sm: 1.5, md: 2 },
             }}
           >
             {filteredSummons.map((summon) => (

@@ -16,8 +16,6 @@ import {
   Card,
   CardContent,
   CardActionArea,
-  useTheme,
-  useMediaQuery,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -33,7 +31,6 @@ import {
   Star as StarIcon,
   Diamond as DiamondIcon,
 } from '@mui/icons-material';
-import { useRouter } from 'next/navigation';
 import { useAtom } from 'jotai';
 import { 
   inputValuesAtom,
@@ -79,9 +76,6 @@ function a11yProps(index: number) {
 }
 
 export default function Home() {
-  const router = useRouter();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [inputValues, setInputValues] = useAtom(inputValuesAtom);
   const [selectedCharacters] = useAtom(selectedCharactersAtom);
   const [selectedWeapons] = useAtom(selectedWeaponsAtom);
@@ -434,7 +428,7 @@ export default function Home() {
       </Typography>
       
       <Grid container spacing={3}>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={6} md={4} lg={4}>
           <Card 
             sx={{ 
               width: 280,
@@ -472,7 +466,7 @@ export default function Home() {
           </Card>
         </Grid>
         
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={6} md={4} lg={4}>
           <Card 
             sx={{ 
               width: 280,
@@ -510,7 +504,7 @@ export default function Home() {
           </Card>
         </Grid>
         
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={6} md={4} lg={4}>
           <Card 
             sx={{ 
               width: 280,

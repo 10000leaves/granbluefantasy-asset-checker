@@ -41,7 +41,6 @@ import {
   selectedSummonItemsAtom,
   weaponCountsAtom,
   weaponAwakeningsAtom,
-  WeaponAwakenings
 } from '@/atoms';
 import { useInputItems } from '@/hooks/useInputItems';
 import { useLocalStorage } from '@/hooks/useLocalStorage';

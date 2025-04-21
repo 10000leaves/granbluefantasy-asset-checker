@@ -43,7 +43,6 @@ export function ExportDialogContent({
   exportType,
   isExporting,
   exportedImageUrl,
-  tabValue,
   handleTabChange,
   handleDownload,
   handleExport,

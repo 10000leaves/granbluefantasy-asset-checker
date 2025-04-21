@@ -512,8 +512,9 @@ export function CharacterList() {
               sm: 'repeat(3, 1fr)',
               md: 'repeat(4, 1fr)',
               lg: 'repeat(5, 1fr)',
+              xl: 'repeat(6, 1fr)',
             },
-            gap: { xs: 1, sm: 2 },
+            gap: { xs: 1, sm: 1.5, md: 2 },
           }}
         >
           {filteredCharacters.map((character) => {
