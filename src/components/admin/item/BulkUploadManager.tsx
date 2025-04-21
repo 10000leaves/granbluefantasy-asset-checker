@@ -225,7 +225,7 @@ export function BulkUploadManager() {
     let csvContent = '';
     
     switch (tabValue) {
-      case 0: // キャラクター
+      case 0: // キャラ
         csvContent = 'name,imageName,attribute,rarity,type,race,gender,weapons,releaseWeapon,obtainMethod,implementationDate\n' +
                     'キャラ名,画像ファイル名.jpg,火/水/土/風/光/闇,SSR/SR/R,攻撃/防御/回復/バランス/特殊,ヒューマン/ドラフ/エルーン/ハーヴィン/その他/星晶獣,♂/♀/不明,剣|槍|斧|弓|杖|短剣|格闘|銃|刀|楽器,剣/槍/斧/弓/杖/短剣/格闘/銃/刀/楽器,恒常/リミテッド/季節限定/コラボ/その他,YYYY-MM-DD\n' +
                     'グラン,gran.jpg,火,SSR,バランス,ヒューマン,♂,剣,剣,恒常,2014-03-10';
@@ -281,11 +281,11 @@ export function BulkUploadManager() {
 
       <TabPanel value={tabValue} index={0}>
         <Typography variant="subtitle1" gutterBottom>
-          キャラクターのまとめてアップロード
+          キャラのまとめてアップロード
         </Typography>
         <Typography variant="body2" color="text.secondary" paragraph>
-          CSVファイルと画像ファイルをアップロードして、キャラクターをまとめて登録できます。
-          CSVファイルには、キャラクター名、画像ファイル名、属性などを記入してください。
+          CSVファイルと画像ファイルをアップロードして、キャラをまとめて登録できます。
+          CSVファイルには、キャラ名、画像ファイル名、属性などを記入してください。
         </Typography>
       </TabPanel>
 
