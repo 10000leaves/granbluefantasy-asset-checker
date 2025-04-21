@@ -194,13 +194,18 @@ export function ItemManager() {
   const handleSaveItem = async (item: any) => {
     try {
       if (isEditMode) {
-        await updateItem(item);
+        // 編集モードの場合は既存のタグ情報を保持
+        // ItemDialog.tsxでは編集時にタグ情報を含めないようにしているので、
+        // ここでは既存のタグ情報を追加する
+        const existingTags = selectedItem?.tags || [];
+        await updateItem({ ...item, tags: existingTags });
         setSnackbar({
           open: true,
           message: 'アイテムを更新しました',
           severity: 'success',
         });
       } else {
+        // 新規作成の場合はそのまま作成（タグ情報も含まれている）
         await createItem(item);
         setSnackbar({
           open: true,

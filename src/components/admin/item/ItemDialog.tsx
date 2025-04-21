@@ -104,16 +104,28 @@ export function ItemDialog({
         imageUrl = await uploadImage(itemForm.imageFile);
       }
       
-      onSave({
+      // 基本情報
+      const itemData = {
         id: itemForm.id,
         name: itemForm.name,
         category: itemForm.category,
         imageUrl,
         implementationDate: itemForm.implementationDate || null,
-        tags: Object.entries(selectedTags).flatMap(([categoryId, valueIds]) => 
+      };
+      
+      // 新規作成時のみタグ情報を含める（編集時はタグアイコンから編集するため）
+      if (!isEditMode) {
+        const tags = Object.entries(selectedTags).flatMap(([categoryId, valueIds]) => 
           valueIds.map(valueId => ({ categoryId, valueId }))
-        ),
-      });
+        );
+        
+        onSave({
+          ...itemData,
+          tags
+        });
+      } else {
+        onSave(itemData);
+      }
     } catch (error) {
       console.error('Error saving item:', error);
     }
@@ -197,31 +209,36 @@ export function ItemDialog({
           )}
         </Box>
 
-        <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>タグ</Typography>
-        {getCategoryTags(itemForm.category).map((category) => (
-          <Box key={category.id} sx={{ mb: 2 }}>
-            <Typography variant="subtitle2">{category.name}</Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-              {getTagValues(category.id).map((value) => (
-                <Chip
-                  key={value.id}
-                  label={value.value}
-                  size="small"
-                  variant={selectedTags[category.id]?.includes(value.id) ? "filled" : "outlined"}
-                  color={selectedTags[category.id]?.includes(value.id) ? "primary" : "default"}
-                  onClick={() => 
-                    onTagChange(
-                      category.id, 
-                      value.id, 
-                      !selectedTags[category.id]?.includes(value.id)
-                    )
-                  }
-                  sx={{ m: 0.5 }}
-                />
-              ))}
-            </Box>
-          </Box>
-        ))}
+        {/* 編集モードの場合はタグ編集機能を非表示（タグアイコンから編集）、新規作成時は表示 */}
+        {!isEditMode && (
+          <>
+            <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>タグ</Typography>
+            {getCategoryTags(itemForm.category).map((category) => (
+              <Box key={category.id} sx={{ mb: 2 }}>
+                <Typography variant="subtitle2">{category.name}</Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {getTagValues(category.id).map((value) => (
+                    <Chip
+                      key={value.id}
+                      label={value.value}
+                      size="small"
+                      variant={selectedTags[category.id]?.includes(value.id) ? "filled" : "outlined"}
+                      color={selectedTags[category.id]?.includes(value.id) ? "primary" : "default"}
+                      onClick={() => 
+                        onTagChange(
+                          category.id, 
+                          value.id, 
+                          !selectedTags[category.id]?.includes(value.id)
+                        )
+                      }
+                      sx={{ m: 0.5 }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            ))}
+          </>
+        )}
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>キャンセル</Button>

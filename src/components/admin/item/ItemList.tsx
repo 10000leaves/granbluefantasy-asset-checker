@@ -85,7 +85,7 @@ export function ItemList({
       {items.map((item) => (
         <Grid item xs={6} sm={4} md={3} lg={2} key={item.id}>
           <Card sx={{ 
-            width: 280,
+            width: '100%',
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
@@ -96,7 +96,7 @@ export function ItemList({
               boxShadow: 3,
             }
           }}>
-            <Box sx={{ position: 'relative', height: 160, width: 280, margin: '0 auto' }}>
+            <Box sx={{ position: 'relative', height: 160, width: '100%', margin: '0 auto' }}>
               {item.imageUrl ? (
                 <Image
                   src={item.imageUrl}
