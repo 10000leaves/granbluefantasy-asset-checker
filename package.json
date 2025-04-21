@@ -16,9 +16,9 @@
     "@mui/icons-material": "^5.15.14",
     "@mui/material": "^5.15.14",
     "@mui/material-nextjs": "^5.15.11",
-    "@types/papaparse": "^5.3.15",
     "@vercel/blob": "^0.22.1",
     "cookies-next": "^4.1.1",
+    "csv-parse": "^5.6.0",
     "dotenv": "^16.5.0",
     "html2canvas": "^1.4.1",
     "jotai": "^2.12.3",
@@ -31,7 +31,9 @@
     "react-dom": "^18"
   },
   "devDependencies": {
+    "@types/csv-parse": "^1.1.12",
     "@types/node": "^20",
+    "@types/papaparse": "^5.3.15",
     "@types/pg": "^8.11.13",
     "@types/react": "^18",
     "@types/react-dom": "^18",
