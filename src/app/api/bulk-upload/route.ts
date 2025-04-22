@@ -95,10 +95,13 @@ export async function POST(request: NextRequest) {
         });
         const imageUrl = blob.url;
 
+        // 実装年月日が指定されていない場合は現在の日付を使用
+        const implementationDate = record.implementationDate || new Date().toISOString().split('T')[0];
+        
         // アイテムをデータベースに保存
         const { rows: [item] } = await query(
           'INSERT INTO items (name, image_url, category, implementation_date) VALUES ($1, $2, $3, $4) RETURNING id, name, image_url, category, implementation_date',
-          [record.name, imageUrl, category, record.implementationDate]
+          [record.name, imageUrl, category, implementationDate]
         );
 
         // カテゴリに応じたタグを取得

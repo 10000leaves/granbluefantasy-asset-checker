@@ -119,7 +119,7 @@ export function ItemManager() {
       category: item.category,
       imageUrl: item.imageUrl,
       imageFile: null,
-      implementationDate: item.implementationDate || '',
+      implementationDate: item.implementationDate || item.implementation_date || new Date().toISOString().split('T')[0],
     });
     
     // 選択されたタグを設定
@@ -232,12 +232,14 @@ export function ItemManager() {
     try {
       // データベースのカラム名とJavaScriptのプロパティ名の違いを考慮
       const imageUrl = selectedItem.imageUrl || selectedItem.image_url || '';
+      const implementationDate = selectedItem.implementationDate || selectedItem.implementation_date || new Date().toISOString().split('T')[0];
       
       await updateItem({
         id: selectedItem.id,
         name: selectedItem.name,
         category: selectedItem.category,
         imageUrl: imageUrl,
+        implementationDate: implementationDate,
         tags: Object.entries(selectedTags).flatMap(([categoryId, valueIds]) => 
           valueIds.map(valueId => ({ categoryId, valueId }))
         ),

@@ -9,7 +9,6 @@ import {
   selectedCharactersAtom,
   selectedWeaponsAtom,
   selectedSummonsAtom,
-  weaponCountsAtom,
 } from '@/atoms';
 
 interface ItemTag {
@@ -22,6 +21,7 @@ interface Item {
   name: string;
   imageUrl: string;
   category: string;
+  implementationDate: string;
   tags?: ItemTag[];
 }
 
@@ -29,6 +29,7 @@ interface CreateItemParams {
   name: string;
   category: string;
   imageUrl: string;
+  implementationDate: string;
   tags?: ItemTag[];
 }
 
@@ -37,6 +38,7 @@ interface UpdateItemParams {
   name: string;
   category: string;
   imageUrl: string;
+  implementationDate: string;
   tags?: ItemTag[];
 }
 
@@ -65,9 +67,7 @@ export function useItems(category?: string): UseItemsResult<any> {
   const [selectedCharacters, setSelectedCharacters] = useAtom(selectedCharactersAtom);
   const [selectedWeapons, setSelectedWeapons] = useAtom(selectedWeaponsAtom);
   const [selectedSummons, setSelectedSummons] = useAtom(selectedSummonsAtom);
-  
-  const [weaponCounts, setWeaponCounts] = useAtom(weaponCountsAtom);
-  
+ 
   // 管理者画面用の状態（カテゴリが指定されていない場合）
   const [adminItems, setAdminItems] = useState<Item[]>([]);
   const [adminSelectedItems, setAdminSelectedItems] = useState<string[]>([]);

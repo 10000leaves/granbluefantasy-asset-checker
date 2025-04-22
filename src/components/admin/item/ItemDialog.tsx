@@ -110,7 +110,7 @@ export function ItemDialog({
         name: itemForm.name,
         category: itemForm.category,
         imageUrl,
-        implementationDate: itemForm.implementationDate || null,
+        implementationDate: itemForm.implementationDate || new Date().toISOString().split('T')[0],
       };
       
       // 新規作成時のみタグ情報を含める（編集時はタグアイコンから編集するため）
