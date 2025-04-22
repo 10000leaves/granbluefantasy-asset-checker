@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import {
   Card,
@@ -91,7 +91,6 @@ export const WeaponCard = ({
   }, [awakenings]);
 
   const handleImageLoad = () => {
-    console.log(`Image loaded: ${name}`);
     setLoading(false);
   };
 
@@ -100,11 +99,6 @@ export const WeaponCard = ({
     setLoading(false);
     setError(true);
   };
-
-  // コンポーネントがマウントされたときにURLをログに出力
-  useEffect(() => {
-    console.log(`Weapon image URL: ${imageUrl}`);
-  }, [imageUrl]);
 
   // 所持数を更新する関数
   const updateCount = (newCount: number, e?: React.MouseEvent) => {

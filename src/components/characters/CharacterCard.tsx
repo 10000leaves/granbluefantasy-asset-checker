@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import {
   Card,
@@ -62,7 +62,6 @@ export const CharacterCard = ({
   const [error, setError] = useState(false);
 
   const handleImageLoad = () => {
-    console.log(`Image loaded: ${name}`);
     setLoading(false);
   };
 
@@ -71,11 +70,6 @@ export const CharacterCard = ({
     setLoading(false);
     setError(true);
   };
-
-  // コンポーネントがマウントされたときにURLをログに出力
-  useEffect(() => {
-    console.log(`Character image URL: ${imageUrl}`);
-  }, [imageUrl]);
 
   return (
     <Card

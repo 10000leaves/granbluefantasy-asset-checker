@@ -17,7 +17,6 @@ export function useAuth() {
   useEffect(() => {
     // クッキーから認証情報を取得
     const authUserType = getCookie(AUTH_USER_TYPE_COOKIE) as UserType;
-    console.log('認証情報:', authUserType); // デバッグ用ログ
     setUserType(authUserType || null);
     setIsLoading(false);
   }, []);

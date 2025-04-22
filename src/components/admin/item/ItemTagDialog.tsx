@@ -10,18 +10,20 @@ import {
   Box,
   Typography,
   Chip,
+  CircularProgress,
 } from '@mui/material';
 import { TagCategory, TagValue } from '@/hooks/useTags';
 
 interface ItemTagDialogProps {
   open: boolean;
   onClose: () => void;
-  onSave: () => void;
+  onSave: () => Promise<void>;
   item: any | null;
   tagCategories: TagCategory[];
   tagValues: TagValue[];
   selectedTags: Record<string, string[]>;
   onTagChange: (categoryId: string, valueId: string, checked: boolean) => void;
+  isSaving?: boolean;
 }
 
 export function ItemTagDialog({
@@ -33,6 +35,7 @@ export function ItemTagDialog({
   tagValues,
   selectedTags,
   onTagChange,
+  isSaving = false,
 }: ItemTagDialogProps) {
   // カテゴリに対応するタグカテゴリを取得
   const getCategoryTags = (category: string) => {
@@ -58,7 +61,14 @@ export function ItemTagDialog({
               alt={item.name}
               sx={{ width: 60, height: 60, mr: 2, objectFit: 'cover' }}
             />
-            <Typography variant="h6">{item.name}</Typography>
+            <Box>
+              <Typography variant="h6">{item.name}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {item.category === 'character' ? 'キャラ' : item.category === 'weapon' ? '武器' : '召喚石'}
+                {' • '}
+                {new Date(item.implementationDate || item.implementation_date).toLocaleDateString('ja-JP')}
+              </Typography>
+            </Box>
           </Box>
           
           {getCategoryTags(item.category).map((category) => (
@@ -88,9 +98,14 @@ export function ItemTagDialog({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>キャンセル</Button>
-        <Button onClick={onSave} color="primary">
-          保存
+        <Button onClick={onClose} disabled={isSaving}>キャンセル</Button>
+        <Button 
+          onClick={onSave} 
+          color="primary" 
+          disabled={isSaving}
+          startIcon={isSaving ? <CircularProgress size={20} /> : null}
+        >
+          {isSaving ? '保存中...' : '保存'}
         </Button>
       </DialogActions>
     </Dialog>

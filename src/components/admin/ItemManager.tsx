@@ -81,6 +81,9 @@ export function ItemManager() {
     message: '',
     severity: 'success' as 'success' | 'error',
   });
+  
+  // 保存中の状態
+  const [isSaving, setIsSaving] = useState(false);
 
   // タブの切り替え
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -143,7 +146,6 @@ export function ItemManager() {
       });
     }
     
-    console.log('Selected tags for edit dialog:', tags);
     setSelectedTags(tags);
     
     setSelectedItem(item);
@@ -151,53 +153,32 @@ export function ItemManager() {
   };
 
   // タグダイアログを開く
-  const handleOpenTagDialog = async (item: any) => {
-    try {
-      // APIから直接最新のアイテム情報を取得
-      const response = await fetch(`/api/items?category=${item.category}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch items');
-      }
-      const data = await response.json();
-      
-      // 最新のアイテムを取得
-      const updatedItem = data.find((i: any) => i.id === item.id) || item;
-      
-      setSelectedItem(updatedItem);
-      
-      // 選択されたタグを設定
-      const tags: Record<string, string[]> = {};
-      if (updatedItem.tags) {
-        updatedItem.tags.forEach((tag: any) => {
-          // タグのカテゴリIDとバリューIDを取得（データ形式の違いに対応）
-          const categoryId = tag.categoryId || tag.category_id;
-          const valueId = tag.valueId || tag.value_id;
-          
-          if (categoryId && valueId) {
-            if (!tags[categoryId]) {
-              tags[categoryId] = [];
-            }
-            
-            // 重複を避けるために存在チェック
-            if (!tags[categoryId].includes(valueId)) {
-              tags[categoryId].push(valueId);
-            }
+  const handleOpenTagDialog = (item: any) => {
+    setSelectedItem(item);
+    
+    // 選択されたタグを設定
+    const tags: Record<string, string[]> = {};
+    if (item.tags) {
+      item.tags.forEach((tag: any) => {
+        // タグのカテゴリIDとバリューIDを取得（データ形式の違いに対応）
+        const categoryId = tag.categoryId || tag.category_id;
+        const valueId = tag.valueId || tag.value_id;
+        
+        if (categoryId && valueId) {
+          if (!tags[categoryId]) {
+            tags[categoryId] = [];
           }
-        });
-      }
-      
-      console.log('Selected tags for dialog:', tags);
-      setSelectedTags(tags);
-      
-      setOpenTagDialog(true);
-    } catch (error) {
-      console.error('Error fetching item:', error);
-      setSnackbar({
-        open: true,
-        message: 'アイテム情報の取得に失敗しました',
-        severity: 'error',
+          
+          // 重複を避けるために存在チェック
+          if (!tags[categoryId].includes(valueId)) {
+            tags[categoryId].push(valueId);
+          }
+        }
       });
     }
+    
+    setSelectedTags(tags);
+    setOpenTagDialog(true);
   };
 
   // ダイアログを閉じる
@@ -248,7 +229,6 @@ export function ItemManager() {
           return { categoryId, valueId };
         }) || [];
         
-        console.log('Updating item with tags:', existingTags);
         await updateItem({ ...item, tags: existingTags });
         setSnackbar({
           open: true,
@@ -257,7 +237,6 @@ export function ItemManager() {
         });
       } else {
         // 新規作成の場合はそのまま作成（タグ情報も含まれている）
-        console.log('Creating item with tags:', item.tags);
         await createItem(item);
         setSnackbar({
           open: true,
@@ -281,37 +260,14 @@ export function ItemManager() {
   // タグを保存
   const handleSaveTags = async () => {
     if (!selectedItem) return;
+    
+    // 保存中の状態を設定
+    setIsSaving(true);
 
     try {
       // データベースのカラム名とJavaScriptのプロパティ名の違いを考慮
       const imageUrl = selectedItem.imageUrl || selectedItem.image_url || '';
       const implementationDate = selectedItem.implementationDate || selectedItem.implementation_date || new Date().toISOString().split('T')[0];
-      
-      // タグ情報を作成
-      console.log('selectedTags:', selectedTags);
-      
-      // タグ値が存在するか確認
-      for (const [categoryId, valueIds] of Object.entries(selectedTags)) {
-        console.log(`Checking category ${categoryId} with values:`, valueIds);
-        
-        // タグカテゴリが存在するか確認
-        const category = tagCategories.find(c => c.id === categoryId);
-        if (!category) {
-          console.error(`Category ${categoryId} not found in tagCategories:`, tagCategories);
-        } else {
-          console.log(`Found category: ${category.name}`);
-        }
-        
-        // タグ値が存在するか確認
-        for (const valueId of valueIds) {
-          const value = tagValues.find(v => v.id === valueId);
-          if (!value) {
-            console.error(`Value ${valueId} not found in tagValues:`, tagValues);
-          } else {
-            console.log(`Found value: ${value.value} for category: ${category?.name}`);
-          }
-        }
-      }
       
       // タグ情報を配列に変換
       const tags = [];
@@ -324,8 +280,6 @@ export function ItemManager() {
         }
       }
       
-      console.log('Saving tags:', tags);
-      
       // リクエストボディを作成
       const requestBody = {
         id: selectedItem.id,
@@ -335,8 +289,6 @@ export function ItemManager() {
         implementationDate: implementationDate,
         tags: tags,
       };
-      
-      console.log('Request body:', JSON.stringify(requestBody, null, 2));
       
       // アイテムを更新
       const response = await fetch('/api/items', {
@@ -353,7 +305,6 @@ export function ItemManager() {
       
       // 更新されたアイテム情報を取得
       const updatedItem = await response.json();
-      console.log('Updated item with tags:', updatedItem);
       
       // 選択されたアイテムを更新
       setSelectedItem(updatedItem);
@@ -364,6 +315,7 @@ export function ItemManager() {
         severity: 'success',
       });
       
+      // ダイアログを閉じる
       handleCloseTagDialog();
       
       // アイテム一覧を更新
@@ -375,6 +327,9 @@ export function ItemManager() {
         message: 'タグの更新に失敗しました',
         severity: 'error',
       });
+    } finally {
+      // 保存中の状態を解除
+      setIsSaving(false);
     }
   };
 
@@ -551,6 +506,7 @@ export function ItemManager() {
         tagValues={tagValues}
         selectedTags={selectedTags}
         onTagChange={handleTagChange}
+        isSaving={isSaving}
       />
 
       {/* 通知 */}

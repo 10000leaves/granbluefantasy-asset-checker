@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -54,6 +54,13 @@ export function ItemDialog({
 }: ItemDialogProps) {
   const { uploadImage, uploading } = useImageUpload();
   const [itemForm, setItemForm] = useState<ItemFormData>(initialData);
+  
+  // initialDataが変更されたとき、またはダイアログが開かれたときにitemFormを更新
+  useEffect(() => {
+    if (open) {
+      setItemForm(initialData);
+    }
+  }, [initialData, open]);
 
   // フォームの変更を処理
   const handleItemFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {

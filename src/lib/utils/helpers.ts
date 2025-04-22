@@ -187,7 +187,6 @@ export const createTagCategoryMap = (
   return map;
 };
 
-
 /**
  * アイテムのタグデータを生成する共通関数
  * カテゴリIDに対応するフィルターキーをキーとして、タグ値の配列を値とするオブジェクトを返す

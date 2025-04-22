@@ -182,8 +182,6 @@ export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
     
-    console.log('PUT request body:', JSON.stringify(body, null, 2));
-    
     // リクエストボディのバリデーション
     const validation = validateRequestBody(body, ['id', 'name', 'category']);
     if (!validation.valid) {
@@ -195,11 +193,7 @@ export async function PUT(request: NextRequest) {
     
     // 入力値のサニタイズ
     const sanitizedBody = sanitizeObject(body);
-    console.log('Sanitized body:', JSON.stringify(sanitizedBody, null, 2));
-    
     const { id, name, category, imageUrl, implementationDate, tags } = sanitizedBody;
-    
-    console.log('Tags from request:', tags);
 
     // トランザクションを開始
     await query('BEGIN');
@@ -229,71 +223,41 @@ export async function PUT(request: NextRequest) {
 
       // 新しいタグ関連付けを作成
       if (tags && tags.length > 0) {
-        console.log('Creating tag associations for item:', id);
-        console.log('Tags:', tags);
-        
         // タグ値が存在するか確認
         const { rows: allTagValues } = await query(`
           SELECT id, category_id, value
           FROM tag_values
         `);
         
-        console.log('All tag values:', allTagValues);
-        
         for (const tag of tags) {
-          console.log('Processing tag:', tag);
-          console.log('Tag valueId:', tag.valueId);
-          
           // valueIdが存在するか確認
           if (!tag.valueId) {
-            console.error('Missing valueId in tag:', tag);
             continue;
           }
           
           // タグ値が存在するか確認
           const tagValue = allTagValues.find((v: any) => v.id === tag.valueId);
           if (!tagValue) {
-            console.error(`Tag value ${tag.valueId} not found in database`);
             continue;
           }
           
-          console.log(`Found tag value: ${tagValue.value} for category: ${tagValue.category_id}`);
-          
           try {
             // タグ関連付けを作成
-            const result = await query(`
+            await query(`
               INSERT INTO item_tags (item_id, tag_value_id)
               VALUES ($1, $2)
               ON CONFLICT (item_id, tag_value_id) DO NOTHING
               RETURNING id
             `, [id, tag.valueId]);
-            
-            console.log('Tag association created result:', result);
           } catch (err) {
-            console.error('Error creating tag association:', err);
             throw err;
           }
         }
-      } else {
-        console.log('No tags to create for item:', id);
       }
 
       // トランザクションをコミット
       await query('COMMIT');
 
-      // タグ情報を含めた応答を返す
-      console.log('Fetching item with tags for id:', id);
-      
-      // まず、アイテムタグの関連付けを確認
-      const { rows: itemTags } = await query(`
-        SELECT it.*, tv.category_id, tv.value
-        FROM item_tags it
-        JOIN tag_values tv ON it.tag_value_id = tv.id
-        WHERE it.item_id = $1
-      `, [id]);
-      
-      console.log('Item tags found:', itemTags);
-      
       // アイテムとタグ情報を取得
       const { rows: [itemWithTags] } = await query(`
         SELECT
@@ -319,8 +283,6 @@ export async function PUT(request: NextRequest) {
         WHERE i.id = $1
         GROUP BY i.id
       `, [id]);
-      
-      console.log('Item with tags:', itemWithTags);
       
       // image_urlをimageUrlに変換
       const { image_url, ...rest } = itemWithTags;

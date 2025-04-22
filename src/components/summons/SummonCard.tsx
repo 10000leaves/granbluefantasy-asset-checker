@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import {
   Card,
@@ -58,7 +58,6 @@ export const SummonCard = ({
   const [error, setError] = useState(false);
 
   const handleImageLoad = () => {
-    console.log(`Image loaded: ${name}`);
     setLoading(false);
   };
 
@@ -67,11 +66,6 @@ export const SummonCard = ({
     setLoading(false);
     setError(true);
   };
-
-  // コンポーネントがマウントされたときにURLをログに出力
-  useEffect(() => {
-    console.log(`Summon image URL: ${imageUrl}`);
-  }, [imageUrl]);
 
   return (
     <Card
