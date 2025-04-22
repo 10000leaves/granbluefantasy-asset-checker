@@ -295,7 +295,7 @@ export function ItemManager() {
       console.log('Saving tags:', tags);
       
       // アイテムを更新
-      await fetch('/api/items', {
+      const response = await fetch('/api/items', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -309,6 +309,17 @@ export function ItemManager() {
           tags: tags,
         }),
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update tags');
+      }
+      
+      // 更新されたアイテム情報を取得
+      const updatedItem = await response.json();
+      console.log('Updated item with tags:', updatedItem);
+      
+      // 選択されたアイテムを更新
+      setSelectedItem(updatedItem);
       
       setSnackbar({
         open: true,

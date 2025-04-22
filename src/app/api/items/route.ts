@@ -132,7 +132,38 @@ export async function POST(request: NextRequest) {
       // トランザクションをコミット
       await query('COMMIT');
 
-      return NextResponse.json(item);
+      // タグ情報を含めた応答を返す
+      const { rows: [itemWithTags] } = await query(`
+        SELECT
+          i.*,
+          COALESCE(
+            (
+              SELECT json_agg(
+                json_build_object(
+                  'categoryId', tc.id,
+                  'valueId', tv.id
+                )
+              )
+              FROM item_tags it
+              JOIN tag_values tv ON it.tag_value_id = tv.id
+              JOIN tag_categories tc ON tv.category_id = tc.id
+              WHERE it.item_id = i.id
+            ),
+            '[]'::json
+          ) as tags
+        FROM items i
+        WHERE i.id = $1
+        GROUP BY i.id
+      `, [item.id]);
+      
+      // image_urlをimageUrlに変換
+      const { image_url, ...rest } = itemWithTags;
+      const formattedItem = {
+        ...rest,
+        imageUrl: image_url
+      };
+      
+      return NextResponse.json(formattedItem);
     } catch (err) {
       // エラーが発生した場合はロールバック
       await query('ROLLBACK');
@@ -203,7 +234,38 @@ export async function PUT(request: NextRequest) {
       // トランザクションをコミット
       await query('COMMIT');
 
-      return NextResponse.json(item);
+      // タグ情報を含めた応答を返す
+      const { rows: [itemWithTags] } = await query(`
+        SELECT
+          i.*,
+          COALESCE(
+            (
+              SELECT json_agg(
+                json_build_object(
+                  'categoryId', tc.id,
+                  'valueId', tv.id
+                )
+              )
+              FROM item_tags it
+              JOIN tag_values tv ON it.tag_value_id = tv.id
+              JOIN tag_categories tc ON tv.category_id = tc.id
+              WHERE it.item_id = i.id
+            ),
+            '[]'::json
+          ) as tags
+        FROM items i
+        WHERE i.id = $1
+        GROUP BY i.id
+      `, [id]);
+      
+      // image_urlをimageUrlに変換
+      const { image_url, ...rest } = itemWithTags;
+      const formattedItem = {
+        ...rest,
+        imageUrl: image_url
+      };
+      
+      return NextResponse.json(formattedItem);
     } catch (err) {
       // エラーが発生した場合はロールバック
       await query('ROLLBACK');
