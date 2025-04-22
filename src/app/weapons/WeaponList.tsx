@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Typography,
   Box,
@@ -12,7 +12,6 @@ import {
   Grid,
   Chip,
   Divider,
-  useTheme,
   Card,
   CardContent,
   CircularProgress,
@@ -27,59 +26,50 @@ import { WeaponCard } from '@/components/weapons/WeaponCard';
 import { ExportPanel } from '@/components/common/ExportPanel';
 import { useItems } from '@/hooks/useItems';
 import { useTags } from '@/hooks/useTags';
-
-// 属性の日本語マッピング
-const elementMap = {
-  fire: '火',
-  water: '水',
-  earth: '土',
-  wind: '風',
-  light: '光',
-  dark: '闇',
-};
+import {
+  createTagCategoryMap,
+  generateItemTagData,
+  getItemAttributes
+} from '@/lib/utils/helpers';
 
 // 武器データの型定義
 interface Weapon {
   id: string;
   name: string;
   imageUrl: string;
-  element?: 'fire' | 'water' | 'earth' | 'wind' | 'light' | 'dark';
-  weaponType?: string;
-  rarity?: 'SSR' | 'SR' | 'R';
   tags?: any[];
+  tagData?: Record<string, string[]>; // タグデータを動的に保持
 }
 
 export function WeaponList() {
-  const theme = useTheme();
   const { items, loading, error, toggleItem, selectedItems: selectedWeapons } = useItems('weapon');
   const { tagCategories, tagValues } = useTags('weapon');
   
   // 状態管理
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(true);
-  const [filters, setFilters] = useState({
-    elements: [] as string[],
-    weaponTypes: [] as string[],
-    rarities: [] as string[],
+  const [filters, setFilters] = useState<Record<string, string[]>>({
+    elements: []
   });
+
+  // タグカテゴリが読み込まれたら、動的にフィルター状態を初期化
+  useEffect(() => {
+    if (tagCategories.length > 0) {
+      const tagCategoryMap = createTagCategoryMap(tagCategories);
+      const initialFilters: Record<string, string[]> = {};
+      
+      // 全てのカテゴリに対応するフィルターキーを初期化
+      Object.values(tagCategoryMap).forEach(key => {
+        initialFilters[key] = [];
+      });
+      
+      setFilters(initialFilters);
+    }
+  }, [tagCategories]);
   
-  // タグカテゴリのマッピング
+  // タグカテゴリのマッピングを動的に生成
   const tagCategoryMap = useMemo(() => {
-    const map: Record<string, string> = {};
-    tagCategories.forEach(category => {
-      switch (category.name.toLowerCase()) {
-        case '属性':
-          map[category.id] = 'elements';
-          break;
-        case '武器種':
-          map[category.id] = 'weaponTypes';
-          break;
-        case 'レアリティ':
-          map[category.id] = 'rarities';
-          break;
-      }
-    });
-    return map;
+    return createTagCategoryMap(tagCategories);
   }, [tagCategories]);
 
   // タグ値のマッピング
@@ -97,64 +87,18 @@ export function WeaponList() {
   // 武器データの整形
   const weapons = useMemo(() => {
     return items.map(item => {
-      // タグからメタデータを抽出
-      const elementTag = item.tags?.find((tag: any) => {
-        const category = tagCategories.find(c => c.id === tag.categoryId);
-        return category && category.name.toLowerCase() === '属性';
-      });
-      
-      const weaponTypeTag = item.tags?.find((tag: any) => {
-        const category = tagCategories.find(c => c.id === tag.categoryId);
-        return category && category.name.toLowerCase() === '武器種';
-      });
-      
-      const rarityTag = item.tags?.find((tag: any) => {
-        const category = tagCategories.find(c => c.id === tag.categoryId);
-        return category && category.name.toLowerCase() === 'レアリティ';
-      });
-      
-      // 属性の取得と変換
-      let element: 'fire' | 'water' | 'earth' | 'wind' | 'light' | 'dark' = 'fire';
-      if (elementTag) {
-        const elementValue = tagValueMap[elementTag.valueId]?.value.toLowerCase();
-        if (elementValue === 'fire' || elementValue === 'water' || elementValue === 'earth' || 
-            elementValue === 'wind' || elementValue === 'light' || elementValue === 'dark' ||
-            elementValue === '火' || elementValue === '水' || elementValue === '土' || 
-            elementValue === '風' || elementValue === '光' || elementValue === '闇') {
-          // 日本語から英語への変換
-          if (elementValue === '火') element = 'fire';
-          else if (elementValue === '水') element = 'water';
-          else if (elementValue === '土') element = 'earth';
-          else if (elementValue === '風') element = 'wind';
-          else if (elementValue === '光') element = 'light';
-          else if (elementValue === '闇') element = 'dark';
-          else element = elementValue as any;
-        }
-      }
-      
-      // 武器種の取得
-      const weaponType = weaponTypeTag ? tagValueMap[weaponTypeTag.valueId]?.value : '';
-      
-      // レアリティの取得と変換
-      let rarity: 'SSR' | 'SR' | 'R' = 'SSR';
-      if (rarityTag) {
-        const rarityValue = tagValueMap[rarityTag.valueId]?.value.toUpperCase();
-        if (rarityValue === 'SSR' || rarityValue === 'SR' || rarityValue === 'R') {
-          rarity = rarityValue as any;
-        }
-      }
+      // タグデータを動的に生成
+      const tagData = generateItemTagData(item, tagCategories, tagValueMap, tagCategoryMap);
       
       return {
         id: item.id,
         name: item.name,
         imageUrl: item.imageUrl,
-        element,
-        weaponType,
-        rarity,
-        tags: item.tags
+        tags: item.tags,
+        tagData
       } as Weapon;
     });
-  }, [items, tagCategories, tagValueMap]);
+  }, [items, tagCategories, tagValueMap, tagCategoryMap]);
 
   // アクティブなフィルター数
   const activeFilterCount = Object.values(filters).reduce(
@@ -173,28 +117,16 @@ export function WeaponList() {
         return false;
       }
 
-      // 属性フィルター
-      if (
-        filters.elements.length > 0 &&
-        (!weapon.element || !filters.elements.includes(weapon.element))
-      ) {
-        return false;
-      }
-
-      // 武器種フィルター
-      if (
-        filters.weaponTypes.length > 0 &&
-        (!weapon.weaponType || !filters.weaponTypes.includes(weapon.weaponType))
-      ) {
-        return false;
-      }
-
-      // レアリティフィルター
-      if (
-        filters.rarities.length > 0 &&
-        (!weapon.rarity || !filters.rarities.includes(weapon.rarity))
-      ) {
-        return false;
+      // タグデータによるフィルタリング
+      for (const [category, selectedValues] of Object.entries(filters)) {
+        if (selectedValues.length === 0) continue;
+        
+        const weaponValues = weapon.tagData?.[category] || [];
+        
+        // いずれかの値が一致するかチェック
+        const hasMatch = selectedValues.some(value => weaponValues.includes(value));
+        
+        if (!hasMatch) return false;
       }
 
       return true;
@@ -217,11 +149,14 @@ export function WeaponList() {
 
   // フィルターのクリア
   const clearFilters = () => {
-    setFilters({
-      elements: [],
-      weaponTypes: [],
-      rarities: [],
+    const emptyFilters: Record<string, string[]> = {};
+    
+    // 全てのフィルターキーを空の配列で初期化
+    Object.keys(filters).forEach(key => {
+      emptyFilters[key] = [];
     });
+    
+    setFilters(emptyFilters);
   };
 
   // 特定のフィルターのクリア
@@ -325,19 +260,20 @@ export function WeaponList() {
                 let label = value;
                 let categoryName = '';
                 
-                // カテゴリ名の日本語化
-                switch (category) {
-                  case 'elements':
-                    categoryName = '属性';
-                    label = elementMap[value as keyof typeof elementMap] || value;
-                    break;
-                  case 'weaponTypes':
-                    categoryName = '武器種';
-                    break;
-                  case 'rarities':
-                    categoryName = 'レアリティ';
-                    break;
+                // カテゴリIDを逆引き
+                const categoryId = Object.entries(tagCategoryMap).find(
+                  ([_, key]) => key === category
+                )?.[0];
+                
+                // カテゴリ名を取得
+                if (categoryId) {
+                  const categoryObj = tagCategories.find(c => c.id === categoryId);
+                  if (categoryObj) {
+                    categoryName = categoryObj.name;
+                  }
                 }
+                
+                // 属性も含めて全て日本語のまま表示
                 
                 return (
                   <Chip
@@ -369,39 +305,34 @@ export function WeaponList() {
           <Card variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
             <CardContent sx={{ p: 0 }}>
               <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  {renderFilterSection('属性', 'elements', [
-                    { value: 'fire', label: '火' },
-                    { value: 'water', label: '水' },
-                    { value: 'earth', label: '土' },
-                    { value: 'wind', label: '風' },
-                    { value: 'light', label: '光' },
-                    { value: 'dark', label: '闇' },
-                  ])}
-                </Grid>
-                
-                <Grid item xs={12}>
-                  {renderFilterSection('武器種', 'weaponTypes', [
-                    { value: '剣', label: '剣' },
-                    { value: '槍', label: '槍' },
-                    { value: '斧', label: '斧' },
-                    { value: '弓', label: '弓' },
-                    { value: '杖', label: '杖' },
-                    { value: '短剣', label: '短剣' },
-                    { value: '格闘', label: '格闘' },
-                    { value: '銃', label: '銃' },
-                    { value: '刀', label: '刀' },
-                    { value: '楽器', label: '楽器' },
-                  ])}
-                </Grid>
-                
-                <Grid item xs={12}>
-                  {renderFilterSection('レアリティ', 'rarities', [
-                    { value: 'SSR', label: 'SSR' },
-                    { value: 'SR', label: 'SR' },
-                    { value: 'R', label: 'R' },
-                  ])}
-                </Grid>
+                {tagCategories.map((category) => {
+                  // カテゴリに対応するフィルターキーを取得
+                  const filterKey = Object.entries(tagCategoryMap).find(
+                    ([id, _]) => id === category.id
+                  )?.[1] as keyof typeof filters;
+                  
+                  if (!filterKey) return null;
+                  
+                  // カテゴリに属するタグ値を取得
+                  const categoryValues = tagValues.filter(
+                    (value) => value.categoryId === category.id
+                  );
+                  
+                  // タグ値がない場合はスキップ
+                  if (categoryValues.length === 0) return null;
+                  
+                  // フィルターオプションを作成
+                  const options = categoryValues.map((value) => ({
+                    value: value.value,
+                    label: value.value,
+                  }));
+                  
+                  return (
+                    <Grid item xs={12} key={category.id}>
+                      {renderFilterSection(category.name, filterKey, options)}
+                    </Grid>
+                  );
+                })}
               </Grid>
             </CardContent>
           </Card>
@@ -438,23 +369,32 @@ export function WeaponList() {
                 sm: 'repeat(3, 1fr)',
                 md: 'repeat(4, 1fr)',
                 lg: 'repeat(5, 1fr)',
+                xl: 'repeat(6, 1fr)',
               },
-              gap: { xs: 1, sm: 2 },
+              gap: { xs: 1, sm: 1.5, md: 2 },
+              width: '100%',
             }}
           >
-            {filteredWeapons.map((weapon) => (
-              <WeaponCard
-                key={weapon.id}
-                id={weapon.id}
-                name={weapon.name}
-                imageUrl={weapon.imageUrl}
-                element={weapon.element as any}
-                weaponType={weapon.weaponType || ''}
-                rarity={weapon.rarity as any || 'SSR'}
-                selected={selectedWeapons.includes(weapon.id)}
-                onSelect={handleWeaponSelect}
-              />
-            ))}
+            {filteredWeapons.map((weapon) => {
+              // タグデータから属性とレアリティを取得
+              const { element, rarity } = getItemAttributes(weapon, weapon.tagData || {});
+              // 武器種を取得
+              const weaponType = weapon.tagData?.weaponTypes?.[0] || '';
+              
+              return (
+                <WeaponCard
+                  key={weapon.id}
+                  id={weapon.id}
+                  name={weapon.name}
+                  imageUrl={weapon.imageUrl}
+                  element={element as 'fire' | 'water' | 'earth' | 'wind' | 'light' | 'dark'}
+                  weaponType={weaponType}
+                  rarity={rarity as 'SSR' | 'SR' | 'R'}
+                  selected={selectedWeapons.includes(weapon.id)}
+                  onSelect={handleWeaponSelect}
+                />
+              );
+            })}
           </Box>
         )}
       </Paper>

@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/react"
 import { Navigation } from '@/components/common/Navigation';
 import { ThemeProvider } from '@/components/common/ThemeProvider';
 import { LocalStorageProvider } from '@/components/common/LocalStorageProvider';
@@ -21,6 +22,7 @@ export default function RootLayout({
             <main style={{ padding: '20px' }}>
               {children}
             </main>
+            <Analytics />
           </LocalStorageProvider>
         </ThemeProvider>
       </body>

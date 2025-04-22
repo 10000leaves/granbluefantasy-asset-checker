@@ -54,6 +54,7 @@ export interface Item {
   name: string;
   imageUrl: string;
   category: ItemType;
+  implementationDate: Date;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -13,7 +13,6 @@ import {
   Tooltip,
   Skeleton,
   TextField,
-  Divider,
   Collapse,
 } from '@mui/material';
 import {
@@ -30,6 +29,8 @@ import {
 } from '@mui/icons-material';
 import { useAtom } from 'jotai';
 import { weaponCountsAtom, weaponAwakeningsAtom, AwakeningType } from '@/atoms';
+
+import { translateElement } from '../../lib/utils/helpers';
 
 interface WeaponCardProps {
   id: string;
@@ -183,7 +184,7 @@ export const WeaponCard = ({
     <Card
       sx={{
         position: 'relative',
-        width: 280,
+        width: '100%',
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -195,7 +196,7 @@ export const WeaponCard = ({
       }}
       onClick={() => onSelect(id, !selected)}
     >
-      <Box sx={{ position: 'relative', height: 160, width: 280 }}>
+      <Box sx={{ position: 'relative', height: 160, width: '100%' }}>
         {loading && (
           <Skeleton
             variant="rectangular"
@@ -220,7 +221,7 @@ export const WeaponCard = ({
             <BrokenImageIcon sx={{ fontSize: 60, color: 'text.disabled' }} />
           </Box>
         ) : (
-          <Box sx={{ position: 'relative', height: 160, width: 280 }}>
+          <Box sx={{ position: 'relative', height: 160, width: '100%' }}>
             <Image
               src={imageUrl}
               alt={name}
@@ -254,7 +255,7 @@ export const WeaponCard = ({
             },
           }}
         />
-        <Tooltip title={`${element}属性`}>
+        <Tooltip title={`${translateElement(element)}属性`}>
           <IconButton
             size="small"
             sx={{
@@ -377,7 +378,7 @@ export const WeaponCard = ({
               gap: 1
             }}
           >
-            <Tooltip title="覚醒設定">
+            <Tooltip title="覚醒タイプ">
               <IconButton
                 size="small"
                 onClick={toggleAwakeningOptions}
@@ -418,7 +419,7 @@ export const WeaponCard = ({
           <Collapse in={showAwakeningOptions}>
             <Box sx={{ mt: 1, p: 1, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
               <Typography variant="caption" sx={{ display: 'block', mb: 1, fontWeight: 'bold' }}>
-                覚醒設定（残り: {Math.max(0, count - totalAwakeningCount)}本）
+                覚醒タイプ（残り: {Math.max(0, count - totalAwakeningCount)}本）
               </Typography>
               
               {awakeningTypes.map((type) => {

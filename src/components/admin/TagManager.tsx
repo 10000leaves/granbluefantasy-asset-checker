@@ -1,77 +1,31 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Paper,
   Typography,
-  TextField,
   Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Checkbox,
-  FormControlLabel,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  IconButton,
-  Divider,
   Tabs,
   Tab,
   Alert,
   Snackbar,
   CircularProgress,
-  Card,
-  CardContent,
-  Chip,
 } from '@mui/material';
-import {
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-  Add as AddIcon,
-  Save as SaveIcon,
-  Cancel as CancelIcon,
-} from '@mui/icons-material';
-import { useTags, TagCategory, TagValue } from '@/hooks/useTags';
+import { useTags } from '@/hooks/useTags';
+import { CategoryManager } from './tag/CategoryManager';
+import { ValueManager } from './tag/ValueManager';
 
 interface TagManagerProps {
   itemType?: 'character' | 'weapon' | 'summon';
   onTagsUpdated?: () => void;
 }
 
-interface TagCategoryForm {
-  id?: string;
-  name: string;
-  multipleSelect: boolean;
-  required: boolean;
-}
-
-interface TagValueForm {
-  id?: string;
-  value: string;
-  categoryId?: string;
-}
-
 export function TagManager({ itemType = 'character', onTagsUpdated }: TagManagerProps) {
   const { tagCategories, tagValues, loading, error, refreshTags } = useTags(itemType);
   
   const [currentItemType, setCurrentItemType] = useState<'character' | 'weapon' | 'summon'>(itemType);
-  const [categoryForm, setCategoryForm] = useState<TagCategoryForm>({
-    name: '',
-    multipleSelect: false,
-    required: false,
-  });
-
-  const [valueForm, setValueForm] = useState<TagValueForm>({
-    value: '',
-  });
-
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [editMode, setEditMode] = useState<boolean>(false);
-  const [editValueMode, setEditValueMode] = useState<boolean>(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -82,74 +36,41 @@ export function TagManager({ itemType = 'character', onTagsUpdated }: TagManager
   const handleItemTypeChange = (_: React.SyntheticEvent, newValue: 'character' | 'weapon' | 'summon') => {
     setCurrentItemType(newValue);
     setSelectedCategory('');
-    resetForms();
   };
 
-  // フォームリセット
-  const resetForms = () => {
-    setCategoryForm({
-      name: '',
-      multipleSelect: false,
-      required: false,
+  // スナックバーを閉じる
+  const handleCloseSnackbar = () => {
+    setSnackbar({
+      ...snackbar,
+      open: false,
     });
-    setValueForm({
-      value: '',
-    });
-    setEditMode(false);
-    setEditValueMode(false);
   };
 
-  // カテゴリ編集モード
-  const handleEditCategory = (category: TagCategory) => {
-    setCategoryForm({
-      id: category.id,
-      name: category.name,
-      multipleSelect: category.multipleSelect,
-      required: category.required,
-    });
-    setEditMode(true);
+  // 特定のカテゴリに属するタグ値を取得
+  const getCategoryValues = (categoryId: string) => {
+    return tagValues.filter(value => value.categoryId === categoryId || value.category_id === categoryId);
   };
 
-  // タグ値編集モード
-  const handleEditValue = (value: TagValue) => {
-    setValueForm({
-      id: value.id,
-      value: value.value,
-      categoryId: value.categoryId,
-    });
-    setEditValueMode(true);
-  };
-
-  // カテゴリ送信
-  const handleCategorySubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-
+  // カテゴリ保存
+  const handleSaveCategory = async (category: any, isEdit: boolean) => {
     try {
       const response = await fetch('/api/tags', {
-        method: editMode ? 'PUT' : 'POST',
+        method: isEdit ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          id: categoryForm.id,
-          name: categoryForm.name,
-          itemType: currentItemType,
-          multipleSelect: categoryForm.multipleSelect,
-          required: categoryForm.required,
-        }),
+        body: JSON.stringify(category),
       });
 
       if (!response.ok) {
         throw new Error('Failed to save tag category');
       }
 
-      // フォームをリセット
-      resetForms();
       refreshTags();
       
       setSnackbar({
         open: true,
-        message: editMode ? 'カテゴリを更新しました' : 'カテゴリを追加しました',
+        message: isEdit ? 'カテゴリを更新しました' : 'カテゴリを追加しました',
         severity: 'success',
       });
     } catch (err) {
@@ -159,40 +80,30 @@ export function TagManager({ itemType = 'character', onTagsUpdated }: TagManager
         message: '保存に失敗しました',
         severity: 'error',
       });
+      throw err;
     }
   };
 
-  // タグ値送信
-  const handleValueSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-
-    if (!selectedCategory && !valueForm.categoryId) return;
-
+  // タグ値保存
+  const handleSaveValue = async (value: any, isEdit: boolean) => {
     try {
       const response = await fetch('/api/tags/values', {
-        method: editValueMode ? 'PUT' : 'POST',
+        method: isEdit ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          id: valueForm.id,
-          value: valueForm.value,
-          categoryId: editValueMode ? valueForm.categoryId : selectedCategory,
-        }),
+        body: JSON.stringify(value),
       });
 
       if (!response.ok) {
         throw new Error('Failed to save tag value');
       }
 
-      // フォームをリセット
-      setValueForm({ value: '' });
-      setEditValueMode(false);
       refreshTags();
       
       setSnackbar({
         open: true,
-        message: editValueMode ? 'タグ値を更新しました' : 'タグ値を追加しました',
+        message: isEdit ? 'タグ値を更新しました' : 'タグ値を追加しました',
         severity: 'success',
       });
     } catch (err) {
@@ -202,6 +113,7 @@ export function TagManager({ itemType = 'character', onTagsUpdated }: TagManager
         message: '保存に失敗しました',
         severity: 'error',
       });
+      throw err;
     }
   };
 
@@ -270,19 +182,6 @@ export function TagManager({ itemType = 'character', onTagsUpdated }: TagManager
         severity: 'error',
       });
     }
-  };
-
-  // スナックバーを閉じる
-  const handleCloseSnackbar = () => {
-    setSnackbar({
-      ...snackbar,
-      open: false,
-    });
-  };
-
-  // 特定のカテゴリに属するタグ値を取得
-  const getCategoryValues = (categoryId: string) => {
-    return tagValues.filter(value => value.categoryId === categoryId || value.category_id === categoryId);
   };
 
   // 初期設定のプリセットを追加
@@ -578,276 +477,25 @@ export function TagManager({ itemType = 'character', onTagsUpdated }: TagManager
       <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
         {/* カテゴリ管理 */}
         <Paper sx={{ p: 3, flex: 1 }}>
-          <Typography variant="h6" gutterBottom>
-            タグカテゴリの管理
-          </Typography>
-          <Box
-            component="form"
-            onSubmit={handleCategorySubmit}
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 2,
-              mb: 3,
-            }}
-          >
-            <TextField
-              fullWidth
-              label="カテゴリ名"
-              value={categoryForm.name}
-              onChange={(e) =>
-                setCategoryForm((prev) => ({ ...prev, name: e.target.value }))
-              }
-              required
-            />
-
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={categoryForm.multipleSelect}
-                  onChange={(e) =>
-                    setCategoryForm((prev) => ({
-                      ...prev,
-                      multipleSelect: e.target.checked,
-                    }))
-                  }
-                />
-              }
-              label="複数選択可"
-            />
-
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={categoryForm.required}
-                  onChange={(e) =>
-                    setCategoryForm((prev) => ({
-                      ...prev,
-                      required: e.target.checked,
-                    }))
-                  }
-                />
-              }
-              label="必須"
-            />
-
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                startIcon={editMode ? <SaveIcon /> : <AddIcon />}
-                sx={{ flex: 1 }}
-              >
-                {editMode ? '更新' : '追加'}
-              </Button>
-              
-              {editMode && (
-                <Button
-                  variant="outlined"
-                  color="secondary"
-                  startIcon={<CancelIcon />}
-                  onClick={() => {
-                    resetForms();
-                  }}
-                >
-                  キャンセル
-                </Button>
-              )}
-            </Box>
-          </Box>
-
-          <Typography variant="subtitle1" gutterBottom>
-            カテゴリ一覧
-          </Typography>
-          
-          {tagCategories.filter(cat => cat.itemType === currentItemType || cat.item_type === currentItemType).length === 0 ? (
-            <Alert severity="info">
-              カテゴリがありません。上のフォームから追加してください。
-            </Alert>
-          ) : (
-            <List>
-              {tagCategories
-                .filter(category => category.itemType === currentItemType || category.item_type === currentItemType)
-                .map((category, index) => (
-                  <React.Fragment key={category.id}>
-                    {index > 0 && <Divider />}
-                    <ListItem>
-                      <ListItemText
-                        primary={
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography variant="body1">{category.name}</Typography>
-                            {category.required && (
-                              <Chip
-                                label="必須"
-                                size="small"
-                                color="error"
-                                sx={{ height: 20 }}
-                              />
-                            )}
-                            {(category.multipleSelect || category.multiple_select) && (
-                              <Chip
-                                label="複数選択"
-                                size="small"
-                                color="primary"
-                                sx={{ height: 20 }}
-                              />
-                            )}
-                          </Box>
-                        }
-                        secondary={`${getCategoryValues(category.id).length}個の値`}
-                      />
-                      <ListItemSecondaryAction>
-                        <IconButton
-                          edge="end"
-                          aria-label="edit"
-                          onClick={() => handleEditCategory(category)}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton
-                          edge="end"
-                          aria-label="delete"
-                          onClick={() => handleDeleteCategory(category.id)}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </ListItemSecondaryAction>
-                    </ListItem>
-                  </React.Fragment>
-                ))}
-            </List>
-          )}
+          <CategoryManager
+            tagCategories={tagCategories}
+            currentItemType={currentItemType}
+            onSaveCategory={handleSaveCategory}
+            onDeleteCategory={handleDeleteCategory}
+            getCategoryValues={getCategoryValues}
+          />
         </Paper>
 
         {/* タグ値管理 */}
         <Paper sx={{ p: 3, flex: 1 }}>
-          <Typography variant="h6" gutterBottom>
-            タグ値の管理
-          </Typography>
-          <Box
-            component="form"
-            onSubmit={handleValueSubmit}
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 2,
-              mb: 3,
-            }}
-          >
-            <FormControl fullWidth required>
-              <InputLabel>カテゴリ</InputLabel>
-              <Select
-                value={editValueMode ? valueForm.categoryId : selectedCategory}
-                label="カテゴリ"
-                onChange={(e) => {
-                  if (!editValueMode) {
-                    setSelectedCategory(e.target.value);
-                  } else {
-                    setValueForm(prev => ({ ...prev, categoryId: e.target.value }));
-                  }
-                }}
-                disabled={editValueMode}
-              >
-                <MenuItem value="">選択してください</MenuItem>
-                {tagCategories
-                  .filter(category => category.itemType === currentItemType || category.item_type === currentItemType)
-                  .map((category) => (
-                    <MenuItem key={category.id} value={category.id}>
-                      {category.name}
-                    </MenuItem>
-                  ))}
-              </Select>
-            </FormControl>
-
-            <TextField
-              fullWidth
-              label="タグ値"
-              value={valueForm.value}
-              onChange={(e) =>
-                setValueForm((prev) => ({ ...prev, value: e.target.value }))
-              }
-              required
-            />
-
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                startIcon={editValueMode ? <SaveIcon /> : <AddIcon />}
-                disabled={!selectedCategory && !valueForm.categoryId}
-                sx={{ flex: 1 }}
-              >
-                {editValueMode ? '更新' : '追加'}
-              </Button>
-              
-              {editValueMode && (
-                <Button
-                  variant="outlined"
-                  color="secondary"
-                  startIcon={<CancelIcon />}
-                  onClick={() => {
-                    setValueForm({ value: '' });
-                    setEditValueMode(false);
-                  }}
-                >
-                  キャンセル
-                </Button>
-              )}
-            </Box>
-          </Box>
-
-          <Typography variant="subtitle1" gutterBottom>
-            タグ値一覧
-          </Typography>
-
-          {!selectedCategory && !editValueMode ? (
-            <Alert severity="info">
-              左側からカテゴリを選択してください。
-            </Alert>
-          ) : (
-            <>
-              <Typography variant="subtitle2" gutterBottom>
-                {editValueMode 
-                  ? tagCategories.find(c => c.id === valueForm.categoryId)?.name 
-                  : tagCategories.find(c => c.id === selectedCategory)?.name}
-              </Typography>
-              
-              {getCategoryValues(editValueMode ? valueForm.categoryId! : selectedCategory).length === 0 ? (
-                <Alert severity="info">
-                  値がありません。上のフォームから追加してください。
-                </Alert>
-              ) : (
-                <List>
-                  {getCategoryValues(editValueMode ? valueForm.categoryId! : selectedCategory).map((value, index) => (
-                    <React.Fragment key={value.id}>
-                      {index > 0 && <Divider />}
-                      <ListItem>
-                        <ListItemText primary={value.value} />
-                        <ListItemSecondaryAction>
-                          <IconButton
-                            edge="end"
-                            aria-label="edit"
-                            onClick={() => handleEditValue(value)}
-                          >
-                            <EditIcon />
-                          </IconButton>
-                          <IconButton
-                            edge="end"
-                            aria-label="delete"
-                            onClick={() => handleDeleteValue(value.id)}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </ListItemSecondaryAction>
-                      </ListItem>
-                    </React.Fragment>
-                  ))}
-                </List>
-              )}
-            </>
-          )}
+          <ValueManager
+            tagCategories={tagCategories}
+            tagValues={tagValues}
+            currentItemType={currentItemType}
+            onSaveValue={handleSaveValue}
+            onDeleteValue={handleDeleteValue}
+            getCategoryValues={getCategoryValues}
+          />
         </Paper>
       </Box>
 

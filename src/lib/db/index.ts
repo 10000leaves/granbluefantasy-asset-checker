@@ -1,17 +1,53 @@
 import { Pool } from 'pg';
 import { put, del, list } from '@vercel/blob';
-import { cache } from 'react';
+
+// 環境に応じてcache関数を使用するかどうかを切り替える
+// Node.js環境（マイグレーションスクリプトなど）では関数をそのまま返す
+const cacheFunction = <T extends (...args: any[]) => any>(fn: T): T => {
+  // Next.js環境ではReactのcache関数を使用
+  if (typeof process !== 'undefined' && process.env.NEXT_RUNTIME === 'nodejs') {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { cache } = require('react');
+      return cache(fn);
+    } catch (e) {
+      // Reactのcache関数が使用できない場合は関数をそのまま返す
+      return fn;
+    }
+  }
+  // Node.js環境では関数をそのまま返す
+  return fn;
+};
 
 // データベースプールの設定
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: true,
-  },
+  ssl: process.env.NODE_ENV === 'production' ? {
+    rejectUnauthorized: false, // 本番環境では自己署名証明書を許可
+  } : false, // 開発環境ではSSLを無効化
 });
 
+// 接続テスト
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+  process.exit(-1);
+});
+
+// 接続テスト用の関数
+export const testConnection = async () => {
+  try {
+    const client = await pool.connect();
+    console.log('Database connection successful');
+    client.release();
+    return true;
+  } catch (error) {
+    console.error('Database connection error:', error);
+    return false;
+  }
+};
+
 // データベースクエリのキャッシュ
-export const getItems = cache(async (category: string) => {
+export const getItems = cacheFunction(async (category: string) => {
   const { rows } = await pool.query(`
     SELECT
       i.*,
@@ -39,7 +75,7 @@ export const getItems = cache(async (category: string) => {
 });
 
 // タグカテゴリの取得
-export const getTagCategories = cache(async (itemType?: string) => {
+export const getTagCategories = cacheFunction(async (itemType?: string) => {
   let query = `
     SELECT
       tc.*
@@ -60,7 +96,7 @@ export const getTagCategories = cache(async (itemType?: string) => {
 });
 
 // タグ値の取得
-export const getTagValues = cache(async () => {
+export const getTagValues = cacheFunction(async () => {
   const { rows } = await pool.query(`
     SELECT
       tv.*
@@ -71,7 +107,7 @@ export const getTagValues = cache(async () => {
 });
 
 // 入力項目の取得
-export const getInputItems = cache(async () => {
+export const getInputItems = cacheFunction(async () => {
   const { rows } = await pool.query(`
     SELECT
       ig.id as group_id,
@@ -106,7 +142,7 @@ export const createSession = async (inputValues: any, selectedItems: string[]) =
 };
 
 // セッションの取得
-export const getSession = cache(async (id: string) => {
+export const getSession = cacheFunction(async (id: string) => {
   const { rows } = await pool.query(`
     SELECT * FROM user_sessions WHERE id = $1
   `, [id]);

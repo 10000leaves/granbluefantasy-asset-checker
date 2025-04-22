@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
         FROM items i
         WHERE i.category = $1
         GROUP BY i.id
-        ORDER BY i.name
+        ORDER BY i.implementation_date DESC NULLS LAST, i.name
       `;
       params = [category];
     } else {
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
           ) as tags
         FROM items i
         GROUP BY i.id
-        ORDER BY i.category, i.name
+        ORDER BY i.implementation_date DESC NULLS LAST, i.category, i.name
       `;
     }
 
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
     
     // 入力値のサニタイズ
     const sanitizedBody = sanitizeObject(body);
-    const { name, category, imageUrl, tags } = sanitizedBody;
+    const { name, category, imageUrl, implementationDate, tags } = sanitizedBody;
 
     // トランザクションを開始
     await query('BEGIN');
@@ -114,10 +114,10 @@ export async function POST(request: NextRequest) {
     try {
       // アイテムを作成
       const { rows: [item] } = await query(`
-        INSERT INTO items (name, category, image_url)
-        VALUES ($1, $2, $3)
+        INSERT INTO items (name, category, image_url, implementation_date)
+        VALUES ($1, $2, $3, $4)
         RETURNING *
-      `, [name, category, imageUrl]);
+      `, [name, category, imageUrl, implementationDate]);
 
       // タグが指定されている場合は関連付けを作成
       if (tags && tags.length > 0) {
@@ -162,7 +162,7 @@ export async function PUT(request: NextRequest) {
     
     // 入力値のサニタイズ
     const sanitizedBody = sanitizeObject(body);
-    const { id, name, category, imageUrl, tags } = sanitizedBody;
+    const { id, name, category, imageUrl, implementationDate, tags } = sanitizedBody;
 
     // トランザクションを開始
     await query('BEGIN');
@@ -171,10 +171,10 @@ export async function PUT(request: NextRequest) {
       // アイテムを更新
       const { rows: [item] } = await query(`
         UPDATE items
-        SET name = $1, category = $2, image_url = $3
-        WHERE id = $4
+        SET name = $1, category = $2, image_url = $3, implementation_date = $4
+        WHERE id = $5
         RETURNING *
-      `, [name, category, imageUrl, id]);
+      `, [name, category, imageUrl, implementationDate, id]);
 
       if (!item) {
         await query('ROLLBACK');
