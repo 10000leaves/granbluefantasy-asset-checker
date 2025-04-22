@@ -22,9 +22,8 @@ interface TagManagerProps {
 }
 
 export function TagManager({ itemType = 'character', onTagsUpdated }: TagManagerProps) {
-  const { tagCategories, tagValues, loading, error, refreshTags } = useTags(itemType);
-  
   const [currentItemType, setCurrentItemType] = useState<'character' | 'weapon' | 'summon'>(itemType);
+  const { tagCategories, tagValues, loading, error, refreshTags } = useTags(currentItemType);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -412,6 +411,62 @@ export function TagManager({ itemType = 'character', onTagsUpdated }: TagManager
             body: JSON.stringify({
               value: type,
               categoryId: weaponTypeCategory.id,
+            }),
+          });
+        }
+        
+        // レアリティカテゴリ
+        const rarityResponse = await fetch('/api/tags', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: 'レアリティ',
+            itemType: 'weapon',
+            multipleSelect: false,
+            required: true,
+          }),
+        });
+
+        if (!rarityResponse.ok) throw new Error('Failed to create rarity category');
+        const rarityCategory = await rarityResponse.json();
+
+        // レアリティの値
+        const rarities = ['SSR', 'SR', 'R'];
+        for (const rarity of rarities) {
+          await fetch('/api/tags/values', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              value: rarity,
+              categoryId: rarityCategory.id,
+            }),
+          });
+        }
+      } else if (currentItemType === 'summon') {
+        // レアリティカテゴリ
+        const rarityResponse = await fetch('/api/tags', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: 'レアリティ',
+            itemType: 'summon',
+            multipleSelect: false,
+            required: true,
+          }),
+        });
+
+        if (!rarityResponse.ok) throw new Error('Failed to create rarity category');
+        const rarityCategory = await rarityResponse.json();
+
+        // レアリティの値
+        const rarities = ['SSR', 'SR', 'R'];
+        for (const rarity of rarities) {
+          await fetch('/api/tags/values', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              value: rarity,
+              categoryId: rarityCategory.id,
             }),
           });
         }

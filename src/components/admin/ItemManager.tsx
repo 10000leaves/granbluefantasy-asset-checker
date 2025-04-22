@@ -126,12 +126,24 @@ export function ItemManager() {
     const tags: Record<string, string[]> = {};
     if (item.tags) {
       item.tags.forEach((tag: any) => {
-        if (!tags[tag.categoryId]) {
-          tags[tag.categoryId] = [];
+        // タグのカテゴリIDとバリューIDを取得（データ形式の違いに対応）
+        const categoryId = tag.categoryId || tag.category_id;
+        const valueId = tag.valueId || tag.value_id;
+        
+        if (categoryId && valueId) {
+          if (!tags[categoryId]) {
+            tags[categoryId] = [];
+          }
+          
+          // 重複を避けるために存在チェック
+          if (!tags[categoryId].includes(valueId)) {
+            tags[categoryId].push(valueId);
+          }
         }
-        tags[tag.categoryId].push(tag.valueId);
       });
     }
+    
+    console.log('Selected tags for edit dialog:', tags);
     setSelectedTags(tags);
     
     setSelectedItem(item);
@@ -146,12 +158,24 @@ export function ItemManager() {
     const tags: Record<string, string[]> = {};
     if (item.tags) {
       item.tags.forEach((tag: any) => {
-        if (!tags[tag.categoryId]) {
-          tags[tag.categoryId] = [];
+        // タグのカテゴリIDとバリューIDを取得（データ形式の違いに対応）
+        const categoryId = tag.categoryId || tag.category_id;
+        const valueId = tag.valueId || tag.value_id;
+        
+        if (categoryId && valueId) {
+          if (!tags[categoryId]) {
+            tags[categoryId] = [];
+          }
+          
+          // 重複を避けるために存在チェック
+          if (!tags[categoryId].includes(valueId)) {
+            tags[categoryId].push(valueId);
+          }
         }
-        tags[tag.categoryId].push(tag.valueId);
       });
     }
+    
+    console.log('Selected tags for dialog:', tags);
     setSelectedTags(tags);
     
     setOpenTagDialog(true);
@@ -197,7 +221,15 @@ export function ItemManager() {
         // 編集モードの場合は既存のタグ情報を保持
         // ItemDialog.tsxでは編集時にタグ情報を含めないようにしているので、
         // ここでは既存のタグ情報を追加する
-        const existingTags = selectedItem?.tags || [];
+        
+        // 既存のタグ情報を正しい形式に変換
+        const existingTags = selectedItem?.tags?.map((tag: any) => {
+          const categoryId = tag.categoryId || tag.category_id;
+          const valueId = tag.valueId || tag.value_id;
+          return { categoryId, valueId };
+        }) || [];
+        
+        console.log('Updating item with tags:', existingTags);
         await updateItem({ ...item, tags: existingTags });
         setSnackbar({
           open: true,
@@ -206,6 +238,7 @@ export function ItemManager() {
         });
       } else {
         // 新規作成の場合はそのまま作成（タグ情報も含まれている）
+        console.log('Creating item with tags:', item.tags);
         await createItem(item);
         setSnackbar({
           open: true,
@@ -217,6 +250,7 @@ export function ItemManager() {
       handleCloseItemDialog();
       refreshItems();
     } catch (error) {
+      console.error('Error saving item:', error);
       setSnackbar({
         open: true,
         message: '保存に失敗しました',
