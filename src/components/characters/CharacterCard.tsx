@@ -81,7 +81,7 @@ export const CharacterCard = ({
     <Card
       sx={{
         position: 'relative',
-        width: 280,
+        width: '100%',
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -93,7 +93,7 @@ export const CharacterCard = ({
       }}
       onClick={() => onSelect(id, !selected)}
     >
-      <Box sx={{ position: 'relative', height: 160, width: 280 }}>
+      <Box sx={{ position: 'relative', height: 160, width: '100%' }}>
         {loading && (
           <Skeleton
             variant="rectangular"
@@ -118,7 +118,7 @@ export const CharacterCard = ({
             <BrokenImageIcon sx={{ fontSize: 60, color: 'text.disabled' }} />
           </Box>
         ) : (
-          <Box sx={{ position: 'relative', height: 160, width: 280 }}>
+          <Box sx={{ position: 'relative', height: 160, width: '100%' }}>
             <Image
               src={imageUrl}
               alt={name}
