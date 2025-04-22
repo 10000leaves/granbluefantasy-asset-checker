@@ -89,7 +89,11 @@ export function ExportDialogContent({
     showWeapons: true,
     showSummons: true,
     includeUnowned: false,
-    tagFilters: {},
+    tagFilters: {
+      character: {},
+      weapon: {},
+      summon: {}
+    }
   });
 
   // タグカテゴリのマッピングを動的に生成
@@ -101,11 +105,26 @@ export function ExportDialogContent({
   useEffect(() => {
     if (allTagCategories.length > 0) {
       const tagCategoryMap = createTagCategoryMap(allTagCategories);
-      const initialTagFilters: Record<string, string[]> = {};
+      const initialTagFilters = {
+        character: {} as Record<string, string[]>,
+        weapon: {} as Record<string, string[]>,
+        summon: {} as Record<string, string[]>
+      };
       
       // 全てのカテゴリに対応するフィルターキーを初期化
-      Object.values(tagCategoryMap).forEach(key => {
-        initialTagFilters[key] = [];
+      Object.entries(tagCategoryMap).forEach(([categoryId, key]) => {
+        // カテゴリIDからアイテムタイプを判断
+        let itemType: 'character' | 'weapon' | 'summon' = 'character';
+        
+        if (characterTagCategories.some(cat => cat.id === categoryId)) {
+          itemType = 'character';
+        } else if (weaponTagCategories.some(cat => cat.id === categoryId)) {
+          itemType = 'weapon';
+        } else if (summonTagCategories.some(cat => cat.id === categoryId)) {
+          itemType = 'summon';
+        }
+        
+        initialTagFilters[itemType][key] = [];
       });
       
       setFilterSettings(prev => ({
@@ -113,7 +132,7 @@ export function ExportDialogContent({
         tagFilters: initialTagFilters
       }));
     }
-  }, [allTagCategories]);
+  }, [allTagCategories, characterTagCategories, weaponTagCategories, summonTagCategories]);
 
   // フィルター設定の変更ハンドラー
   const handleFilterChange = (setting: keyof ExportFilterSettings, checked: boolean) => {
@@ -125,6 +144,7 @@ export function ExportDialogContent({
 
   // タグフィルターの変更ハンドラー
   const handleTagFilterChange = (
+    itemType: 'character' | 'weapon' | 'summon',
     category: string,
     value: string,
     checked: boolean
@@ -133,31 +153,41 @@ export function ExportDialogContent({
       ...prev,
       tagFilters: {
         ...prev.tagFilters,
-        [category]: checked
-          ? [...(prev.tagFilters[category] || []), value]
-          : (prev.tagFilters[category] || []).filter(item => item !== value)
+        [itemType]: {
+          ...prev.tagFilters[itemType],
+          [category]: checked
+            ? [...(prev.tagFilters[itemType][category] || []), value]
+            : (prev.tagFilters[itemType][category] || []).filter(item => item !== value)
+        }
       }
     }));
   };
 
   // 特定のタグフィルターのクリア
-  const handleClearTagFilter = (category: string, value: string) => {
+  const handleClearTagFilter = (
+    itemType: 'character' | 'weapon' | 'summon',
+    category: string,
+    value: string
+  ) => {
     setFilterSettings(prev => ({
       ...prev,
       tagFilters: {
         ...prev.tagFilters,
-        [category]: (prev.tagFilters[category] || []).filter(item => item !== value)
+        [itemType]: {
+          ...prev.tagFilters[itemType],
+          [category]: (prev.tagFilters[itemType][category] || []).filter(item => item !== value)
+        }
       }
     }));
   };
 
   // 全てのタグフィルターのクリア
-  const handleClearAllTagFilters = () => {
-    const emptyTagFilters: Record<string, string[]> = {};
+  const handleClearAllTagFilters = (itemType: 'character' | 'weapon' | 'summon') => {
+    const emptyTagFilters = { ...filterSettings.tagFilters };
     
-    // 全てのフィルターキーを空の配列で初期化
-    Object.keys(filterSettings.tagFilters).forEach(key => {
-      emptyTagFilters[key] = [];
+    // 指定されたアイテムタイプのフィルターをクリア
+    Object.keys(emptyTagFilters[itemType]).forEach(key => {
+      emptyTagFilters[itemType][key] = [];
     });
     
     setFilterSettings(prev => ({
@@ -228,87 +258,101 @@ export function ExportDialogContent({
 
   // フィルター処理されたアイテム
   const filteredItems = useMemo(() => {
-    // タグフィルターが空の場合は全てのアイテムを表示
-    const hasActiveTagFilters = Object.values(filterSettings.tagFilters).some(
-      filters => filters.length > 0
-    );
-
-    if (!hasActiveTagFilters) {
-      return itemsWithUnowned;
-    }
+    // アイテムタイプごとのタグフィルターを取得
+    const characterTagFilters = filterSettings.tagFilters.character;
+    const weaponTagFilters = filterSettings.tagFilters.weapon;
+    const summonTagFilters = filterSettings.tagFilters.summon;
+    
+    // タグフィルターが空かどうかをチェック
+    const hasCharacterFilters = Object.values(characterTagFilters).some(filters => filters.length > 0);
+    const hasWeaponFilters = Object.values(weaponTagFilters).some(filters => filters.length > 0);
+    const hasSummonFilters = Object.values(summonTagFilters).some(filters => filters.length > 0);
 
     // キャラクターのフィルタリング
-    const filteredCharacters = itemsWithUnowned.characters.filter(character => {
-      // タグでのフィルタリング
-      const characterTagData = generateItemTagData(character, allTagCategories, {}, tagCategoryMap);
-      
-      // 各フィルターカテゴリをチェック
-      for (const [category, selectedValues] of Object.entries(filterSettings.tagFilters)) {
-        // 選択されていないカテゴリはスキップ
-        if (selectedValues.length === 0) continue;
-        
-        const characterValues = characterTagData[category] || [];
-        
-        // いずれかの値が一致するかチェック
-        const hasMatch = selectedValues.some(value => characterValues.includes(value));
-        
-        // 一致しない場合はフィルタリング
-        if (!hasMatch) return false;
-      }
+    const filteredCharacters = hasCharacterFilters
+      ? itemsWithUnowned.characters.filter(character => {
+          // タグでのフィルタリング
+          const characterTagData = generateItemTagData(character, characterTagCategories, {}, tagCategoryMap);
+          
+          // 各フィルターカテゴリをチェック
+          for (const [category, selectedValues] of Object.entries(characterTagFilters)) {
+            // 選択されていないカテゴリはスキップ
+            if (selectedValues.length === 0) continue;
+            
+            const characterValues = characterTagData[category] || [];
+            
+            // いずれかの値が一致するかチェック
+            const hasMatch = selectedValues.some(value => characterValues.includes(value));
+            
+            // 一致しない場合はフィルタリング
+            if (!hasMatch) return false;
+          }
 
-      return true;
-    });
+          return true;
+        })
+      : itemsWithUnowned.characters;
 
     // 武器のフィルタリング
-    const filteredWeapons = itemsWithUnowned.weapons.filter(weapon => {
-      // タグでのフィルタリング
-      const weaponTagData = generateItemTagData(weapon, allTagCategories, {}, tagCategoryMap);
-      
-      // 各フィルターカテゴリをチェック
-      for (const [category, selectedValues] of Object.entries(filterSettings.tagFilters)) {
-        // 選択されていないカテゴリはスキップ
-        if (selectedValues.length === 0) continue;
-        
-        const weaponValues = weaponTagData[category] || [];
-        
-        // いずれかの値が一致するかチェック
-        const hasMatch = selectedValues.some(value => weaponValues.includes(value));
-        
-        // 一致しない場合はフィルタリング
-        if (!hasMatch) return false;
-      }
+    const filteredWeapons = hasWeaponFilters
+      ? itemsWithUnowned.weapons.filter(weapon => {
+          // タグでのフィルタリング
+          const weaponTagData = generateItemTagData(weapon, weaponTagCategories, {}, tagCategoryMap);
+          
+          // 各フィルターカテゴリをチェック
+          for (const [category, selectedValues] of Object.entries(weaponTagFilters)) {
+            // 選択されていないカテゴリはスキップ
+            if (selectedValues.length === 0) continue;
+            
+            const weaponValues = weaponTagData[category] || [];
+            
+            // いずれかの値が一致するかチェック
+            const hasMatch = selectedValues.some(value => weaponValues.includes(value));
+            
+            // 一致しない場合はフィルタリング
+            if (!hasMatch) return false;
+          }
 
-      return true;
-    });
+          return true;
+        })
+      : itemsWithUnowned.weapons;
 
     // 召喚石のフィルタリング
-    const filteredSummons = itemsWithUnowned.summons.filter(summon => {
-      // タグでのフィルタリング
-      const summonTagData = generateItemTagData(summon, allTagCategories, {}, tagCategoryMap);
-      
-      // 各フィルターカテゴリをチェック
-      for (const [category, selectedValues] of Object.entries(filterSettings.tagFilters)) {
-        // 選択されていないカテゴリはスキップ
-        if (selectedValues.length === 0) continue;
-        
-        const summonValues = summonTagData[category] || [];
-        
-        // いずれかの値が一致するかチェック
-        const hasMatch = selectedValues.some(value => summonValues.includes(value));
-        
-        // 一致しない場合はフィルタリング
-        if (!hasMatch) return false;
-      }
+    const filteredSummons = hasSummonFilters
+      ? itemsWithUnowned.summons.filter(summon => {
+          // タグでのフィルタリング
+          const summonTagData = generateItemTagData(summon, summonTagCategories, {}, tagCategoryMap);
+          
+          // 各フィルターカテゴリをチェック
+          for (const [category, selectedValues] of Object.entries(summonTagFilters)) {
+            // 選択されていないカテゴリはスキップ
+            if (selectedValues.length === 0) continue;
+            
+            const summonValues = summonTagData[category] || [];
+            
+            // いずれかの値が一致するかチェック
+            const hasMatch = selectedValues.some(value => summonValues.includes(value));
+            
+            // 一致しない場合はフィルタリング
+            if (!hasMatch) return false;
+          }
 
-      return true;
-    });
+          return true;
+        })
+      : itemsWithUnowned.summons;
 
     return {
       characters: filteredCharacters,
       weapons: filteredWeapons,
       summons: filteredSummons
     };
-  }, [itemsWithUnowned, filterSettings.tagFilters, allTagCategories, tagCategoryMap]);
+  }, [
+    itemsWithUnowned, 
+    filterSettings.tagFilters, 
+    characterTagCategories, 
+    weaponTagCategories, 
+    summonTagCategories, 
+    tagCategoryMap
+  ]);
   
   // エクスポート中の表示
   if (isExporting) {
@@ -403,7 +447,11 @@ export function ExportDialogContent({
                 showWeapons: true,
                 showSummons: true,
                 includeUnowned: false,
-                tagFilters: {}
+                tagFilters: {
+                  character: {},
+                  weapon: {},
+                  summon: {}
+                }
               }}
               selectedItems={selectedItems}
               sessionData={sessionData}

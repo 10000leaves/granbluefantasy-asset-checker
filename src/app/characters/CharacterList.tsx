@@ -18,11 +18,13 @@ import {
   CardContent,
   CircularProgress,
   Alert,
+  Button,
 } from '@mui/material';
 import {
   Search as SearchIcon,
   FilterList as FilterListIcon,
   Close as CloseIcon,
+  CheckBox as CheckBoxIcon,
 } from '@mui/icons-material';
 import { CharacterCard } from '@/components/characters/CharacterCard';
 import { ExportPanel } from '@/components/common/ExportPanel';
@@ -35,7 +37,7 @@ import {
 } from '@/lib/utils/helpers';
 
 export function CharacterList() {
-  const { items: characters, loading, error, selectedItems, toggleItem } = useItems('character');
+  const { items: characters, loading, error, selectedItems, toggleItem, selectItems } = useItems('character');
   const { tagCategories, tagValues } = useTags('character');
 
   // 状態管理
@@ -180,6 +182,14 @@ export function CharacterList() {
   // キャラ選択処理
   const handleCharacterSelect = (id: string, selected: boolean) => {
     toggleItem(id);
+  };
+
+  // すべて選択処理
+  const handleSelectAll = () => {
+    // フィルター後のアイテムのIDを取得
+    const filteredIds = filteredCharacters.map(character => character.id);
+    // 選択状態を更新
+    selectItems(filteredIds);
   };
 
   // フィルターセクションのレンダリング
@@ -375,12 +385,23 @@ export function CharacterList() {
           <Typography variant="h6" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
             キャラ一覧 ({filteredCharacters.length})
           </Typography>
-          <Chip
-            label={`選択中: ${selectedItems.length}`}
-            color="primary"
-            size="small"
-            variant="outlined"
-          />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<CheckBoxIcon />}
+              onClick={handleSelectAll}
+              sx={{ borderRadius: '20px' }}
+            >
+              すべて選択
+            </Button>
+            <Chip
+              label={`選択中: ${selectedItems.length}`}
+              color="primary"
+              size="small"
+              variant="outlined"
+            />
+          </Box>
         </Box>
           <Box
             sx={{

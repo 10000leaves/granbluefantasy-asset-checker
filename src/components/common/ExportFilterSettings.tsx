@@ -41,15 +41,19 @@ export interface ExportFilterSettings {
   showWeapons: boolean;
   showSummons: boolean;
   includeUnowned: boolean;
-  tagFilters: Record<string, string[]>;
+  tagFilters: {
+    character: Record<string, string[]>;
+    weapon: Record<string, string[]>;
+    summon: Record<string, string[]>;
+  };
 }
 
 interface ExportFilterSettingsProps {
   filterSettings: ExportFilterSettings;
   onFilterChange: (setting: keyof ExportFilterSettings, checked: boolean) => void;
-  onTagFilterChange?: (category: string, value: string, checked: boolean) => void;
-  onClearTagFilter?: (category: string, value: string) => void;
-  onClearAllTagFilters?: () => void;
+  onTagFilterChange?: (itemType: 'character' | 'weapon' | 'summon', category: string, value: string, checked: boolean) => void;
+  onClearTagFilter?: (itemType: 'character' | 'weapon' | 'summon', category: string, value: string) => void;
+  onClearAllTagFilters?: (itemType: 'character' | 'weapon' | 'summon') => void;
   itemType?: 'character' | 'weapon' | 'summon';
   onItemTypeChange?: (itemType: 'character' | 'weapon' | 'summon') => void;
 }
@@ -86,8 +90,11 @@ export function ExportFilterSettingsComponent({
     return map;
   }, [tagValues]);
 
+  // 現在のアイテムタイプのタグフィルター
+  const currentTagFilters = filterSettings.tagFilters[itemType] || {};
+
   // アクティブなフィルター数
-  const activeFilterCount = Object.values(filterSettings.tagFilters || {}).reduce(
+  const activeFilterCount = Object.values(currentTagFilters).reduce(
     (count, filterArray) => count + filterArray.length,
     0
   );
@@ -104,7 +111,7 @@ export function ExportFilterSettingsComponent({
     checked: boolean
   ) => {
     if (onTagFilterChange) {
-      onTagFilterChange(category, value, checked);
+      onTagFilterChange(itemType, category, value, checked);
     }
   };
 
@@ -131,13 +138,13 @@ export function ExportFilterSettingsComponent({
             key={option.value}
             label={option.label}
             size="small"
-            variant={filterSettings.tagFilters[category]?.includes(option.value) ? "filled" : "outlined"}
-            color={filterSettings.tagFilters[category]?.includes(option.value) ? "primary" : "default"}
+            variant={currentTagFilters[category]?.includes(option.value) ? "filled" : "outlined"}
+            color={currentTagFilters[category]?.includes(option.value) ? "primary" : "default"}
             onClick={() =>
               handleTagFilterChange(
                 category,
                 option.value,
-                !filterSettings.tagFilters[category]?.includes(option.value)
+                !currentTagFilters[category]?.includes(option.value)
               )
             }
             sx={{
@@ -289,7 +296,7 @@ export function ExportFilterSettingsComponent({
           {/* アクティブタグフィルター表示 */}
           {activeFilterCount > 0 && (
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
-              {Object.entries(filterSettings.tagFilters || {}).map(([category, values]) =>
+              {Object.entries(currentTagFilters).map(([category, values]) =>
                 values.map((value) => {
                   let categoryName = '';
 
@@ -311,7 +318,7 @@ export function ExportFilterSettingsComponent({
                       key={`${category}-${value}`}
                       label={`${categoryName}: ${value}`}
                       size="small"
-                      onDelete={() => onClearTagFilter && onClearTagFilter(category, value)}
+                      onDelete={() => onClearTagFilter && onClearTagFilter(itemType, category, value)}
                       deleteIcon={<CloseIcon fontSize="small" />}
                       color="primary"
                       variant="outlined"
@@ -323,7 +330,7 @@ export function ExportFilterSettingsComponent({
               <Button
                 variant="outlined"
                 size="small"
-                onClick={() => onClearAllTagFilters && onClearAllTagFilters()}
+                onClick={() => onClearAllTagFilters && onClearAllTagFilters(itemType)}
                 sx={{ borderRadius: '16px', ml: 1 }}
               >
                 すべてクリア

@@ -29,7 +29,7 @@ export function ExportActionButtons({
   // 画像出力の場合（画像が生成済み）
   if (exportType === 'image' && exportedImageUrl) {
     return (
-      <Box sx={{ mt: 3, textAlign: 'center' }}>
+      <Box sx={{ my: 3, textAlign: 'center' }}>
         <Button
           variant="contained"
           color="primary"

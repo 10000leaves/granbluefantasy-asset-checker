@@ -18,11 +18,13 @@ import {
   CardContent,
   CircularProgress,
   Alert,
+  Button,
 } from '@mui/material';
 import {
   Search as SearchIcon,
   FilterList as FilterListIcon,
   Close as CloseIcon,
+  CheckBox as CheckBoxIcon,
 } from '@mui/icons-material';
 import { WeaponCard } from '@/components/weapons/WeaponCard';
 import { ExportPanel } from '@/components/common/ExportPanel';
@@ -44,7 +46,7 @@ interface Weapon {
 }
 
 export function WeaponList() {
-  const { items, loading, error, toggleItem, selectedItems: selectedWeapons } = useItems('weapon');
+  const { items, loading, error, toggleItem, selectedItems: selectedWeapons, selectItems } = useItems('weapon');
   const { tagCategories, tagValues } = useTags('weapon');
   
   // 状態管理
@@ -184,6 +186,14 @@ export function WeaponList() {
   // 武器選択処理
   const handleWeaponSelect = (id: string, selected: boolean) => {
     toggleItem(id);
+  };
+
+  // すべて選択処理
+  const handleSelectAll = () => {
+    // フィルター後のアイテムのIDを取得
+    const filteredIds = filteredWeapons.map(weapon => weapon.id);
+    // 選択状態を更新
+    selectItems(filteredIds);
   };
 
   // フィルターセクションのレンダリング
@@ -365,12 +375,23 @@ export function WeaponList() {
           <Typography variant="h6" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
             武器一覧 ({filteredWeapons.length})
           </Typography>
-          <Chip
-            label={`選択中: ${selectedWeapons.length}`}
-            color="primary"
-            size="small"
-            variant="outlined"
-          />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<CheckBoxIcon />}
+              onClick={handleSelectAll}
+              sx={{ borderRadius: '20px' }}
+            >
+              すべて選択
+            </Button>
+            <Chip
+              label={`選択中: ${selectedWeapons.length}`}
+              color="primary"
+              size="small"
+              variant="outlined"
+            />
+          </Box>
         </Box>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
@@ -398,9 +419,7 @@ export function WeaponList() {
             {filteredWeapons.map((weapon) => {
               // タグデータから属性とレアリティを取得
               const { element, rarity } = getItemAttributes(weapon, weapon.tagData || {});
-              // 武器種を取得
-              const weaponType = weapon.tagData?.weaponTypes?.[0] || '';
-              
+
               return (
                 <WeaponCard
                   key={weapon.id}
@@ -408,7 +427,6 @@ export function WeaponList() {
                   name={weapon.name}
                   imageUrl={weapon.imageUrl}
                   element={element as 'fire' | 'water' | 'earth' | 'wind' | 'light' | 'dark'}
-                  weaponType={weaponType}
                   rarity={rarity as 'SSR' | 'SR' | 'R'}
                   selected={selectedWeapons.includes(weapon.id)}
                   onSelect={handleWeaponSelect}

@@ -71,12 +71,17 @@ const elementIcons = {
   dark: { icon: DarkIcon, color: '#AA44FF' },
 };
 
+const rarityColors = {
+  SSR: '#FFD700',
+  SR: '#C0C0C0',
+  R: '#CD7F32',
+};
+
 export const WeaponCard = ({
   id,
   name,
   imageUrl,
   element,
-  weaponType,
   rarity = 'SSR',
   selected,
   onSelect,
@@ -292,28 +297,16 @@ export const WeaponCard = ({
             >
               {name}
             </Typography>
-            <Box sx={{ display: 'flex', gap: 0.5 }}>
-              <Chip
-                label={rarity}
-                size="small"
-                sx={{
-                  bgcolor: rarity === 'SSR' ? '#FFD700' : rarity === 'SR' ? '#C0C0C0' : '#CD7F32',
-                  color: rarity === 'SSR' ? '#000' : '#fff',
-                  fontWeight: 'bold',
-                  minWidth: 40,
-                }}
-              />
-              <Chip
-                label={weaponType}
-                size="small"
-                sx={{
-                  bgcolor: 'primary.main',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  minWidth: 40,
-                }}
-              />
-            </Box>
+            <Chip
+              label={rarity}
+              size="small"
+              sx={{
+                bgcolor: rarityColors[rarity],
+                color: 'white',
+                fontWeight: 'bold',
+                minWidth: 40,
+              }}
+            />
           </Box>
           
           {/* 所持数と覚醒入力エリア */}
