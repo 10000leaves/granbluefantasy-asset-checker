@@ -152,39 +152,52 @@ export function ItemManager() {
 
   // タグダイアログを開く
   const handleOpenTagDialog = async (item: any) => {
-    // 最新のアイテム情報を取得
-    await refreshItems();
-    
-    // 最新のアイテムを取得
-    const updatedItem = items.find(i => i.id === item.id) || item;
-    
-    setSelectedItem(updatedItem);
-    
-    // 選択されたタグを設定
-    const tags: Record<string, string[]> = {};
-    if (updatedItem.tags) {
-      updatedItem.tags.forEach((tag: any) => {
-        // タグのカテゴリIDとバリューIDを取得（データ形式の違いに対応）
-        const categoryId = tag.categoryId || tag.category_id;
-        const valueId = tag.valueId || tag.value_id;
-        
-        if (categoryId && valueId) {
-          if (!tags[categoryId]) {
-            tags[categoryId] = [];
-          }
+    try {
+      // APIから直接最新のアイテム情報を取得
+      const response = await fetch(`/api/items?category=${item.category}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch items');
+      }
+      const data = await response.json();
+      
+      // 最新のアイテムを取得
+      const updatedItem = data.find((i: any) => i.id === item.id) || item;
+      
+      setSelectedItem(updatedItem);
+      
+      // 選択されたタグを設定
+      const tags: Record<string, string[]> = {};
+      if (updatedItem.tags) {
+        updatedItem.tags.forEach((tag: any) => {
+          // タグのカテゴリIDとバリューIDを取得（データ形式の違いに対応）
+          const categoryId = tag.categoryId || tag.category_id;
+          const valueId = tag.valueId || tag.value_id;
           
-          // 重複を避けるために存在チェック
-          if (!tags[categoryId].includes(valueId)) {
-            tags[categoryId].push(valueId);
+          if (categoryId && valueId) {
+            if (!tags[categoryId]) {
+              tags[categoryId] = [];
+            }
+            
+            // 重複を避けるために存在チェック
+            if (!tags[categoryId].includes(valueId)) {
+              tags[categoryId].push(valueId);
+            }
           }
-        }
+        });
+      }
+      
+      console.log('Selected tags for dialog:', tags);
+      setSelectedTags(tags);
+      
+      setOpenTagDialog(true);
+    } catch (error) {
+      console.error('Error fetching item:', error);
+      setSnackbar({
+        open: true,
+        message: 'アイテム情報の取得に失敗しました',
+        severity: 'error',
       });
     }
-    
-    console.log('Selected tags for dialog:', tags);
-    setSelectedTags(tags);
-    
-    setOpenTagDialog(true);
   };
 
   // ダイアログを閉じる
@@ -282,19 +295,19 @@ export function ItemManager() {
       console.log('Saving tags:', tags);
       
       // アイテムを更新
-      const updatedItem = await updateItem({
-        id: selectedItem.id,
-        name: selectedItem.name,
-        category: selectedItem.category,
-        imageUrl: imageUrl,
-        implementationDate: implementationDate,
-        tags: tags,
-      });
-      
-      // 選択されたアイテムを更新
-      setSelectedItem({
-        ...selectedItem,
-        tags: tags
+      await fetch('/api/items', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: selectedItem.id,
+          name: selectedItem.name,
+          category: selectedItem.category,
+          imageUrl: imageUrl,
+          implementationDate: implementationDate,
+          tags: tags,
+        }),
       });
       
       setSnackbar({
@@ -304,7 +317,9 @@ export function ItemManager() {
       });
       
       handleCloseTagDialog();
-      await refreshItems(); // 非同期処理を待つ
+      
+      // アイテム一覧を更新
+      await refreshItems();
     } catch (error) {
       console.error('Error saving tags:', error);
       setSnackbar({
