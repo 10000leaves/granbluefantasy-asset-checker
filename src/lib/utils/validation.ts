@@ -70,11 +70,31 @@ export const sanitizeString = (input: string): string => {
  * @returns サニタイズされたオブジェクト
  */
 export const sanitizeObject = <T extends Record<string, any>>(obj: T): Record<string, any> => {
+  // nullまたはundefinedの場合は、そのまま返す
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+  
+  // 配列の場合は、各要素をサニタイズ
+  if (Array.isArray(obj)) {
+    return obj.map(item => {
+      if (typeof item === 'string') {
+        return sanitizeString(item);
+      } else if (typeof item === 'object' && item !== null) {
+        return sanitizeObject(item);
+      }
+      return item;
+    });
+  }
+  
+  // オブジェクトの場合は、各プロパティをサニタイズ
   const result: Record<string, any> = { ...obj };
   
   for (const key in result) {
     if (typeof result[key] === 'string') {
       result[key] = sanitizeString(result[key]);
+    } else if (Array.isArray(result[key])) {
+      result[key] = sanitizeObject(result[key]);
     } else if (typeof result[key] === 'object' && result[key] !== null) {
       result[key] = sanitizeObject(result[key]);
     }

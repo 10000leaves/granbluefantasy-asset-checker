@@ -290,15 +290,53 @@ export function ItemManager() {
       // タグ情報を作成
       console.log('selectedTags:', selectedTags);
       
-      const tags = Object.entries(selectedTags).flatMap(([categoryId, valueIds]) => {
-        console.log(`Processing category ${categoryId} with values:`, valueIds);
-        return valueIds.map(valueId => {
-          console.log(`Creating tag with categoryId: ${categoryId}, valueId: ${valueId}`);
-          return { categoryId, valueId };
-        });
-      });
+      // タグ値が存在するか確認
+      for (const [categoryId, valueIds] of Object.entries(selectedTags)) {
+        console.log(`Checking category ${categoryId} with values:`, valueIds);
+        
+        // タグカテゴリが存在するか確認
+        const category = tagCategories.find(c => c.id === categoryId);
+        if (!category) {
+          console.error(`Category ${categoryId} not found in tagCategories:`, tagCategories);
+        } else {
+          console.log(`Found category: ${category.name}`);
+        }
+        
+        // タグ値が存在するか確認
+        for (const valueId of valueIds) {
+          const value = tagValues.find(v => v.id === valueId);
+          if (!value) {
+            console.error(`Value ${valueId} not found in tagValues:`, tagValues);
+          } else {
+            console.log(`Found value: ${value.value} for category: ${category?.name}`);
+          }
+        }
+      }
+      
+      // タグ情報を配列に変換
+      const tags = [];
+      for (const [categoryId, valueIds] of Object.entries(selectedTags)) {
+        for (const valueId of valueIds) {
+          tags.push({
+            categoryId: categoryId,
+            valueId: valueId
+          });
+        }
+      }
       
       console.log('Saving tags:', tags);
+      
+      // リクエストボディを作成
+      const requestBody = {
+        id: selectedItem.id,
+        name: selectedItem.name,
+        category: selectedItem.category,
+        imageUrl: imageUrl,
+        implementationDate: implementationDate,
+        tags: tags,
+      };
+      
+      console.log('Request body:', JSON.stringify(requestBody, null, 2));
       
       // アイテムを更新
       const response = await fetch('/api/items', {
@@ -306,14 +344,7 @@ export function ItemManager() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          id: selectedItem.id,
-          name: selectedItem.name,
-          category: selectedItem.category,
-          imageUrl: imageUrl,
-          implementationDate: implementationDate,
-          tags: tags,
-        }),
+        body: JSON.stringify(requestBody),
       });
       
       if (!response.ok) {
