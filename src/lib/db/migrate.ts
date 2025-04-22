@@ -1,6 +1,21 @@
-import { query } from './index';
+// .env.localファイルを読み込む
+import * as dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
+
+import { query, testConnection } from './index';
+
+// データベース接続情報をログに出力（デバッグ用）
+console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Set' : 'Not set');
+console.log('NODE_ENV:', process.env.NODE_ENV);
 
 async function migrate() {
+  // データベース接続をテスト
+  const connected = await testConnection();
+  if (!connected) {
+    console.error('Database connection failed. Migration aborted.');
+    process.exit(1);
+  }
+
   try {
     console.log('Starting migration...');
 
