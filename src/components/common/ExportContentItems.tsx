@@ -20,6 +20,7 @@ interface ExportContentItemsProps {
       imageUrl: string;
       count?: number;
       awakenings?: WeaponAwakenings;
+      isUnowned?: boolean;
       [key: string]: any;
     }[];
     summons: any[];
@@ -44,9 +45,6 @@ export function ExportContentItems({
     selectedItems.characters.length + 
     selectedItems.weapons.length + 
     selectedItems.summons.length;
-
-  // 未所持アイテムを含めるかどうかのフラグ
-  const includeUnowned = filterSettings.includeUnowned;
 
   return (
     <>
@@ -132,7 +130,7 @@ export function ExportContentItems({
               キャラ ({selectedItems.characters.length})
             </Typography>
             <Grid container spacing={1}>
-              {selectedItems.characters.map(char => (
+              {selectedItems.characters.map((char) => (
                 <Grid item xs={4} sm={3} md={2} key={char.id}>
                   <Box sx={{ 
                     position: 'relative',
@@ -159,7 +157,7 @@ export function ExportContentItems({
                           }} 
                         />
                         {/* 未所持アイテムの場合、暗いレイヤーを追加 */}
-                        {includeUnowned && !selectedItems.characters.some(item => item.id === char.id) && (
+                        {char.isUnowned && (
                           <Box
                             sx={{
                               position: 'absolute',
@@ -204,7 +202,7 @@ export function ExportContentItems({
               武器 ({selectedItems.weapons.length})
             </Typography>
             <Grid container spacing={1}>
-              {selectedItems.weapons.map(weapon => (
+              {selectedItems.weapons.map((weapon) => (
                 <Grid item xs={4} sm={3} md={2} key={weapon.id}>
                   <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
                     {/* 武器画像 */}
@@ -232,7 +230,7 @@ export function ExportContentItems({
                             }} 
                           />
                           {/* 未所持アイテムの場合、暗いレイヤーを追加 */}
-                          {includeUnowned && !selectedItems.weapons.some(item => item.id === weapon.id) && (
+                          {weapon.isUnowned && (
                             <Box
                               sx={{
                                 position: 'absolute',
@@ -323,7 +321,7 @@ export function ExportContentItems({
               召喚石 ({selectedItems.summons.length})
             </Typography>
             <Grid container spacing={1}>
-              {selectedItems.summons.map(summon => (
+              {selectedItems.summons.map((summon) => (
                 <Grid item xs={4} sm={3} md={2} key={summon.id}>
                   <Box sx={{ 
                     position: 'relative',
@@ -350,7 +348,7 @@ export function ExportContentItems({
                           }} 
                         />
                         {/* 未所持アイテムの場合、暗いレイヤーを追加 */}
-                        {includeUnowned && !selectedItems.summons.some(item => item.id === summon.id) && (
+                        {summon.isUnowned && (
                           <Box
                             sx={{
                               position: 'absolute',

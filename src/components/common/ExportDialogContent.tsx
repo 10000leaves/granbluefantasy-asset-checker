@@ -5,6 +5,8 @@ import {
   Box,
   Typography,
   CircularProgress,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import { useInputItems } from '@/hooks/useInputItems';
 import { useTags } from '@/hooks/useTags';
@@ -52,7 +54,23 @@ export function ExportDialogContent({
 }: ExportDialogContentProps) {
   // 入力項目の情報を取得
   const { inputGroups } = useInputItems();
-  const { tagCategories, tagValues } = useTags('character');
+  
+  // タブ状態
+  const [currentItemType, setCurrentItemType] = useState<'character' | 'weapon' | 'summon'>('character');
+  
+  // タグ情報を取得
+  const { tagCategories: characterTagCategories, tagValues: characterTagValues } = useTags('character');
+  const { tagCategories: weaponTagCategories, tagValues: weaponTagValues } = useTags('weapon');
+  const { tagCategories: summonTagCategories, tagValues: summonTagValues } = useTags('summon');
+  
+  // 全てのタグカテゴリとタグ値を結合
+  const allTagCategories = useMemo(() => {
+    return [...characterTagCategories, ...weaponTagCategories, ...summonTagCategories];
+  }, [characterTagCategories, weaponTagCategories, summonTagCategories]);
+  
+  const allTagValues = useMemo(() => {
+    return [...characterTagValues, ...weaponTagValues, ...summonTagValues];
+  }, [characterTagValues, weaponTagValues, summonTagValues]);
   
   // エクスポートフィルター設定
   const [filterSettings, setFilterSettings] = useState<ExportFilterSettings>({
@@ -66,13 +84,13 @@ export function ExportDialogContent({
 
   // タグカテゴリのマッピングを動的に生成
   const tagCategoryMap = useMemo(() => {
-    return createTagCategoryMap(tagCategories);
-  }, [tagCategories]);
+    return createTagCategoryMap(allTagCategories);
+  }, [allTagCategories]);
 
   // タグカテゴリが読み込まれたら、動的にフィルター状態を初期化
   useEffect(() => {
-    if (tagCategories.length > 0) {
-      const tagCategoryMap = createTagCategoryMap(tagCategories);
+    if (allTagCategories.length > 0) {
+      const tagCategoryMap = createTagCategoryMap(allTagCategories);
       const initialTagFilters: Record<string, string[]> = {};
       
       // 全てのカテゴリに対応するフィルターキーを初期化
@@ -85,7 +103,7 @@ export function ExportDialogContent({
         tagFilters: initialTagFilters
       }));
     }
-  }, [tagCategories]);
+  }, [allTagCategories]);
 
   // フィルター設定の変更ハンドラー
   const handleFilterChange = (setting: keyof ExportFilterSettings, checked: boolean) => {
@@ -156,6 +174,30 @@ export function ExportDialogContent({
     return itemNameMap[itemId] || itemId;
   };
 
+  // 未所持アイテムを含める処理
+  const getItemsWithUnowned = useMemo(() => {
+    if (!filterSettings.includeUnowned) {
+      return selectedItems;
+    }
+
+    // 未所持アイテムを含めるロジック
+    // ここでは、選択されたアイテムに未所持フラグを追加する
+    return {
+      characters: selectedItems.characters.map(character => ({
+        ...character,
+        isUnowned: !selectedItems.characters.some(item => item.id === character.id)
+      })),
+      weapons: selectedItems.weapons.map(weapon => ({
+        ...weapon,
+        isUnowned: !selectedItems.weapons.some(item => item.id === weapon.id)
+      })),
+      summons: selectedItems.summons.map(summon => ({
+        ...summon,
+        isUnowned: !selectedItems.summons.some(item => item.id === summon.id)
+      }))
+    };
+  }, [selectedItems, filterSettings.includeUnowned]);
+
   // フィルター処理されたアイテム
   const filteredItems = useMemo(() => {
     // タグフィルターが空の場合は全てのアイテムを表示
@@ -163,14 +205,16 @@ export function ExportDialogContent({
       filters => filters.length > 0
     );
 
+    const itemsToFilter = getItemsWithUnowned;
+
     if (!hasActiveTagFilters) {
-      return selectedItems;
+      return itemsToFilter;
     }
 
     // キャラクターのフィルタリング
-    const filteredCharacters = selectedItems.characters.filter(character => {
+    const filteredCharacters = itemsToFilter.characters.filter(character => {
       // タグでのフィルタリング
-      const characterTagData = generateItemTagData(character, tagCategories, {}, tagCategoryMap);
+      const characterTagData = generateItemTagData(character, allTagCategories, {}, tagCategoryMap);
       
       // 各フィルターカテゴリをチェック
       for (const [category, selectedValues] of Object.entries(filterSettings.tagFilters)) {
@@ -188,9 +232,9 @@ export function ExportDialogContent({
     });
 
     // 武器のフィルタリング
-    const filteredWeapons = selectedItems.weapons.filter(weapon => {
+    const filteredWeapons = itemsToFilter.weapons.filter(weapon => {
       // タグでのフィルタリング
-      const weaponTagData = generateItemTagData(weapon, tagCategories, {}, tagCategoryMap);
+      const weaponTagData = generateItemTagData(weapon, allTagCategories, {}, tagCategoryMap);
       
       // 各フィルターカテゴリをチェック
       for (const [category, selectedValues] of Object.entries(filterSettings.tagFilters)) {
@@ -208,9 +252,9 @@ export function ExportDialogContent({
     });
 
     // 召喚石のフィルタリング
-    const filteredSummons = selectedItems.summons.filter(summon => {
+    const filteredSummons = itemsToFilter.summons.filter(summon => {
       // タグでのフィルタリング
-      const summonTagData = generateItemTagData(summon, tagCategories, {}, tagCategoryMap);
+      const summonTagData = generateItemTagData(summon, allTagCategories, {}, tagCategoryMap);
       
       // 各フィルターカテゴリをチェック
       for (const [category, selectedValues] of Object.entries(filterSettings.tagFilters)) {
@@ -232,7 +276,7 @@ export function ExportDialogContent({
       weapons: filteredWeapons,
       summons: filteredSummons
     };
-  }, [selectedItems, filterSettings.tagFilters, tagCategories, tagCategoryMap]);
+  }, [getItemsWithUnowned, filterSettings.tagFilters, allTagCategories, tagCategoryMap]);
   
   // エクスポート中の表示
   if (isExporting) {
@@ -287,20 +331,10 @@ export function ExportDialogContent({
     );
   }
 
-  // PDF/CSV出力の場合
-  if (exportType === 'pdf' || exportType === 'csv') {
+  // CSV出力の場合（フィルター設定なし）
+  if (exportType === 'csv') {
     return (
       <Box sx={{ py: 2, textAlign: 'center' }}>
-        {/* フィルター設定 */}
-        <ExportFilterSettingsComponent
-          filterSettings={filterSettings}
-          onFilterChange={handleFilterChange}
-          onTagFilterChange={handleTagFilterChange}
-          onClearTagFilter={handleClearTagFilter}
-          onClearAllTagFilters={handleClearAllTagFilters}
-          itemType="character"
-        />
-
         {/* アクションボタン */}
         <ExportActionButtons
           exportType={exportType}
@@ -309,7 +343,7 @@ export function ExportDialogContent({
           handleExport={handleExport}
         />
         
-        {/* エクスポートコンテンツ（PDF/CSV出力用） - 非表示 */}
+        {/* エクスポートコンテンツ（CSV出力用） - 非表示 */}
         <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
           <Box
             id="export-content"
@@ -323,8 +357,15 @@ export function ExportDialogContent({
             }}
           >
             <ExportContentItems
-              filterSettings={filterSettings}
-              selectedItems={filteredItems}
+              filterSettings={{
+                showUserInfo: true,
+                showCharacters: true,
+                showWeapons: true,
+                showSummons: true,
+                includeUnowned: false,
+                tagFilters: {}
+              }}
+              selectedItems={selectedItems}
               sessionData={sessionData}
               getItemName={getItemName}
               isPdfMode={true}
@@ -335,9 +376,23 @@ export function ExportDialogContent({
     );
   }
 
-  // エクスポートコンテンツ（プレビュー）
+  // PDF出力の場合またはプレビュー表示（画像出力）
   return (
     <Box sx={{ py: 2 }}>
+      {/* タブ切り替え */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+        <Tabs 
+          value={currentItemType} 
+          onChange={(_, newValue) => setCurrentItemType(newValue)}
+          variant="fullWidth"
+          aria-label="アイテムタイプ"
+        >
+          <Tab label="キャラ" value="character" />
+          <Tab label="武器" value="weapon" />
+          <Tab label="召喚石" value="summon" />
+        </Tabs>
+      </Box>
+
       {/* フィルター設定 */}
       <ExportFilterSettingsComponent
         filterSettings={filterSettings}
@@ -345,7 +400,7 @@ export function ExportDialogContent({
         onTagFilterChange={handleTagFilterChange}
         onClearTagFilter={handleClearTagFilter}
         onClearAllTagFilters={handleClearAllTagFilters}
-        itemType="character"
+        itemType={currentItemType}
       />
 
       {/* アクションボタン */}
@@ -373,7 +428,7 @@ export function ExportDialogContent({
           selectedItems={filteredItems}
           sessionData={sessionData}
           getItemName={getItemName}
-          isPdfMode={false}
+          isPdfMode={exportType === 'pdf'}
         />
       </Box>
     </Box>

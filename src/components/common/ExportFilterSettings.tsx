@@ -15,10 +15,16 @@ import {
   Card,
   CardContent,
   IconButton,
+  Button,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Stack,
 } from '@mui/material';
 import {
   FilterList as FilterListIcon,
   Close as CloseIcon,
+  ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
 import { useTags } from '@/hooks/useTags';
 import {
@@ -138,58 +144,79 @@ export function ExportFilterSettingsComponent({
 
   return (
     <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
-      <Typography variant="subtitle1" gutterBottom fontWeight="bold">
+      <Typography variant="subtitle1" gutterBottom fontWeight="bold" sx={{ mb: 2 }}>
         出力設定
       </Typography>
-      <FormGroup>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={filterSettings.showUserInfo}
-                  onChange={handleFilterChange('showUserInfo')}
-                />
-              }
-              label="ユーザー情報を表示"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={filterSettings.showCharacters}
-                  onChange={handleFilterChange('showCharacters')}
-                />
-              }
-              label="キャラを表示"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={filterSettings.showWeapons}
-                  onChange={handleFilterChange('showWeapons')}
-                />
-              }
-              label="武器を表示"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={filterSettings.showSummons}
-                  onChange={handleFilterChange('showSummons')}
-                />
-              }
-              label="召喚石を表示"
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <Divider sx={{ my: 1 }} />
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+
+      {/* 表示設定 */}
+      <Accordion 
+        defaultExpanded 
+        elevation={0} 
+        sx={{ 
+          '&:before': { display: 'none' },
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: '8px',
+          mb: 2
+        }}
+      >
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          sx={{ 
+            bgcolor: 'background.default',
+            borderRadius: '8px 8px 0 0',
+          }}
+        >
+          <Typography variant="subtitle2" fontWeight="bold">表示設定</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={filterSettings.showUserInfo}
+                    onChange={handleFilterChange('showUserInfo')}
+                  />
+                }
+                label="ユーザー情報を表示"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={filterSettings.showCharacters}
+                    onChange={handleFilterChange('showCharacters')}
+                  />
+                }
+                label="キャラを表示"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={filterSettings.showWeapons}
+                    onChange={handleFilterChange('showWeapons')}
+                  />
+                }
+                label="武器を表示"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={filterSettings.showSummons}
+                    onChange={handleFilterChange('showSummons')}
+                  />
+                }
+                label="召喚石を表示"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Divider sx={{ my: 1 }} />
               <FormControlLabel
                 control={
                   <Checkbox
@@ -199,109 +226,128 @@ export function ExportFilterSettingsComponent({
                 }
                 label="未所持アイテムも含める"
               />
-              <IconButton
-                aria-label="タグフィルター"
-                onClick={() => setShowTagFilters(!showTagFilters)}
-                sx={{
-                  bgcolor: showTagFilters ? 'primary.main' : 'inherit',
-                  color: showTagFilters ? 'primary.contrastText' : 'inherit',
-                  '&:hover': {
-                    bgcolor: showTagFilters ? 'primary.dark' : 'inherit',
-                  },
-                  borderRadius: '8px',
-                  ml: 1,
-                }}
-                size="small"
-              >
-                <FilterListIcon fontSize="small" />
-              </IconButton>
-            </Box>
-          </Grid>
-        </Grid>
-      </FormGroup>
-
-      {/* アクティブタグフィルター表示 */}
-      {activeFilterCount > 0 && (
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 2, mb: 1 }}>
-          {Object.entries(filterSettings.tagFilters || {}).map(([category, values]) =>
-            values.map((value) => {
-              let categoryName = '';
-
-              // カテゴリIDを逆引き
-              const categoryId = Object.entries(tagCategoryMap).find(
-                ([_, key]) => key === category
-              )?.[0];
-              
-              // カテゴリ名を取得
-              if (categoryId) {
-                const categoryObj = tagCategories.find(c => c.id === categoryId);
-                if (categoryObj) {
-                  categoryName = categoryObj.name;
-                }
-              }
-
-              return (
-                <Chip
-                  key={`${category}-${value}`}
-                  label={`${categoryName}: ${value}`}
-                  size="small"
-                  onDelete={() => onClearTagFilter && onClearTagFilter(category, value)}
-                  deleteIcon={<CloseIcon fontSize="small" />}
-                  color="primary"
-                  variant="outlined"
-                  sx={{ borderRadius: '16px' }}
-                />
-              );
-            })
-          )}
-          <Chip
-            label="クリア"
-            size="small"
-            onClick={() => onClearAllTagFilters && onClearAllTagFilters()}
-            color="default"
-            sx={{ borderRadius: '16px' }}
-          />
-        </Box>
-      )}
-
-      {/* タグフィルターオプション */}
-      <Collapse in={showTagFilters}>
-        <Divider sx={{ my: 1.5 }} />
-        <Card variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
-          <CardContent sx={{ p: 0 }}>
-            <Grid container spacing={2}>
-              {tagCategories.map((category) => {
-                // カテゴリに対応するフィルターキーを取得
-                const filterKey = Object.entries(tagCategoryMap).find(
-                  ([id, _]) => id === category.id
-                )?.[1];
-                
-                if (!filterKey) return null;
-                
-                // カテゴリに属するタグ値を取得
-                const categoryValues = tagValues.filter(
-                  (value) => value.categoryId === category.id
-                );
-                
-                // タグ値がない場合はスキップ
-                if (categoryValues.length === 0) return null;
-                
-                // フィルターオプションを作成
-                const options = categoryValues.map((value) => ({
-                  value: value.value,
-                  label: value.value,
-                }));
-                
-                return (
-                  <Grid item xs={12} key={category.id}>
-                    {renderFilterSection(category.name, filterKey, options)}
-                  </Grid>
-                );
-              })}
             </Grid>
-          </CardContent>
-        </Card>
-      </Collapse>
+          </Grid>
+        </AccordionDetails>
+      </Accordion>
+
+      {/* タグフィルター */}
+      <Accordion 
+        elevation={0} 
+        sx={{ 
+          '&:before': { display: 'none' },
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: '8px',
+        }}
+      >
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          sx={{ 
+            bgcolor: 'background.default',
+            borderRadius: '8px 8px 0 0',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
+            <Typography variant="subtitle2" fontWeight="bold">タグフィルター</Typography>
+            {activeFilterCount > 0 && (
+              <Chip 
+                label={`${activeFilterCount}個選択中`} 
+                size="small" 
+                color="primary" 
+                sx={{ ml: 1 }}
+              />
+            )}
+          </Box>
+        </AccordionSummary>
+        <AccordionDetails>
+          {/* アクティブタグフィルター表示 */}
+          {activeFilterCount > 0 && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
+              {Object.entries(filterSettings.tagFilters || {}).map(([category, values]) =>
+                values.map((value) => {
+                  let categoryName = '';
+
+                  // カテゴリIDを逆引き
+                  const categoryId = Object.entries(tagCategoryMap).find(
+                    ([_, key]) => key === category
+                  )?.[0];
+                  
+                  // カテゴリ名を取得
+                  if (categoryId) {
+                    const categoryObj = tagCategories.find(c => c.id === categoryId);
+                    if (categoryObj) {
+                      categoryName = categoryObj.name;
+                    }
+                  }
+
+                  return (
+                    <Chip
+                      key={`${category}-${value}`}
+                      label={`${categoryName}: ${value}`}
+                      size="small"
+                      onDelete={() => onClearTagFilter && onClearTagFilter(category, value)}
+                      deleteIcon={<CloseIcon fontSize="small" />}
+                      color="primary"
+                      variant="outlined"
+                      sx={{ borderRadius: '16px' }}
+                    />
+                  );
+                })
+              )}
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => onClearAllTagFilters && onClearAllTagFilters()}
+                sx={{ borderRadius: '16px', ml: 1 }}
+              >
+                すべてクリア
+              </Button>
+            </Box>
+          )}
+
+          {/* タグフィルターオプション */}
+          <Stack spacing={2}>
+            {tagCategories.map((category) => {
+              // カテゴリに対応するフィルターキーを取得
+              const filterKey = Object.entries(tagCategoryMap).find(
+                ([id, _]) => id === category.id
+              )?.[1];
+              
+              if (!filterKey) return null;
+              
+              // カテゴリに属するタグ値を取得
+              const categoryValues = tagValues.filter(
+                (value) => value.categoryId === category.id
+              );
+              
+              // タグ値がない場合はスキップ
+              if (categoryValues.length === 0) return null;
+              
+              // フィルターオプションを作成
+              const options = categoryValues.map((value) => ({
+                value: value.value,
+                label: value.value,
+              }));
+              
+              return (
+                <Card 
+                  key={category.id} 
+                  variant="outlined" 
+                  sx={{ 
+                    borderRadius: '8px',
+                    overflow: 'visible'
+                  }}
+                >
+                  <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                    {renderFilterSection(category.name, filterKey, options)}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </Stack>
+        </AccordionDetails>
+      </Accordion>
     </Paper>
   );
 }
