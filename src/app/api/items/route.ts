@@ -72,12 +72,13 @@ export async function GET(request: NextRequest) {
 
     const { rows } = await query(sql, params);
     
-    // image_urlをimageUrlに変換
+    // image_urlをimageUrl、implementation_dateをimplementationDateに変換
     const formattedRows = rows.map(row => {
-      const { image_url, ...rest } = row;
+      const { image_url, implementation_date, ...rest } = row;
       return {
         ...rest,
-        imageUrl: image_url
+        imageUrl: image_url,
+        implementationDate: implementation_date
       };
     });
     
@@ -156,11 +157,12 @@ export async function POST(request: NextRequest) {
         GROUP BY i.id
       `, [item.id]);
       
-      // image_urlをimageUrlに変換
-      const { image_url, ...rest } = itemWithTags;
+      // image_urlをimageUrl、implementation_dateをimplementationDateに変換
+      const { image_url, implementation_date, ...rest } = itemWithTags;
       const formattedItem = {
         ...rest,
-        imageUrl: image_url
+        imageUrl: image_url,
+        implementationDate: implementation_date
       };
       
       return NextResponse.json(formattedItem);
@@ -284,11 +286,12 @@ export async function PUT(request: NextRequest) {
         GROUP BY i.id
       `, [id]);
       
-      // image_urlをimageUrlに変換
-      const { image_url, ...rest } = itemWithTags;
+      // image_urlをimageUrl、implementation_dateをimplementationDateに変換
+      const { image_url, implementation_date, ...rest } = itemWithTags;
       const formattedItem = {
         ...rest,
-        imageUrl: image_url
+        imageUrl: image_url,
+        implementationDate: implementation_date
       };
       
       return NextResponse.json(formattedItem);

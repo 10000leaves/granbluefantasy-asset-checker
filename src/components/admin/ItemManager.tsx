@@ -122,7 +122,7 @@ export function ItemManager() {
       category: item.category,
       imageUrl: item.imageUrl,
       imageFile: null,
-      implementationDate: item.implementationDate || item.implementation_date || new Date().toISOString().split('T')[0],
+      implementationDate: item.implementationDate,
     });
     
     // 選択されたタグを設定
