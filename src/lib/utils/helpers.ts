@@ -133,6 +133,22 @@ export const convertElementJaToEn = (jaValue: string): string => {
 };
 
 /**
+ * 属性の英語から日本語への変換
+ */
+export const translateElement = (element: string): string => {
+  const elementTranslations: { [key: string]: string } = {
+    fire: '火',
+    water: '水',
+    earth: '土',
+    wind: '風',
+    light: '光',
+    dark: '闇',
+  };
+
+  return elementTranslations[element] || element;
+};
+
+/**
  * タグカテゴリから動的にフィルターキーのマッピングを生成
  * カテゴリIDをキーとして、動的に生成したフィルターキー（a, b, c, ...）を値とするマップを返す
  */

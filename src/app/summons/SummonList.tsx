@@ -29,6 +29,7 @@ import { useTags } from '@/hooks/useTags';
 import { 
   createTagCategoryMap,
   generateItemTagData,
+  getItemAttributes
 } from '@/lib/utils/helpers';
 
 // 召喚石データの型定義
@@ -271,9 +272,7 @@ export function SummonList() {
                     categoryName = categoryObj.name;
                   }
                 }
-                
-                // 属性も含めて全て日本語のまま表示
-                
+
                 return (
                   <Chip
                     key={`${category}-${value}`}
@@ -375,9 +374,8 @@ export function SummonList() {
             }}
           >
             {filteredSummons.map((summon) => {
-              // タグデータから属性、レアリティを取得
-              const element = summon.tagData?.elements?.[0] || 'fire';
-              const rarity = summon.tagData?.rarities?.[0] || 'SSR';
+              // タグデータから属性とレアリティを取得
+              const { element, rarity } = getItemAttributes(summon, summon.tagData || {});
               
               return (
                 <SummonCard
@@ -385,8 +383,8 @@ export function SummonList() {
                   id={summon.id}
                   name={summon.name}
                   imageUrl={summon.imageUrl}
-                  element={element as any}
-                  rarity={rarity as any}
+                  element={element as 'fire' | 'water' | 'earth' | 'wind' | 'light' | 'dark'}
+                  rarity={rarity as 'SSR' | 'SR' | 'R'}
                   selected={selectedSummons.includes(summon.id)}
                   onSelect={handleSummonSelect}
                 />

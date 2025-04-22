@@ -30,6 +30,8 @@ import {
 import { useAtom } from 'jotai';
 import { weaponCountsAtom, weaponAwakeningsAtom, AwakeningType } from '@/atoms';
 
+import { translateElement } from '../../lib/utils/helpers';
+
 interface WeaponCardProps {
   id: string;
   name: string;
@@ -253,7 +255,7 @@ export const WeaponCard = ({
             },
           }}
         />
-        <Tooltip title={`${element}属性`}>
+        <Tooltip title={`${translateElement(element)}属性`}>
           <IconButton
             size="small"
             sx={{
@@ -376,7 +378,7 @@ export const WeaponCard = ({
               gap: 1
             }}
           >
-            <Tooltip title="覚醒設定">
+            <Tooltip title="覚醒タイプ">
               <IconButton
                 size="small"
                 onClick={toggleAwakeningOptions}
@@ -417,7 +419,7 @@ export const WeaponCard = ({
           <Collapse in={showAwakeningOptions}>
             <Box sx={{ mt: 1, p: 1, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
               <Typography variant="caption" sx={{ display: 'block', mb: 1, fontWeight: 'bold' }}>
-                覚醒設定（残り: {Math.max(0, count - totalAwakeningCount)}本）
+                覚醒タイプ（残り: {Math.max(0, count - totalAwakeningCount)}本）
               </Typography>
               
               {awakeningTypes.map((type) => {

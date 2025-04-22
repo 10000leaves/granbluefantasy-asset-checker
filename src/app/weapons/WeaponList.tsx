@@ -29,6 +29,7 @@ import { useTags } from '@/hooks/useTags';
 import {
   createTagCategoryMap,
   generateItemTagData,
+  getItemAttributes
 } from '@/lib/utils/helpers';
 
 // 武器データの型定義
@@ -375,10 +376,10 @@ export function WeaponList() {
             }}
           >
             {filteredWeapons.map((weapon) => {
-              // タグデータから属性、武器種、レアリティを取得
-              const element = weapon.tagData?.elements?.[0] || 'fire';
+              // タグデータから属性とレアリティを取得
+              const { element, rarity } = getItemAttributes(weapon, weapon.tagData || {});
+              // 武器種を取得
               const weaponType = weapon.tagData?.weaponTypes?.[0] || '';
-              const rarity = weapon.tagData?.rarities?.[0] || 'SSR';
               
               return (
                 <WeaponCard
@@ -386,9 +387,9 @@ export function WeaponList() {
                   id={weapon.id}
                   name={weapon.name}
                   imageUrl={weapon.imageUrl}
-                  element={element as any}
+                  element={element as 'fire' | 'water' | 'earth' | 'wind' | 'light' | 'dark'}
                   weaponType={weaponType}
-                  rarity={rarity as any}
+                  rarity={rarity as 'SSR' | 'SR' | 'R'}
                   selected={selectedWeapons.includes(weapon.id)}
                   onSelect={handleWeaponSelect}
                 />

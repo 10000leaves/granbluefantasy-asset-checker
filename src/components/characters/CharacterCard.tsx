@@ -21,6 +21,8 @@ import {
   BrokenImage as BrokenImageIcon,
 } from '@mui/icons-material';
 
+import { translateElement } from '../../lib/utils/helpers';
+
 interface CharacterCardProps {
   id: string;
   name: string;
@@ -150,7 +152,7 @@ export const CharacterCard = ({
             },
           }}
         />
-        <Tooltip title={`${element}属性`}>
+        <Tooltip title={`${translateElement(element)}属性`}>
           <IconButton
             size="small"
             sx={{
