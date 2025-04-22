@@ -151,13 +151,19 @@ export function ItemManager() {
   };
 
   // タグダイアログを開く
-  const handleOpenTagDialog = (item: any) => {
-    setSelectedItem(item);
+  const handleOpenTagDialog = async (item: any) => {
+    // 最新のアイテム情報を取得
+    await refreshItems();
+    
+    // 最新のアイテムを取得
+    const updatedItem = items.find(i => i.id === item.id) || item;
+    
+    setSelectedItem(updatedItem);
     
     // 選択されたタグを設定
     const tags: Record<string, string[]> = {};
-    if (item.tags) {
-      item.tags.forEach((tag: any) => {
+    if (updatedItem.tags) {
+      updatedItem.tags.forEach((tag: any) => {
         // タグのカテゴリIDとバリューIDを取得（データ形式の違いに対応）
         const categoryId = tag.categoryId || tag.category_id;
         const valueId = tag.valueId || tag.value_id;
@@ -268,15 +274,27 @@ export function ItemManager() {
       const imageUrl = selectedItem.imageUrl || selectedItem.image_url || '';
       const implementationDate = selectedItem.implementationDate || selectedItem.implementation_date || new Date().toISOString().split('T')[0];
       
-      await updateItem({
+      // タグ情報を作成
+      const tags = Object.entries(selectedTags).flatMap(([categoryId, valueIds]) => 
+        valueIds.map(valueId => ({ categoryId, valueId }))
+      );
+      
+      console.log('Saving tags:', tags);
+      
+      // アイテムを更新
+      const updatedItem = await updateItem({
         id: selectedItem.id,
         name: selectedItem.name,
         category: selectedItem.category,
         imageUrl: imageUrl,
         implementationDate: implementationDate,
-        tags: Object.entries(selectedTags).flatMap(([categoryId, valueIds]) => 
-          valueIds.map(valueId => ({ categoryId, valueId }))
-        ),
+        tags: tags,
+      });
+      
+      // 選択されたアイテムを更新
+      setSelectedItem({
+        ...selectedItem,
+        tags: tags
       });
       
       setSnackbar({
@@ -286,8 +304,9 @@ export function ItemManager() {
       });
       
       handleCloseTagDialog();
-      refreshItems();
+      await refreshItems(); // 非同期処理を待つ
     } catch (error) {
+      console.error('Error saving tags:', error);
       setSnackbar({
         open: true,
         message: 'タグの更新に失敗しました',
