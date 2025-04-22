@@ -1,19 +1,18 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   Box,
   Typography,
   CircularProgress,
-  Button,
-  Grid,
 } from '@mui/material';
-import {
-  Download as DownloadIcon,
-} from '@mui/icons-material';
 import { useInputItems } from '@/hooks/useInputItems';
-import { renderInputValue } from './ExportUtils';
+import { useTags } from '@/hooks/useTags';
+import { ExportFilterSettings, ExportFilterSettingsComponent } from './ExportFilterSettings';
+import { ExportContentItems } from './ExportContentItems';
+import { ExportActionButtons } from './ExportActionButtons';
 import { WeaponAwakenings } from '@/atoms';
+import { createTagCategoryMap, generateItemTagData } from '@/lib/utils/helpers';
 
 interface ExportDialogContentProps {
   exportType: 'image' | 'pdf' | 'csv';
@@ -38,7 +37,9 @@ interface ExportDialogContentProps {
   sessionData: any;
 }
 
-
+/**
+ * エクスポートダイアログのコンテンツコンポーネント
+ */
 export function ExportDialogContent({
   exportType,
   isExporting,
@@ -51,6 +52,91 @@ export function ExportDialogContent({
 }: ExportDialogContentProps) {
   // 入力項目の情報を取得
   const { inputGroups } = useInputItems();
+  const { tagCategories, tagValues } = useTags('character');
+  
+  // エクスポートフィルター設定
+  const [filterSettings, setFilterSettings] = useState<ExportFilterSettings>({
+    showUserInfo: true,
+    showCharacters: true,
+    showWeapons: true,
+    showSummons: true,
+    includeUnowned: false,
+    tagFilters: {},
+  });
+
+  // タグカテゴリのマッピングを動的に生成
+  const tagCategoryMap = useMemo(() => {
+    return createTagCategoryMap(tagCategories);
+  }, [tagCategories]);
+
+  // タグカテゴリが読み込まれたら、動的にフィルター状態を初期化
+  useEffect(() => {
+    if (tagCategories.length > 0) {
+      const tagCategoryMap = createTagCategoryMap(tagCategories);
+      const initialTagFilters: Record<string, string[]> = {};
+      
+      // 全てのカテゴリに対応するフィルターキーを初期化
+      Object.values(tagCategoryMap).forEach(key => {
+        initialTagFilters[key] = [];
+      });
+      
+      setFilterSettings(prev => ({
+        ...prev,
+        tagFilters: initialTagFilters
+      }));
+    }
+  }, [tagCategories]);
+
+  // フィルター設定の変更ハンドラー
+  const handleFilterChange = (setting: keyof ExportFilterSettings, checked: boolean) => {
+    setFilterSettings({
+      ...filterSettings,
+      [setting]: checked,
+    });
+  };
+
+  // タグフィルターの変更ハンドラー
+  const handleTagFilterChange = (
+    category: string,
+    value: string,
+    checked: boolean
+  ) => {
+    setFilterSettings(prev => ({
+      ...prev,
+      tagFilters: {
+        ...prev.tagFilters,
+        [category]: checked
+          ? [...(prev.tagFilters[category] || []), value]
+          : (prev.tagFilters[category] || []).filter(item => item !== value)
+      }
+    }));
+  };
+
+  // 特定のタグフィルターのクリア
+  const handleClearTagFilter = (category: string, value: string) => {
+    setFilterSettings(prev => ({
+      ...prev,
+      tagFilters: {
+        ...prev.tagFilters,
+        [category]: (prev.tagFilters[category] || []).filter(item => item !== value)
+      }
+    }));
+  };
+
+  // 全てのタグフィルターのクリア
+  const handleClearAllTagFilters = () => {
+    const emptyTagFilters: Record<string, string[]> = {};
+    
+    // 全てのフィルターキーを空の配列で初期化
+    Object.keys(filterSettings.tagFilters).forEach(key => {
+      emptyTagFilters[key] = [];
+    });
+    
+    setFilterSettings(prev => ({
+      ...prev,
+      tagFilters: emptyTagFilters
+    }));
+  };
   
   // 項目IDから項目名を取得するマップを作成
   const itemNameMap = useMemo(() => {
@@ -69,13 +155,84 @@ export function ExportDialogContent({
   const getItemName = (itemId: string): string => {
     return itemNameMap[itemId] || itemId;
   };
-  
-  // 選択されたアイテムの数を取得
-  const totalSelectedItems = useMemo(() => {
-    return selectedItems.characters.length + 
-           selectedItems.weapons.length + 
-           selectedItems.summons.length;
-  }, [selectedItems]);
+
+  // フィルター処理されたアイテム
+  const filteredItems = useMemo(() => {
+    // タグフィルターが空の場合は全てのアイテムを表示
+    const hasActiveTagFilters = Object.values(filterSettings.tagFilters).some(
+      filters => filters.length > 0
+    );
+
+    if (!hasActiveTagFilters) {
+      return selectedItems;
+    }
+
+    // キャラクターのフィルタリング
+    const filteredCharacters = selectedItems.characters.filter(character => {
+      // タグでのフィルタリング
+      const characterTagData = generateItemTagData(character, tagCategories, {}, tagCategoryMap);
+      
+      // 各フィルターカテゴリをチェック
+      for (const [category, selectedValues] of Object.entries(filterSettings.tagFilters)) {
+        if (selectedValues.length === 0) continue;
+        
+        const characterValues = characterTagData[category] || [];
+        
+        // いずれかの値が一致するかチェック
+        const hasMatch = selectedValues.some(value => characterValues.includes(value));
+        
+        if (!hasMatch) return false;
+      }
+
+      return true;
+    });
+
+    // 武器のフィルタリング
+    const filteredWeapons = selectedItems.weapons.filter(weapon => {
+      // タグでのフィルタリング
+      const weaponTagData = generateItemTagData(weapon, tagCategories, {}, tagCategoryMap);
+      
+      // 各フィルターカテゴリをチェック
+      for (const [category, selectedValues] of Object.entries(filterSettings.tagFilters)) {
+        if (selectedValues.length === 0) continue;
+        
+        const weaponValues = weaponTagData[category] || [];
+        
+        // いずれかの値が一致するかチェック
+        const hasMatch = selectedValues.some(value => weaponValues.includes(value));
+        
+        if (!hasMatch) return false;
+      }
+
+      return true;
+    });
+
+    // 召喚石のフィルタリング
+    const filteredSummons = selectedItems.summons.filter(summon => {
+      // タグでのフィルタリング
+      const summonTagData = generateItemTagData(summon, tagCategories, {}, tagCategoryMap);
+      
+      // 各フィルターカテゴリをチェック
+      for (const [category, selectedValues] of Object.entries(filterSettings.tagFilters)) {
+        if (selectedValues.length === 0) continue;
+        
+        const summonValues = summonTagData[category] || [];
+        
+        // いずれかの値が一致するかチェック
+        const hasMatch = selectedValues.some(value => summonValues.includes(value));
+        
+        if (!hasMatch) return false;
+      }
+
+      return true;
+    });
+
+    return {
+      characters: filteredCharacters,
+      weapons: filteredWeapons,
+      summons: filteredSummons
+    };
+  }, [selectedItems, filterSettings.tagFilters, tagCategories, tagCategoryMap]);
   
   // エクスポート中の表示
   if (isExporting) {
@@ -101,7 +258,7 @@ export function ExportDialogContent({
     );
   }
 
-  // 画像出力の場合
+  // 画像出力の場合（画像が生成済み）
   if (exportType === 'image' && exportedImageUrl) {
     return (
       <Box sx={{ textAlign: 'center' }}>
@@ -120,18 +277,12 @@ export function ExportDialogContent({
             style={{ maxWidth: '100%', display: 'block' }}
           />
         </Box>
-        <Box sx={{ mt: 3 }}>
-          <Button
-            variant="contained"
-            color="primary"
-            size="large"
-            startIcon={<DownloadIcon />}
-            onClick={handleDownload}
-            sx={{ px: 4, py: 1 }}
-          >
-            画像をダウンロード
-          </Button>
-        </Box>
+        <ExportActionButtons
+          exportType={exportType}
+          exportedImageUrl={exportedImageUrl}
+          handleDownload={handleDownload}
+          handleExport={handleExport}
+        />
       </Box>
     );
   }
@@ -140,32 +291,23 @@ export function ExportDialogContent({
   if (exportType === 'pdf' || exportType === 'csv') {
     return (
       <Box sx={{ py: 2, textAlign: 'center' }}>
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center',
-          mb: 3,
-          p: 2,
-          bgcolor: 'primary.light',
-          color: 'primary.contrastText',
-          borderRadius: 2
-        }}>
-          <Typography variant="h6" gutterBottom>
-            {exportType === 'pdf' ? 'PDFを出力' : 'CSVを出力'}
-          </Typography>
-          <Typography variant="body1" align="center">
-            選択したアイテムと入力情報を{exportType === 'pdf' ? 'PDF' : 'CSV'}形式で出力します。
-          </Typography>
-          <Button
-            variant="contained"
-            color="secondary"
-            size="large"
-            onClick={handleExport}
-            sx={{ mt: 2, px: 4, py: 1, fontWeight: 'bold' }}
-          >
-            {exportType === 'pdf' ? 'PDFを生成' : 'CSVを生成'}
-          </Button>
-        </Box>
+        {/* フィルター設定 */}
+        <ExportFilterSettingsComponent
+          filterSettings={filterSettings}
+          onFilterChange={handleFilterChange}
+          onTagFilterChange={handleTagFilterChange}
+          onClearTagFilter={handleClearTagFilter}
+          onClearAllTagFilters={handleClearAllTagFilters}
+          itemType="character"
+        />
+
+        {/* アクションボタン */}
+        <ExportActionButtons
+          exportType={exportType}
+          exportedImageUrl={exportedImageUrl}
+          handleDownload={handleDownload}
+          handleExport={handleExport}
+        />
         
         {/* エクスポートコンテンツ（PDF/CSV出力用） - 非表示 */}
         <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
@@ -180,217 +322,13 @@ export function ExportDialogContent({
               boxShadow: 1,
             }}
           >
-            <Typography variant="h5" gutterBottom>
-              グラブル所持チェッカー
-            </Typography>
-            
-            {/* ユーザー情報 */}
-            {sessionData?.inputValues && Object.keys(sessionData.inputValues).length > 0 && (
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  ユーザー情報
-                </Typography>
-                <Grid container spacing={2}>
-                  {Object.entries(sessionData.inputValues).map(([key, value]) => (
-                    <Grid item xs={6} sm={4} key={key}>
-                      <Typography variant="body2" color="text.secondary">
-                        {getItemName(key)}:
-                      </Typography>
-                      <Typography variant="body1">
-                        {renderInputValue({ id: key, name: getItemName(key), type: typeof value === 'boolean' ? 'checkbox' : 'text', order_index: 0, required: false, default_value: null }, value)}
-                      </Typography>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Box>
-            )}
-            
-            {/* キャラ */}
-            {selectedItems.characters.length > 0 && (
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  キャラ ({selectedItems.characters.length})
-                </Typography>
-                <Grid container spacing={1}>
-                  {selectedItems.characters.map(char => (
-                    <Grid item xs={4} sm={3} md={2} key={char.id}>
-                      <Box sx={{ 
-                        p: 0.5, 
-                        border: '1px solid', 
-                        borderColor: 'divider', 
-                        borderRadius: 1,
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        height: 60,
-                        width: 60,
-                        margin: '0 auto'
-                      }}>
-                        {char.imageUrl ? (
-                          <img 
-                            src={char.imageUrl} 
-                            alt={char.name} 
-                            style={{ 
-                              maxHeight: '100%', 
-                              maxWidth: '100%', 
-                              objectFit: 'contain' 
-                            }} 
-                          />
-                        ) : (
-                          <Typography variant="caption" noWrap>
-                            {char.name}
-                          </Typography>
-                        )}
-                      </Box>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Box>
-            )}
-            
-            {/* 武器 */}
-            {selectedItems.weapons.length > 0 && (
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  武器 ({selectedItems.weapons.length})
-                </Typography>
-                <Grid container spacing={1}>
-                  {selectedItems.weapons.map(weapon => (
-                    <Grid item xs={4} sm={3} md={2} key={weapon.id}>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                        {/* 武器画像 */}
-                        <Box sx={{ 
-                          p: 0.5, 
-                          border: '1px solid', 
-                          borderColor: 'divider', 
-                          borderRadius: 1,
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          height: 60,
-                          width: 60
-                        }}>
-                          {weapon.imageUrl ? (
-                            <img 
-                              src={weapon.imageUrl} 
-                              alt={weapon.name} 
-                              style={{ 
-                                maxHeight: '100%', 
-                                maxWidth: '100%', 
-                                objectFit: 'contain' 
-                              }} 
-                            />
-                          ) : (
-                            <Typography variant="caption" noWrap>
-                              {weapon.name}
-                            </Typography>
-                          )}
-                        </Box>
-                        
-                        {/* 所持数と覚醒情報 */}
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 0.5, maxWidth: 80 }}>
-                          {(weapon.count ?? 0) > 0 && (
-                            <Typography 
-                              variant="caption" 
-                              sx={{ 
-                                bgcolor: 'primary.main',
-                                color: 'white',
-                                px: 0.5,
-                                borderRadius: 1,
-                                fontWeight: 'bold',
-                                fontSize: '0.6rem'
-                              }}
-                            >
-                              {weapon.count || 0}本
-                            </Typography>
-                          )}
-                          {weapon.awakenings && Object.keys(weapon.awakenings).length > 0 && (
-                            Object.entries(weapon.awakenings as WeaponAwakenings).map(([type, count]) => (
-                              <Typography 
-                                key={type}
-                                variant="caption" 
-                                sx={{ 
-                                  bgcolor: 
-                                    type === '攻撃' ? '#FF4444' :
-                                    type === '防御' ? '#44AAFF' :
-                                    type === '特殊' ? '#FFAA44' :
-                                    type === '連撃' ? '#AA44FF' :
-                                    type === '回復' ? '#44FF44' :
-                                    type === '奥義' ? '#FFFF44' :
-                                    type === 'アビD' ? '#FF44FF' :
-                                    '#888888',
-                                  color: 'white',
-                                  px: 0.5,
-                                  borderRadius: 1,
-                                  fontWeight: 'bold',
-                                  fontSize: '0.6rem'
-                                }}
-                              >
-                                {type}{count}
-                              </Typography>
-                            ))
-                          )}
-                        </Box>
-                      </Box>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Box>
-            )}
-            
-            {/* 召喚石 */}
-            {selectedItems.summons.length > 0 && (
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  召喚石 ({selectedItems.summons.length})
-                </Typography>
-                <Grid container spacing={1}>
-                  {selectedItems.summons.map(summon => (
-                    <Grid item xs={4} sm={3} md={2} key={summon.id}>
-                      <Box sx={{ 
-                        p: 0.5, 
-                        border: '1px solid', 
-                        borderColor: 'divider', 
-                        borderRadius: 1,
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        height: 60,
-                        width: 60,
-                        margin: '0 auto'
-                      }}>
-                        {summon.imageUrl ? (
-                          <img 
-                            src={summon.imageUrl} 
-                            alt={summon.name} 
-                            style={{ 
-                              maxHeight: '100%', 
-                              maxWidth: '100%', 
-                              objectFit: 'contain' 
-                            }} 
-                          />
-                        ) : (
-                          <Typography variant="caption" noWrap>
-                            {summon.name}
-                          </Typography>
-                        )}
-                      </Box>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Box>
-            )}
-            
-            {/* 選択アイテムがない場合 */}
-            {selectedItems.characters.length === 0 && 
-             selectedItems.weapons.length === 0 && 
-             selectedItems.summons.length === 0 && (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
-                <Typography variant="body1" color="text.secondary">
-                  選択されたアイテムがありません
-                </Typography>
-              </Box>
-            )}
+            <ExportContentItems
+              filterSettings={filterSettings}
+              selectedItems={filteredItems}
+              sessionData={sessionData}
+              getItemName={getItemName}
+              isPdfMode={true}
+            />
           </Box>
         </div>
       </Box>
@@ -400,33 +338,25 @@ export function ExportDialogContent({
   // エクスポートコンテンツ（プレビュー）
   return (
     <Box sx={{ py: 2 }}>
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center',
-        mb: 3,
-        p: 2,
-        bgcolor: 'primary.light',
-        color: 'primary.contrastText',
-        borderRadius: 2
-      }}>
-        <Typography variant="h6" gutterBottom>
-          画像を出力
-        </Typography>
-        <Typography variant="body1" align="center">
-          選択したアイテムと入力情報を画像形式で出力します。
-        </Typography>
-        <Button
-          variant="contained"
-          color="secondary"
-          size="large"
-          onClick={handleExport}
-          sx={{ mt: 2, px: 4, py: 1, fontWeight: 'bold' }}
-        >
-          画像を生成
-        </Button>
-      </Box>
+      {/* フィルター設定 */}
+      <ExportFilterSettingsComponent
+        filterSettings={filterSettings}
+        onFilterChange={handleFilterChange}
+        onTagFilterChange={handleTagFilterChange}
+        onClearTagFilter={handleClearTagFilter}
+        onClearAllTagFilters={handleClearAllTagFilters}
+        itemType="character"
+      />
 
+      {/* アクションボタン */}
+      <ExportActionButtons
+        exportType={exportType}
+        exportedImageUrl={exportedImageUrl}
+        handleDownload={handleDownload}
+        handleExport={handleExport}
+      />
+
+      {/* プレビュー表示 */}
       <Box
         id="export-content"
         sx={{
@@ -438,322 +368,13 @@ export function ExportDialogContent({
           borderColor: 'divider',
         }}
       >
-        <Typography variant="h5" gutterBottom sx={{ borderBottom: '2px solid', borderColor: 'primary.main', pb: 1 }}>
-          グラブル所持チェッカー
-        </Typography>
-        
-        {/* ユーザー情報セクション */}
-        {sessionData?.inputValues && Object.keys(sessionData.inputValues).length > 0 && (
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" gutterBottom sx={{ 
-              bgcolor: 'primary.main', 
-              color: 'primary.contrastText', 
-              px: 2, 
-              py: 1, 
-              borderRadius: 1 
-            }}>
-              ユーザー情報
-            </Typography>
-            <Box sx={{ px: 2 }}>
-              <Grid container spacing={2}>
-                {Object.entries(sessionData.inputValues).map(([key, value]) => (
-                  <Grid item xs={12} sm={6} md={4} key={key}>
-                    <Box sx={{ 
-                      p: 2, 
-                      border: '1px solid', 
-                      borderColor: 'divider', 
-                      borderRadius: 1,
-                      bgcolor: 'background.default',
-                      height: '100%'
-                    }}>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        {getItemName(key)}
-                      </Typography>
-                      <Typography variant="body1" fontWeight="medium">
-                        {renderInputValue({ id: key, name: getItemName(key), type: typeof value === 'boolean' ? 'checkbox' : 'text', order_index: 0, required: false, default_value: null }, value)}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
-          </Box>
-        )}
-        
-        {/* 選択アイテムセクション */}
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="h6" gutterBottom sx={{ 
-            bgcolor: 'primary.main', 
-            color: 'primary.contrastText', 
-            px: 2, 
-            py: 1, 
-            borderRadius: 1 
-          }}>
-            選択アイテム ({totalSelectedItems})
-          </Typography>
-          
-          {/* キャラ */}
-          {selectedItems.characters.length > 0 && (
-            <Box sx={{ mb: 3, px: 2 }}>
-              <Typography variant="subtitle1" gutterBottom sx={{ 
-                borderBottom: '1px solid', 
-                borderColor: 'primary.light',
-                pb: 0.5,
-                color: 'primary.dark',
-                fontWeight: 'bold'
-              }}>
-                キャラ ({selectedItems.characters.length})
-              </Typography>
-              <Grid container spacing={1}>
-                {selectedItems.characters.map(char => (
-                  <Grid item xs={4} sm={3} md={2} key={char.id}>
-                    <Box sx={{ 
-                      position: 'relative',
-                      p: 0.5, 
-                      border: '1px solid', 
-                      borderColor: 'divider', 
-                      borderRadius: 1,
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      height: 60,
-                      width: 60,
-                      margin: '0 auto'
-                    }}>
-                      {char.imageUrl ? (
-                        <img 
-                          src={char.imageUrl} 
-                          alt={char.name} 
-                          style={{ 
-                            maxHeight: '100%', 
-                            maxWidth: '100%', 
-                            objectFit: 'contain' 
-                          }} 
-                        />
-                      ) : (
-                        <Typography variant="caption" noWrap>
-                          {char.name}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
-          )}
-          
-          {/* 武器 */}
-          {selectedItems.weapons.length > 0 && (
-            <Box sx={{ mb: 3, px: 2 }}>
-              <Typography variant="subtitle1" gutterBottom sx={{ 
-                borderBottom: '1px solid', 
-                borderColor: 'primary.light',
-                pb: 0.5,
-                color: 'primary.dark',
-                fontWeight: 'bold'
-              }}>
-                武器 ({selectedItems.weapons.length})
-              </Typography>
-              <Grid container spacing={1}>
-                {selectedItems.weapons.map(weapon => (
-                  <Grid item xs={4} sm={3} md={2} key={weapon.id}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                      {/* 武器画像 */}
-                      <Box sx={{ 
-                        p: 0.5, 
-                        border: '1px solid', 
-                        borderColor: 'divider', 
-                        borderRadius: 1,
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        height: 60,
-                        width: 60
-                      }}>
-                        {weapon.imageUrl ? (
-                          <img 
-                            src={weapon.imageUrl} 
-                            alt={weapon.name} 
-                            style={{ 
-                              maxHeight: '100%', 
-                              maxWidth: '100%', 
-                              objectFit: 'contain' 
-                            }} 
-                          />
-                        ) : (
-                          <Typography variant="caption" noWrap>
-                            {weapon.name}
-                          </Typography>
-                        )}
-                      </Box>
-                      
-                      {/* 所持数と覚醒情報 */}
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 0.5, maxWidth: 80 }}>
-                        {(weapon.count ?? 0) > 0 && (
-                          <Typography 
-                            variant="caption" 
-                            sx={{ 
-                              bgcolor: 'primary.main',
-                              color: 'white',
-                              px: 0.5,
-                              borderRadius: 1,
-                              fontWeight: 'bold',
-                              fontSize: '0.6rem'
-                            }}
-                          >
-                            {weapon.count ?? 0}本
-                          </Typography>
-                        )}
-                        {weapon.awakenings && Object.keys(weapon.awakenings).length > 0 && (
-                          Object.entries(weapon.awakenings as WeaponAwakenings).map(([type, count]) => (
-                            <Typography 
-                              key={type}
-                              variant="caption" 
-                              sx={{ 
-                                bgcolor: 
-                                  type === '攻撃' ? '#FF4444' :
-                                  type === '防御' ? '#44AAFF' :
-                                  type === '特殊' ? '#FFAA44' :
-                                  type === '連撃' ? '#AA44FF' :
-                                  type === '回復' ? '#44FF44' :
-                                  type === '奥義' ? '#FFFF44' :
-                                  type === 'アビD' ? '#FF44FF' :
-                                  '#888888',
-                                color: 'white',
-                                px: 0.5,
-                                borderRadius: 1,
-                                fontWeight: 'bold',
-                                fontSize: '0.6rem'
-                              }}
-                            >
-                              {type}{String(count)}
-                            </Typography>
-                          ))
-                        )}
-                      </Box>
-                    </Box>
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
-          )}
-          
-          {/* 召喚石 */}
-          {selectedItems.summons.length > 0 && (
-            <Box sx={{ mb: 3, px: 2 }}>
-              <Typography variant="subtitle1" gutterBottom sx={{ 
-                borderBottom: '1px solid', 
-                borderColor: 'primary.light',
-                pb: 0.5,
-                color: 'primary.dark',
-                fontWeight: 'bold'
-              }}>
-                召喚石 ({selectedItems.summons.length})
-              </Typography>
-              <Grid container spacing={1}>
-                {selectedItems.summons.map(summon => (
-                  <Grid item xs={4} sm={3} md={2} key={summon.id}>
-                    <Box sx={{ 
-                      position: 'relative',
-                      p: 0.5, 
-                      border: '1px solid', 
-                      borderColor: 'divider', 
-                      borderRadius: 1,
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      height: 60,
-                      width: 60,
-                      margin: '0 auto'
-                    }}>
-                      {summon.imageUrl ? (
-                        <img 
-                          src={summon.imageUrl} 
-                          alt={summon.name} 
-                          style={{ 
-                            maxHeight: '100%', 
-                            maxWidth: '100%', 
-                            objectFit: 'contain' 
-                          }} 
-                        />
-                      ) : (
-                        <Typography variant="caption" noWrap>
-                          {summon.name}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
-          )}
-          
-          {/* 選択アイテムがない場合 */}
-          {totalSelectedItems === 0 && (
-            <Box sx={{ textAlign: 'center', py: 4, px: 2 }}>
-              <Typography variant="body1" color="text.secondary">
-                選択されたアイテムがありません
-              </Typography>
-            </Box>
-          )}
-        </Box>
-        
-        {/* フッター */}
-        <Box sx={{ 
-          mt: 4, 
-          pt: 2, 
-          borderTop: '1px solid', 
-          borderColor: 'divider',
-          textAlign: 'center'
-        }}>
-          <Typography variant="caption" color="text.secondary">
-            Generated by granblue-asset-checker • {new Date().toLocaleDateString()}
-          </Typography>
-        </Box>
-      </Box>
-      
-      {/* エクスポートオプション */}
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        mt: 3, 
-        gap: 2,
-        flexWrap: 'wrap'
-      }}>
-        <Button
-          variant="outlined"
-          color="primary"
-          onClick={() => handleTabChange({} as React.SyntheticEvent, 0)}
-          sx={{ minWidth: 120 }}
-        >
-          画像出力
-        </Button>
-        <Button
-          variant="outlined"
-          color="primary"
-          onClick={() => {
-            // PDFエクスポートに切り替え
-            handleTabChange({} as React.SyntheticEvent, 1);
-            // PDFエクスポートを実行
-            handleExport();
-          }}
-          sx={{ minWidth: 120 }}
-        >
-          PDF出力
-        </Button>
-        <Button
-          variant="outlined"
-          color="primary"
-          onClick={() => {
-            // CSVエクスポートに切り替え
-            handleTabChange({} as React.SyntheticEvent, 2);
-            // CSVエクスポートを実行
-            handleExport();
-          }}
-          sx={{ minWidth: 120 }}
-        >
-          CSV出力
-        </Button>
+        <ExportContentItems
+          filterSettings={filterSettings}
+          selectedItems={filteredItems}
+          sessionData={sessionData}
+          getItemName={getItemName}
+          isPdfMode={false}
+        />
       </Box>
     </Box>
   );
