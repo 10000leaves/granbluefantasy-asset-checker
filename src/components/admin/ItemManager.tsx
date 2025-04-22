@@ -288,9 +288,15 @@ export function ItemManager() {
       const implementationDate = selectedItem.implementationDate || selectedItem.implementation_date || new Date().toISOString().split('T')[0];
       
       // タグ情報を作成
-      const tags = Object.entries(selectedTags).flatMap(([categoryId, valueIds]) => 
-        valueIds.map(valueId => ({ categoryId, valueId }))
-      );
+      console.log('selectedTags:', selectedTags);
+      
+      const tags = Object.entries(selectedTags).flatMap(([categoryId, valueIds]) => {
+        console.log(`Processing category ${categoryId} with values:`, valueIds);
+        return valueIds.map(valueId => {
+          console.log(`Creating tag with categoryId: ${categoryId}, valueId: ${valueId}`);
+          return { categoryId, valueId };
+        });
+      });
       
       console.log('Saving tags:', tags);
       
