@@ -46,7 +46,7 @@ interface Weapon {
 }
 
 export function WeaponList() {
-  const { items, loading, error, toggleItem, selectedItems: selectedWeapons, selectItems } = useItems('weapon');
+  const { items, loading, error, toggleItem, selectedItems: selectedWeapons, setSelectedItems } = useItems('weapon');
   const { tagCategories, tagValues } = useTags('weapon');
   
   // 状態管理
@@ -193,7 +193,7 @@ export function WeaponList() {
     // フィルター後のアイテムのIDを取得
     const filteredIds = filteredWeapons.map(weapon => weapon.id);
     // 選択状態を更新
-    selectItems(filteredIds);
+    setSelectedItems(filteredIds);
   };
 
   // フィルターセクションのレンダリング

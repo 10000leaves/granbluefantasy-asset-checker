@@ -37,7 +37,7 @@ import {
 } from '@/lib/utils/helpers';
 
 export function CharacterList() {
-  const { items: characters, loading, error, selectedItems, toggleItem, selectItems } = useItems('character');
+  const { items: characters, loading, error, selectedItems, toggleItem, setSelectedItems } = useItems('character');
   const { tagCategories, tagValues } = useTags('character');
 
   // 状態管理
@@ -189,7 +189,7 @@ export function CharacterList() {
     // フィルター後のアイテムのIDを取得
     const filteredIds = filteredCharacters.map(character => character.id);
     // 選択状態を更新
-    selectItems(filteredIds);
+    setSelectedItems(filteredIds);
   };
 
   // フィルターセクションのレンダリング

@@ -46,7 +46,7 @@ interface Summon {
 }
 
 export function SummonList() {
-  const { items, loading, error, toggleItem, selectedItems: selectedSummons, selectItems } = useItems('summon');
+  const { items, loading, error, toggleItem, selectedItems: selectedSummons, setSelectedItems } = useItems('summon');
   const { tagCategories, tagValues } = useTags('summon');
   
   // 状態管理
@@ -193,7 +193,7 @@ export function SummonList() {
     // フィルター後のアイテムのIDを取得
     const filteredIds = filteredSummons.map(summon => summon.id);
     // 選択状態を更新
-    selectItems(filteredIds);
+    setSelectedItems(filteredIds);
   };
 
   // フィルターセクションのレンダリング
