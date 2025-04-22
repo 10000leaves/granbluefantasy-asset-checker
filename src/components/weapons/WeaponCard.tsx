@@ -42,7 +42,6 @@ interface WeaponCardProps {
   name: string;
   imageUrl: string;
   element: 'fire' | 'water' | 'earth' | 'wind' | 'light' | 'dark';
-  weaponType: string;
   rarity?: 'SSR' | 'SR' | 'R';
   selected: boolean;
   onSelect: (id: string, selected: boolean) => void;
