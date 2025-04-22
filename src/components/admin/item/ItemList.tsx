@@ -51,13 +51,16 @@ export function ItemList({
     return '';
   };
 
-  // アイテムのタグを表示
+  // アイテムのタグを表示（最大3つまで表示し、それ以降は「...」で表示）
   const renderItemTags = (item: any) => {
     if (!item.tags || item.tags.length === 0) return null;
     
+    const displayTags = item.tags.slice(0, 3);
+    const hasMoreTags = item.tags.length > 3;
+    
     return (
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
-        {item.tags.map((tag: any, index: number) => (
+        {displayTags.map((tag: any, index: number) => (
           <Chip
             key={index}
             label={getTagName(tag.categoryId, tag.valueId)}
@@ -66,6 +69,14 @@ export function ItemList({
             variant="outlined"
           />
         ))}
+        {hasMoreTags && (
+          <Chip
+            label="..."
+            size="small"
+            color="default"
+            variant="outlined"
+          />
+        )}
       </Box>
     );
   };

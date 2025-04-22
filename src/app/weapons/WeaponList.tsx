@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
+import { OwnedOnlyFilter } from '@/components/common/OwnedOnlyFilter';
+import { useOwnedFilter } from '@/hooks/useOwnedFilter';
 import {
   Typography,
   Box,
@@ -100,6 +102,13 @@ export function WeaponList() {
     });
   }, [items, tagCategories, tagValueMap, tagCategoryMap]);
 
+  // 所持のみフィルターのカスタムフック
+  const { ownedOnly, setOwnedOnly } = useOwnedFilter(
+    weapons,
+    selectedWeapons,
+    undefined
+  );
+
   // アクティブなフィルター数
   const activeFilterCount = Object.values(filters).reduce(
     (count, filterArray) => count + filterArray.length,
@@ -117,6 +126,11 @@ export function WeaponList() {
         return false;
       }
 
+      // 所持のみフィルター
+      if (ownedOnly && !selectedWeapons.includes(weapon.id)) {
+        return false;
+      }
+
       // タグデータによるフィルタリング
       for (const [category, selectedValues] of Object.entries(filters)) {
         if (selectedValues.length === 0) continue;
@@ -131,7 +145,7 @@ export function WeaponList() {
 
       return true;
     });
-  }, [searchQuery, filters, weapons]);
+  }, [searchQuery, filters, weapons, ownedOnly, selectedWeapons]);
 
   // フィルターの更新処理
   const handleFilterChange = (
@@ -251,6 +265,12 @@ export function WeaponList() {
             <FilterListIcon />
           </IconButton>
         </Box>
+
+        {/* 所持のみフィルター */}
+        <OwnedOnlyFilter 
+          ownedOnly={ownedOnly} 
+          onChange={setOwnedOnly} 
+        />
 
         {/* アクティブフィルター表示 */}
         {activeFilterCount > 0 && (

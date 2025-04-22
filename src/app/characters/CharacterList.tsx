@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
+import { OwnedOnlyFilter } from '@/components/common/OwnedOnlyFilter';
+import { useOwnedFilter } from '@/hooks/useOwnedFilter';
 import {
   Typography,
   Box,
@@ -42,6 +44,13 @@ export function CharacterList() {
   const [filters, setFilters] = useState<Record<string, string[]>>({
     elements: []
   });
+
+  // 所持のみフィルターのカスタムフック
+  const { ownedOnly, setOwnedOnly } = useOwnedFilter(
+    characters || [],
+    selectedItems,
+    undefined
+  );
 
   // タグカテゴリが読み込まれたら、動的にフィルター状態を初期化
   useEffect(() => {
@@ -110,6 +119,11 @@ export function CharacterList() {
         return false;
       }
 
+      // 所持のみフィルター
+      if (ownedOnly && !selectedItems.includes(character.id)) {
+        return false;
+      }
+
       // タグでのフィルタリング
       const characterTagData = generateItemTagData(character, tagCategories, tagValueMap, tagCategoryMap);
       
@@ -127,7 +141,7 @@ export function CharacterList() {
 
       return true;
     });
-  }, [searchQuery, filters, characters, tagCategoryMap, tagValueMap]);
+  }, [searchQuery, filters, characters, tagCategoryMap, tagValueMap, ownedOnly, selectedItems]);
 
   // フィルターの更新処理
   const handleFilterChange = (
@@ -263,6 +277,12 @@ export function CharacterList() {
             <FilterListIcon />
           </IconButton>
         </Box>
+
+        {/* 所持のみフィルター */}
+        <OwnedOnlyFilter 
+          ownedOnly={ownedOnly} 
+          onChange={setOwnedOnly} 
+        />
 
         {/* アクティブフィルター表示 */}
         {activeFilterCount > 0 && (
