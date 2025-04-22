@@ -116,13 +116,17 @@ export function ItemManager() {
   // アイテムダイアログを開く（編集）
   const handleOpenEditItemDialog = (item: any) => {
     setIsEditMode(true);
+  
+    // 日付をYYYY-MM-DD形式で取得
+    const implementationDate = new Date(item.implementationDate).toISOString().split('T')[0];
+
     setItemForm({
       id: item.id,
       name: item.name,
       category: item.category,
       imageUrl: item.imageUrl,
       imageFile: null,
-      implementationDate: item.implementationDate || item.implementation_date || new Date().toISOString().split('T')[0],
+      implementationDate: implementationDate,
     });
     
     // 選択されたタグを設定
@@ -148,13 +152,27 @@ export function ItemManager() {
     
     setSelectedTags(tags);
     
-    setSelectedItem(item);
+    // 正規化されたアイテムを設定
+    const normalizedItem = {
+      ...item,
+      implementationDate: implementationDate,
+    };
+    
+    setSelectedItem(normalizedItem);
     setOpenItemDialog(true);
   };
 
   // タグダイアログを開く
   const handleOpenTagDialog = (item: any) => {
-    setSelectedItem(item);
+    // 日付をYYYY-MM-DD形式で取得
+    const implementationDate = new Date(item.implementationDate).toISOString().split('T')[0];
+
+    const normalizedItem = {
+      ...item,
+      implementationDate: implementationDate,
+    };
+    
+    setSelectedItem(normalizedItem);
     
     // 選択されたタグを設定
     const tags: Record<string, string[]> = {};
@@ -265,10 +283,9 @@ export function ItemManager() {
     setIsSaving(true);
 
     try {
-      // データベースのカラム名とJavaScriptのプロパティ名の違いを考慮
-      const imageUrl = selectedItem.imageUrl || selectedItem.image_url || '';
-      const implementationDate = selectedItem.implementationDate || selectedItem.implementation_date || new Date().toISOString().split('T')[0];
-      
+      // 日付をYYYY-MM-DD形式で取得
+      const implementationDate = new Date(selectedItem.implementationDate).toISOString().split('T')[0];
+
       // タグ情報を配列に変換
       const tags = [];
       for (const [categoryId, valueIds] of Object.entries(selectedTags)) {
@@ -285,7 +302,7 @@ export function ItemManager() {
         id: selectedItem.id,
         name: selectedItem.name,
         category: selectedItem.category,
-        imageUrl: imageUrl,
+        imageUrl: selectedItem.imageUrl,
         implementationDate: implementationDate,
         tags: tags,
       };

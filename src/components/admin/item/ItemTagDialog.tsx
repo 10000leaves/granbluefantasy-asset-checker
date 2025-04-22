@@ -65,7 +65,7 @@ export function ItemTagDialog({
               <Typography variant="h6">{item.name}</Typography>
               <Typography variant="body2" color="text.secondary">
                 {item.category === 'character' ? 'キャラ' : item.category === 'weapon' ? '武器' : '召喚石'}
-                {' • '}
+                {' : '}
                 {new Date(item.implementationDate).toLocaleDateString('ja-JP')}
               </Typography>
             </Box>
