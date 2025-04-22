@@ -7,6 +7,7 @@ import {
   CircularProgress,
   Tabs,
   Tab,
+  Button,
 } from '@mui/material';
 import { useInputItems } from '@/hooks/useInputItems';
 import { useTags } from '@/hooks/useTags';
@@ -15,6 +16,7 @@ import { ExportContentItems } from './ExportContentItems';
 import { ExportActionButtons } from './ExportActionButtons';
 import { WeaponAwakenings } from '@/atoms';
 import { createTagCategoryMap, generateItemTagData } from '@/lib/utils/helpers';
+import { useItems } from '@/hooks/useItems';
 
 interface ExportDialogContentProps {
   exportType: 'image' | 'pdf' | 'csv';
@@ -57,6 +59,14 @@ export function ExportDialogContent({
   
   // タブ状態
   const [currentItemType, setCurrentItemType] = useState<'character' | 'weapon' | 'summon'>('character');
+  
+  // 画像プレビュー表示状態
+  const [showImagePreview, setShowImagePreview] = useState(false);
+  
+  // 全アイテムを取得
+  const { items: allCharacters } = useItems('character');
+  const { items: allWeapons } = useItems('weapon');
+  const { items: allSummons } = useItems('summon');
   
   // タグ情報を取得
   const { tagCategories: characterTagCategories, tagValues: characterTagValues } = useTags('character');
@@ -175,28 +185,46 @@ export function ExportDialogContent({
   };
 
   // 未所持アイテムを含める処理
-  const getItemsWithUnowned = useMemo(() => {
+  const itemsWithUnowned = useMemo(() => {
     if (!filterSettings.includeUnowned) {
-      return selectedItems;
+      return {
+        characters: selectedItems.characters,
+        weapons: selectedItems.weapons,
+        summons: selectedItems.summons
+      };
     }
 
-    // 未所持アイテムを含めるロジック
-    // ここでは、選択されたアイテムに未所持フラグを追加する
+    // 選択されたアイテムのIDを取得
+    const selectedCharacterIds = new Set(selectedItems.characters.map(item => item.id));
+    const selectedWeaponIds = new Set(selectedItems.weapons.map(item => item.id));
+    const selectedSummonIds = new Set(selectedItems.summons.map(item => item.id));
+
+    // 全アイテムから未所持アイテムを抽出
+    const unownedCharacters = allCharacters
+      ? allCharacters
+          .filter(item => !selectedCharacterIds.has(item.id))
+          .map(item => ({ ...item, isUnowned: true }))
+      : [];
+    
+    const unownedWeapons = allWeapons
+      ? allWeapons
+          .filter(item => !selectedWeaponIds.has(item.id))
+          .map(item => ({ ...item, isUnowned: true }))
+      : [];
+    
+    const unownedSummons = allSummons
+      ? allSummons
+          .filter(item => !selectedSummonIds.has(item.id))
+          .map(item => ({ ...item, isUnowned: true }))
+      : [];
+
+    // 選択されたアイテムと未所持アイテムを結合
     return {
-      characters: selectedItems.characters.map(character => ({
-        ...character,
-        isUnowned: !selectedItems.characters.some(item => item.id === character.id)
-      })),
-      weapons: selectedItems.weapons.map(weapon => ({
-        ...weapon,
-        isUnowned: !selectedItems.weapons.some(item => item.id === weapon.id)
-      })),
-      summons: selectedItems.summons.map(summon => ({
-        ...summon,
-        isUnowned: !selectedItems.summons.some(item => item.id === summon.id)
-      }))
+      characters: [...selectedItems.characters, ...unownedCharacters],
+      weapons: [...selectedItems.weapons, ...unownedWeapons],
+      summons: [...selectedItems.summons, ...unownedSummons]
     };
-  }, [selectedItems, filterSettings.includeUnowned]);
+  }, [selectedItems, filterSettings.includeUnowned, allCharacters, allWeapons, allSummons]);
 
   // フィルター処理されたアイテム
   const filteredItems = useMemo(() => {
@@ -205,19 +233,18 @@ export function ExportDialogContent({
       filters => filters.length > 0
     );
 
-    const itemsToFilter = getItemsWithUnowned;
-
     if (!hasActiveTagFilters) {
-      return itemsToFilter;
+      return itemsWithUnowned;
     }
 
     // キャラクターのフィルタリング
-    const filteredCharacters = itemsToFilter.characters.filter(character => {
+    const filteredCharacters = itemsWithUnowned.characters.filter(character => {
       // タグでのフィルタリング
       const characterTagData = generateItemTagData(character, allTagCategories, {}, tagCategoryMap);
       
       // 各フィルターカテゴリをチェック
       for (const [category, selectedValues] of Object.entries(filterSettings.tagFilters)) {
+        // 選択されていないカテゴリはスキップ
         if (selectedValues.length === 0) continue;
         
         const characterValues = characterTagData[category] || [];
@@ -225,6 +252,7 @@ export function ExportDialogContent({
         // いずれかの値が一致するかチェック
         const hasMatch = selectedValues.some(value => characterValues.includes(value));
         
+        // 一致しない場合はフィルタリング
         if (!hasMatch) return false;
       }
 
@@ -232,12 +260,13 @@ export function ExportDialogContent({
     });
 
     // 武器のフィルタリング
-    const filteredWeapons = itemsToFilter.weapons.filter(weapon => {
+    const filteredWeapons = itemsWithUnowned.weapons.filter(weapon => {
       // タグでのフィルタリング
       const weaponTagData = generateItemTagData(weapon, allTagCategories, {}, tagCategoryMap);
       
       // 各フィルターカテゴリをチェック
       for (const [category, selectedValues] of Object.entries(filterSettings.tagFilters)) {
+        // 選択されていないカテゴリはスキップ
         if (selectedValues.length === 0) continue;
         
         const weaponValues = weaponTagData[category] || [];
@@ -245,6 +274,7 @@ export function ExportDialogContent({
         // いずれかの値が一致するかチェック
         const hasMatch = selectedValues.some(value => weaponValues.includes(value));
         
+        // 一致しない場合はフィルタリング
         if (!hasMatch) return false;
       }
 
@@ -252,12 +282,13 @@ export function ExportDialogContent({
     });
 
     // 召喚石のフィルタリング
-    const filteredSummons = itemsToFilter.summons.filter(summon => {
+    const filteredSummons = itemsWithUnowned.summons.filter(summon => {
       // タグでのフィルタリング
       const summonTagData = generateItemTagData(summon, allTagCategories, {}, tagCategoryMap);
       
       // 各フィルターカテゴリをチェック
       for (const [category, selectedValues] of Object.entries(filterSettings.tagFilters)) {
+        // 選択されていないカテゴリはスキップ
         if (selectedValues.length === 0) continue;
         
         const summonValues = summonTagData[category] || [];
@@ -265,6 +296,7 @@ export function ExportDialogContent({
         // いずれかの値が一致するかチェック
         const hasMatch = selectedValues.some(value => summonValues.includes(value));
         
+        // 一致しない場合はフィルタリング
         if (!hasMatch) return false;
       }
 
@@ -276,7 +308,7 @@ export function ExportDialogContent({
       weapons: filteredWeapons,
       summons: filteredSummons
     };
-  }, [getItemsWithUnowned, filterSettings.tagFilters, allTagCategories, tagCategoryMap]);
+  }, [itemsWithUnowned, filterSettings.tagFilters, allTagCategories, tagCategoryMap]);
   
   // エクスポート中の表示
   if (isExporting) {
@@ -303,7 +335,7 @@ export function ExportDialogContent({
   }
 
   // 画像出力の場合（画像が生成済み）
-  if (exportType === 'image' && exportedImageUrl) {
+  if (exportType === 'image' && exportedImageUrl && showImagePreview) {
     return (
       <Box sx={{ textAlign: 'center' }}>
         <Box
@@ -321,12 +353,20 @@ export function ExportDialogContent({
             style={{ maxWidth: '100%', display: 'block' }}
           />
         </Box>
-        <ExportActionButtons
-          exportType={exportType}
-          exportedImageUrl={exportedImageUrl}
-          handleDownload={handleDownload}
-          handleExport={handleExport}
-        />
+        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+          <Button
+            variant="outlined"
+            onClick={() => setShowImagePreview(false)}
+          >
+            設定に戻る
+          </Button>
+          <ExportActionButtons
+            exportType={exportType}
+            exportedImageUrl={exportedImageUrl}
+            handleDownload={handleDownload}
+            handleExport={handleExport}
+          />
+        </Box>
       </Box>
     );
   }
@@ -379,20 +419,6 @@ export function ExportDialogContent({
   // PDF出力の場合またはプレビュー表示（画像出力）
   return (
     <Box sx={{ py: 2 }}>
-      {/* タブ切り替え */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-        <Tabs 
-          value={currentItemType} 
-          onChange={(_, newValue) => setCurrentItemType(newValue)}
-          variant="fullWidth"
-          aria-label="アイテムタイプ"
-        >
-          <Tab label="キャラ" value="character" />
-          <Tab label="武器" value="weapon" />
-          <Tab label="召喚石" value="summon" />
-        </Tabs>
-      </Box>
-
       {/* フィルター設定 */}
       <ExportFilterSettingsComponent
         filterSettings={filterSettings}
@@ -401,6 +427,7 @@ export function ExportDialogContent({
         onClearTagFilter={handleClearTagFilter}
         onClearAllTagFilters={handleClearAllTagFilters}
         itemType={currentItemType}
+        onItemTypeChange={setCurrentItemType}
       />
 
       {/* アクションボタン */}
@@ -408,7 +435,17 @@ export function ExportDialogContent({
         exportType={exportType}
         exportedImageUrl={exportedImageUrl}
         handleDownload={handleDownload}
-        handleExport={handleExport}
+        handleExport={() => {
+          if (exportType === 'image') {
+            handleExport();
+            // 画像生成後にプレビューを表示
+            setTimeout(() => {
+              setShowImagePreview(true);
+            }, 100);
+          } else {
+            handleExport();
+          }
+        }}
       />
 
       {/* プレビュー表示 */}

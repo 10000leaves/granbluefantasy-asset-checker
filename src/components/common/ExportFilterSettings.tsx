@@ -20,6 +20,8 @@ import {
   AccordionSummary,
   AccordionDetails,
   Stack,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import {
   FilterList as FilterListIcon,
@@ -49,6 +51,7 @@ interface ExportFilterSettingsProps {
   onClearTagFilter?: (category: string, value: string) => void;
   onClearAllTagFilters?: () => void;
   itemType?: 'character' | 'weapon' | 'summon';
+  onItemTypeChange?: (itemType: 'character' | 'weapon' | 'summon') => void;
 }
 
 /**
@@ -60,7 +63,8 @@ export function ExportFilterSettingsComponent({
   onTagFilterChange,
   onClearTagFilter,
   onClearAllTagFilters,
-  itemType = 'character'
+  itemType = 'character',
+  onItemTypeChange
 }: ExportFilterSettingsProps) {
   const [showTagFilters, setShowTagFilters] = useState(false);
   const { tagCategories, tagValues } = useTags(itemType);
@@ -101,6 +105,13 @@ export function ExportFilterSettingsComponent({
   ) => {
     if (onTagFilterChange) {
       onTagFilterChange(category, value, checked);
+    }
+  };
+
+  // アイテムタイプの変更ハンドラー
+  const handleItemTypeChange = (_: React.SyntheticEvent, newValue: 'character' | 'weapon' | 'summon') => {
+    if (onItemTypeChange) {
+      onItemTypeChange(newValue);
     }
   };
 
@@ -261,6 +272,20 @@ export function ExportFilterSettingsComponent({
           </Box>
         </AccordionSummary>
         <AccordionDetails>
+          {/* アイテムタイプ切り替えタブ */}
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+            <Tabs 
+              value={itemType} 
+              onChange={handleItemTypeChange}
+              variant="fullWidth"
+              aria-label="アイテムタイプ"
+            >
+              <Tab label="キャラ" value="character" />
+              <Tab label="武器" value="weapon" />
+              <Tab label="召喚石" value="summon" />
+            </Tabs>
+          </Box>
+
           {/* アクティブタグフィルター表示 */}
           {activeFilterCount > 0 && (
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
