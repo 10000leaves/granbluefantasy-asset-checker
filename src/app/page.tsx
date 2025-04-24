@@ -293,7 +293,7 @@ export default function Home() {
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     {group.group_name === '基本情報' && <PersonIcon sx={{ mr: 1 }} />}
-                    {group.group_name === '希望' && <SettingsIcon sx={{ mr: 1 }} />}
+                    {group.group_name === 'プレイスタイル' && <SettingsIcon sx={{ mr: 1 }} />}
                     {group.group_name === 'マナベリ' && <StarIcon sx={{ mr: 1 }} />}
                     {group.group_name === '大事なもの' && <DiamondIcon sx={{ mr: 1 }} />}
                     <Typography variant="h6">{group.group_name}</Typography>

@@ -75,6 +75,11 @@ export const selectedSummonsAtom = atom<string[]>([]);
 export const weaponCountsAtom = atom<Record<string, number>>({});
 export const weaponAwakeningsAtom = atom<Record<string, WeaponAwakenings>>({});
 
+// 備考用のアトム
+export const characterNotesAtom = atom<Record<string, string>>({});
+export const weaponNotesAtom = atom<Record<string, string>>({});
+export const summonNotesAtom = atom<Record<string, string>>({});
+
 export const inputGroupsAtom = atom<InputGroup[]>([]);
 export const inputValuesAtom = atom<Record<string, any>>({});
 

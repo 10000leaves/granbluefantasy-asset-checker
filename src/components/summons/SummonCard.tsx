@@ -13,6 +13,8 @@ import {
   Tooltip,
   Skeleton,
 } from '@mui/material';
+import { useAtom } from 'jotai';
+import { summonNotesAtom } from '@/atoms';
 import {
   Whatshot as FireIcon,
   Water as WaterIcon,
@@ -21,7 +23,9 @@ import {
   LightMode as LightIcon,
   DarkMode as DarkIcon,
   BrokenImage as BrokenImageIcon,
+  Edit as EditIcon,
 } from '@mui/icons-material';
+import { NoteDialog } from '../common/NoteDialog';
 
 import { translateElement } from '../../lib/utils/helpers';
 
@@ -56,6 +60,25 @@ export const SummonCard = ({
   const ElementIcon = elementIcons[element].icon;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [summonNotes, setSummonNotes] = useAtom(summonNotesAtom);
+  const [showNoteDialog, setShowNoteDialog] = useState(false);
+  
+  // 備考を取得
+  const note = summonNotes[id] || '';
+  
+  // 備考ダイアログを開く
+  const openNoteDialog = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowNoteDialog(true);
+  };
+  
+  // 備考を保存
+  const handleSaveNote = (newNote: string) => {
+    setSummonNotes(prev => ({
+      ...prev,
+      [id]: newNote
+    }));
+  };
 
   const handleImageLoad = () => {
     setLoading(false);
@@ -187,7 +210,64 @@ export const SummonCard = ({
             />
           </Box>
         </Box>
+        
+        {/* 備考エリア */}
+        <Box onClick={(e) => e.stopPropagation()}>
+          <Box sx={{ 
+            mt: 1, 
+            display: 'flex', 
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 1 
+          }}>
+            {note ? (
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  flexGrow: 1,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  color: 'text.secondary'
+                }}
+              >
+                {note}
+              </Typography>
+            ) : (
+              <Box sx={{ flexGrow: 1 }} />
+            )}
+            
+            <Tooltip title="備考を編集">
+              <IconButton
+                size="small"
+                onClick={openNoteDialog}
+                sx={{
+                  bgcolor: note ? 'primary.main' : 'action.hover',
+                  color: note ? 'white' : 'inherit',
+                  '&:hover': { 
+                    bgcolor: note ? 'primary.main' : 'action.selected',
+                    opacity: 0.8
+                  },
+                  width: 24,
+                  height: 24
+                }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Box>
       </CardContent>
+      
+      {/* 備考編集ダイアログ */}
+      <NoteDialog
+        open={showNoteDialog}
+        onClose={() => setShowNoteDialog(false)}
+        onSave={handleSaveNote}
+        initialNote={note}
+        title="備考を編集"
+        itemName={name}
+      />
     </Card>
   );
 };

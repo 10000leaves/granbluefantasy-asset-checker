@@ -31,9 +31,11 @@ import {
   Remove as RemoveIcon,
   AutoAwesome as AwakeningIcon,
   Close as CloseIcon,
+  Edit as EditIcon,
 } from '@mui/icons-material';
+import { NoteDialog } from '../common/NoteDialog';
 import { useAtom } from 'jotai';
-import { weaponCountsAtom, weaponAwakeningsAtom, AwakeningType } from '@/atoms';
+import { weaponCountsAtom, weaponAwakeningsAtom, weaponNotesAtom, AwakeningType } from '@/atoms';
 
 import { translateElement } from '../../lib/utils/helpers';
 
@@ -90,9 +92,28 @@ export const WeaponCard = ({
   const [error, setError] = useState(false);
   const [weaponCounts, setWeaponCounts] = useAtom(weaponCountsAtom);
   const [weaponAwakenings, setWeaponAwakenings] = useAtom(weaponAwakeningsAtom);
+  const [weaponNotes, setWeaponNotes] = useAtom(weaponNotesAtom);
   const count = weaponCounts[id] || 0;
   const awakenings = weaponAwakenings[id] || {};
   const [showAwakeningDialog, setShowAwakeningDialog] = useState(false);
+  const [showNoteDialog, setShowNoteDialog] = useState(false);
+  
+  // 備考を取得
+  const note = weaponNotes[id] || '';
+  
+  // 備考ダイアログを開く
+  const openNoteDialog = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowNoteDialog(true);
+  };
+  
+  // 備考を保存
+  const handleSaveNote = (newNote: string) => {
+    setWeaponNotes(prev => ({
+      ...prev,
+      [id]: newNote
+    }));
+  };
   
   // 覚醒の合計本数を計算
   const totalAwakeningCount = useMemo(() => {
@@ -316,10 +337,28 @@ export const WeaponCard = ({
                 mt: 1, 
                 display: 'flex', 
                 alignItems: 'center',
-                justifyContent: 'center',
+                justifyContent: 'space-between',
                 gap: 1 
               }}
             >
+              <Tooltip title="備考を編集">
+                <IconButton
+                  size="small"
+                  onClick={openNoteDialog}
+                  sx={{
+                    bgcolor: note ? 'primary.main' : 'action.hover',
+                    color: note ? 'white' : 'inherit',
+                    '&:hover': { 
+                      bgcolor: note ? 'primary.main' : 'action.selected',
+                      opacity: 0.8
+                    },
+                    width: 24,
+                    height: 24
+                  }}
+                >
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
               <IconButton 
                 size="small" 
                 onClick={(e) => updateCount(count - 1, e)}
@@ -526,6 +565,16 @@ export const WeaponCard = ({
           </Button>
         </DialogActions>
       </Dialog>
+      
+      {/* 備考編集ダイアログ */}
+      <NoteDialog
+        open={showNoteDialog}
+        onClose={() => setShowNoteDialog(false)}
+        onSave={handleSaveNote}
+        initialNote={note}
+        title="備考を編集"
+        itemName={name}
+      />
     </>
   );
 };

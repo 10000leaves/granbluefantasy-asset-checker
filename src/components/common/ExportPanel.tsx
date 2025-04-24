@@ -398,8 +398,9 @@ export function ExportPanel({ selectedCount }: ExportPanelProps) {
         <Box
           sx={{
             display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
             justifyContent: 'space-between',
-            alignItems: 'center',
+            alignItems: { xs: 'flex-start', sm: 'center' },
           }}
         >
           <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
@@ -407,67 +408,87 @@ export function ExportPanel({ selectedCount }: ExportPanelProps) {
               ? `${selectedCount}個のアイテムを選択中`
               : 'アイテムを選択してください'}
           </Typography>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              variant="outlined"
-              color="primary"
-              startIcon={<UploadIcon />}
-              onClick={() => fileInputRef.current?.click()}
-              size={isMobile ? 'small' : 'medium'}
-            >
-              CSVインポート
-            </Button>
-            <Input
-              type="file"
-              inputRef={fileInputRef}
-              onChange={handleCsvImport}
-              sx={{ display: 'none' }}
-              inputProps={{ accept: '.csv' }}
-            />
-            <Button
-              variant="outlined"
-              color="primary"
-              startIcon={<FileDownloadIcon />}
-              onClick={handleExportMenuOpen}
-              disabled={selectedCount === 0}
-              size={isMobile ? 'small' : 'medium'}
-            >
-              エクスポート
-            </Button>
-            <Menu
-              anchorEl={exportMenuAnchorEl}
-              open={Boolean(exportMenuAnchorEl)}
-              onClose={handleExportMenuClose}
-            >
-              <MenuItem onClick={() => handleExportTypeSelect('image')}>
-                <ListItemIcon>
-                  <ImageIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText primary="画像出力" />
-              </MenuItem>
-              <MenuItem onClick={() => handleExportTypeSelect('pdf')}>
-                <ListItemIcon>
-                  <PdfIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText primary="PDF出力" />
-              </MenuItem>
-              <MenuItem onClick={() => handleExportTypeSelect('csv')}>
-                <ListItemIcon>
-                  <CsvIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText primary="CSV出力" />
-              </MenuItem>
-            </Menu>
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<ShareIcon />}
-              onClick={handleShare}
-              disabled={selectedCount === 0}
-              size={isMobile ? 'small' : 'medium'}
-            >
-              共有
-            </Button>
+          <Box sx={{ 
+            display: 'flex', 
+            gap: { xs: 0.5, sm: 1 },
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { xs: 'stretch', sm: 'center' },
+            mt: { xs: 1, sm: 0 },
+            width: { xs: '100%', sm: 'auto' }
+          }}>
+            <Box sx={{ 
+              display: 'flex', 
+              gap: { xs: 0.5, sm: 1 },
+              width: '100%',
+              justifyContent: 'space-between'
+            }}>
+              <Button
+                variant="outlined"
+                color="primary"
+                startIcon={isMobile ? null : <UploadIcon />}
+                onClick={() => fileInputRef.current?.click()}
+                size={isMobile ? 'small' : 'medium'}
+                fullWidth={isMobile}
+                sx={{ minWidth: isMobile ? 0 : undefined }}
+              >
+                {isMobile ? <UploadIcon fontSize="small" /> : 'CSVインポート'}
+              </Button>
+              <Input
+                type="file"
+                inputRef={fileInputRef}
+                onChange={handleCsvImport}
+                sx={{ display: 'none' }}
+                inputProps={{ accept: '.csv' }}
+              />
+              <Button
+                variant="outlined"
+                color="primary"
+                startIcon={isMobile ? null : <FileDownloadIcon />}
+                onClick={handleExportMenuOpen}
+                disabled={selectedCount === 0}
+                size={isMobile ? 'small' : 'medium'}
+                fullWidth={isMobile}
+                sx={{ minWidth: isMobile ? 0 : undefined }}
+              >
+                {isMobile ? <FileDownloadIcon fontSize="small" /> : 'エクスポート'}
+              </Button>
+              <Menu
+                anchorEl={exportMenuAnchorEl}
+                open={Boolean(exportMenuAnchorEl)}
+                onClose={handleExportMenuClose}
+              >
+                <MenuItem onClick={() => handleExportTypeSelect('image')}>
+                  <ListItemIcon>
+                    <ImageIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary="画像出力" />
+                </MenuItem>
+                <MenuItem onClick={() => handleExportTypeSelect('pdf')}>
+                  <ListItemIcon>
+                    <PdfIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary="PDF出力" />
+                </MenuItem>
+                <MenuItem onClick={() => handleExportTypeSelect('csv')}>
+                  <ListItemIcon>
+                    <CsvIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary="CSV出力" />
+                </MenuItem>
+              </Menu>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={isMobile ? null : <ShareIcon />}
+                onClick={handleShare}
+                disabled={selectedCount === 0}
+                size={isMobile ? 'small' : 'medium'}
+                fullWidth={isMobile}
+                sx={{ minWidth: isMobile ? 0 : undefined }}
+              >
+                {isMobile ? <ShareIcon fontSize="small" /> : '共有'}
+              </Button>
+            </Box>
           </Box>
         </Box>
       </Paper>

@@ -5,8 +5,6 @@ import {
   Box,
   Typography,
   CircularProgress,
-  Tabs,
-  Tab,
   Button,
 } from '@mui/material';
 import { useInputItems } from '@/hooks/useInputItems';
@@ -256,6 +254,18 @@ export function ExportDialogContent({
     };
   }, [selectedItems, filterSettings.includeUnowned, allCharacters, allWeapons, allSummons]);
 
+  // タグ値のマッピングを作成
+  const tagValueMap = useMemo(() => {
+    const map: Record<string, { categoryId: string, value: string }> = {};
+    allTagValues.forEach(value => {
+      map[value.id] = {
+        categoryId: value.categoryId,
+        value: value.value,
+      };
+    });
+    return map;
+  }, [allTagValues]);
+
   // フィルター処理されたアイテム
   const filteredItems = useMemo(() => {
     // アイテムタイプごとのタグフィルターを取得
@@ -272,7 +282,7 @@ export function ExportDialogContent({
     const filteredCharacters = hasCharacterFilters
       ? itemsWithUnowned.characters.filter(character => {
           // タグでのフィルタリング
-          const characterTagData = generateItemTagData(character, characterTagCategories, {}, tagCategoryMap);
+          const characterTagData = generateItemTagData(character, characterTagCategories, tagValueMap, tagCategoryMap);
           
           // 各フィルターカテゴリをチェック
           for (const [category, selectedValues] of Object.entries(characterTagFilters)) {
@@ -296,7 +306,7 @@ export function ExportDialogContent({
     const filteredWeapons = hasWeaponFilters
       ? itemsWithUnowned.weapons.filter(weapon => {
           // タグでのフィルタリング
-          const weaponTagData = generateItemTagData(weapon, weaponTagCategories, {}, tagCategoryMap);
+          const weaponTagData = generateItemTagData(weapon, weaponTagCategories, tagValueMap, tagCategoryMap);
           
           // 各フィルターカテゴリをチェック
           for (const [category, selectedValues] of Object.entries(weaponTagFilters)) {
@@ -320,7 +330,7 @@ export function ExportDialogContent({
     const filteredSummons = hasSummonFilters
       ? itemsWithUnowned.summons.filter(summon => {
           // タグでのフィルタリング
-          const summonTagData = generateItemTagData(summon, summonTagCategories, {}, tagCategoryMap);
+          const summonTagData = generateItemTagData(summon, summonTagCategories, tagValueMap, tagCategoryMap);
           
           // 各フィルターカテゴリをチェック
           for (const [category, selectedValues] of Object.entries(summonTagFilters)) {

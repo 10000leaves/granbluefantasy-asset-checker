@@ -106,7 +106,7 @@ WHERE ic.name = v.category_name;
 INSERT INTO input_groups (name, order_index)
 VALUES
   ('基本情報', 1),
-  ('希望', 2),
+  ('プレイスタイル', 2),
   ('マナベリ', 3),
   ('大事なもの', 4);
 
@@ -128,7 +128,7 @@ JOIN (
     -- 基本情報
     ('名前', 'text', true, NULL, 'basic', 1),
     
-    -- 希望
+    -- プレイスタイル
     ('手動', 'checkbox', false, 'false', 'preference', 1),
     ('フルオート', 'checkbox', false, 'false', 'preference', 2),
     
@@ -145,7 +145,7 @@ JOIN (
 ) AS i(name, type, required, default_value, group_name, order_index)
 ON g.name = CASE 
   WHEN i.group_name = 'basic' THEN '基本情報'
-  WHEN i.group_name = 'preference' THEN '希望'
+  WHEN i.group_name = 'preference' THEN 'プレイスタイル'
   WHEN i.group_name = 'manaberi' THEN 'マナベリ'
   WHEN i.group_name = 'important' THEN '大事なもの'
 END;

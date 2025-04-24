@@ -201,26 +201,79 @@ export const generateItemTagData = (
   
   const tagData: Record<string, string[]> = {};
   
-  item.tags.forEach((tag: { categoryId: string, valueId: string }) => {
-    const category = tagCategories.find(c => c.id === tag.categoryId);
-    if (!category) return;
-    
-    const tagValue = tagValueMap[tag.valueId]?.value;
-    if (!tagValue) return;
-    
-    // カテゴリに対応するフィルターキーを取得
-    const filterKey = tagCategoryMap[category.id];
-    if (!filterKey) return;
-    
-    // フィルターキーに対応するタグ値を追加
-    if (!tagData[filterKey]) {
-      tagData[filterKey] = [];
-    }
-    
-    // 全てのタグ値を日本語のまま保持
-    tagData[filterKey].push(tagValue);
-  });
-  
+  // タグの形式をチェック
+  if (Array.isArray(item.tags)) {
+    // 配列形式のタグ
+    item.tags.forEach((tag: any) => {
+      // タグの形式によって処理を分岐
+      if (tag.categoryId && tag.valueId) {
+        // { categoryId, valueId } 形式
+        const category = tagCategories.find(c => c.id === tag.categoryId);
+        if (!category) return;
+        
+        const tagValue = tagValueMap[tag.valueId]?.value;
+        if (!tagValue) return;
+        
+        // カテゴリに対応するフィルターキーを取得
+        const filterKey = tagCategoryMap[category.id];
+        if (!filterKey) return;
+        
+        // フィルターキーに対応するタグ値を追加
+        if (!tagData[filterKey]) {
+          tagData[filterKey] = [];
+        }
+        
+        // 全てのタグ値を日本語のまま保持
+        tagData[filterKey].push(tagValue);
+      } else if (tag.category_id && tag.value_id) {
+        // { category_id, value_id } 形式
+        const category = tagCategories.find(c => c.id === tag.category_id);
+        if (!category) return;
+        
+        const tagValue = tagValueMap[tag.value_id]?.value;
+        if (!tagValue) return;
+        
+        // カテゴリに対応するフィルターキーを取得
+        const filterKey = tagCategoryMap[category.id];
+        if (!filterKey) return;
+        
+        // フィルターキーに対応するタグ値を追加
+        if (!tagData[filterKey]) {
+          tagData[filterKey] = [];
+        }
+        
+        // 全てのタグ値を日本語のまま保持
+        tagData[filterKey].push(tagValue);
+      }
+    });
+  } else if (typeof item.tags === 'object') {
+    // オブジェクト形式のタグ
+    Object.entries(item.tags).forEach(([categoryName, values]) => {
+      // カテゴリ名からカテゴリを検索
+      const category = tagCategories.find(c => c.name.toLowerCase() === categoryName.toLowerCase());
+      if (!category) return;
+      
+      // カテゴリに対応するフィルターキーを取得
+      const filterKey = tagCategoryMap[category.id];
+      if (!filterKey) return;
+      
+      // フィルターキーに対応するタグ値を追加
+      if (!tagData[filterKey]) {
+        tagData[filterKey] = [];
+      }
+      
+      // 値が配列の場合
+      if (Array.isArray(values)) {
+        (values as string[]).forEach(value => {
+          tagData[filterKey].push(value);
+        });
+      } else if (typeof values === 'string') {
+        // 値が文字列の場合
+        tagData[filterKey].push(values as string);
+      }
+    });
+  }
+
   return tagData;
 };
 

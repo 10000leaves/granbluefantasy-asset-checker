@@ -6,7 +6,8 @@ import {
   Typography,
   Grid,
 } from '@mui/material';
-import { WeaponAwakenings } from '@/atoms';
+import { WeaponAwakenings, characterNotesAtom, weaponNotesAtom, summonNotesAtom } from '@/atoms';
+import { useAtomValue } from 'jotai';
 import { renderInputValue } from './ExportUtils';
 import { ExportFilterSettings } from './ExportFilterSettings';
 
@@ -40,6 +41,11 @@ export function ExportContentItems({
   getItemName,
   isPdfMode = false
 }: ExportContentItemsProps) {
+  // 備考を取得
+  const characterNotes = useAtomValue(characterNotesAtom);
+  const weaponNotes = useAtomValue(weaponNotesAtom);
+  const summonNotes = useAtomValue(summonNotesAtom);
+  
   // 選択されたアイテムの数を取得
   const totalSelectedItems = 
     selectedItems.characters.length + 
@@ -129,62 +135,108 @@ export function ExportContentItems({
             }}>
               キャラ ({selectedItems.characters.length})
             </Typography>
-            <Grid container spacing={1}>
-              {selectedItems.characters.map((char) => (
-                <Grid item xs={4} sm={3} md={2} key={char.id}>
+            <Grid container spacing={2}>
+              {selectedItems.characters.map((char) => {
+                // 備考を取得
+                const note = characterNotes[char.id] || '';
+                
+                return (
+                <Grid item xs={6} sm={4} md={3} key={char.id}>
                   <Box sx={{ 
-                    position: 'relative',
-                    p: 0.5, 
-                    border: '1px solid', 
-                    borderColor: 'divider', 
-                    borderRadius: 1,
                     display: 'flex',
-                    justifyContent: 'center',
+                    flexDirection: 'column',
                     alignItems: 'center',
-                    height: 60,
-                    width: 60,
-                    margin: '0 auto'
+                    gap: 1,
+                    p: 1,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    height: '100%',
                   }}>
-                    {char.imageUrl ? (
-                      <>
-                        <img 
-                          src={char.imageUrl} 
-                          alt={char.name} 
-                          style={{ 
-                            maxHeight: '100%', 
-                            maxWidth: '100%', 
-                            objectFit: 'contain' 
-                          }} 
-                        />
-                        {/* 未所持アイテムの場合、暗いレイヤーを追加 */}
-                        {char.isUnowned && (
-                          <Box
-                            sx={{
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            <Typography variant="caption" sx={{ color: 'white', fontWeight: 'bold' }}>
-                              未所持
-                            </Typography>
-                          </Box>
-                        )}
-                      </>
-                    ) : (
-                      <Typography variant="caption" noWrap>
-                        {char.name}
+                    {/* キャラクター名 */}
+                    <Typography 
+                      variant="subtitle2" 
+                      sx={{ 
+                        width: '100%',
+                        textAlign: 'center',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {char.name}
+                    </Typography>
+                    
+                    {/* キャラクター画像 */}
+                    <Box sx={{ 
+                      position: 'relative',
+                      p: 0.5, 
+                      border: '1px solid', 
+                      borderColor: 'divider', 
+                      borderRadius: 1,
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      height: 60,
+                      width: 60
+                    }}>
+                      {char.imageUrl ? (
+                        <>
+                          <img 
+                            src={char.imageUrl} 
+                            alt={char.name} 
+                            style={{ 
+                              maxHeight: '100%', 
+                              maxWidth: '100%', 
+                              objectFit: 'contain' 
+                            }} 
+                          />
+                          {/* 未所持アイテムの場合、暗いレイヤーを追加 */}
+                          {char.isUnowned && (
+                            <Box
+                              sx={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <Typography variant="caption" sx={{ color: 'white', fontWeight: 'bold' }}>
+                                未所持
+                              </Typography>
+                            </Box>
+                          )}
+                        </>
+                      ) : (
+                        <Typography variant="caption" noWrap>
+                          {char.name}
+                        </Typography>
+                      )}
+                    </Box>
+                    
+                    {/* 備考 */}
+                    {note && (
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          width: '100%',
+                          textAlign: 'center',
+                          color: 'text.secondary',
+                          mt: 0.5
+                        }}
+                      >
+                        {note}
                       </Typography>
                     )}
                   </Box>
                 </Grid>
-              ))}
+                );
+              })}
             </Grid>
           </Box>
         )}
@@ -201,10 +253,37 @@ export function ExportContentItems({
             }}>
               武器 ({selectedItems.weapons.length})
             </Typography>
-            <Grid container spacing={1}>
-              {selectedItems.weapons.map((weapon) => (
-                <Grid item xs={4} sm={3} md={2} key={weapon.id}>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+            <Grid container spacing={2}>
+              {selectedItems.weapons.map((weapon) => {
+                // 備考を取得
+                const note = weaponNotes[weapon.id] || '';
+                
+                return (
+                <Grid item xs={6} sm={4} md={3} key={weapon.id}>
+                  <Box sx={{ 
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 1,
+                    p: 1,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    height: '100%',
+                  }}>
+                    {/* 武器名 */}
+                    <Typography 
+                      variant="subtitle2" 
+                      sx={{ 
+                        width: '100%',
+                        textAlign: 'center',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {weapon.name}
+                    </Typography>
                     {/* 武器画像 */}
                     <Box sx={{ 
                       p: 0.5, 
@@ -301,9 +380,25 @@ export function ExportContentItems({
                         ))
                       )}
                     </Box>
+                    
+                    {/* 備考 */}
+                    {note && (
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          width: '100%',
+                          textAlign: 'center',
+                          color: 'text.secondary',
+                          mt: 0.5
+                        }}
+                      >
+                        {note}
+                      </Typography>
+                    )}
                   </Box>
                 </Grid>
-              ))}
+                );
+              })}
             </Grid>
           </Box>
         )}
@@ -320,62 +415,108 @@ export function ExportContentItems({
             }}>
               召喚石 ({selectedItems.summons.length})
             </Typography>
-            <Grid container spacing={1}>
-              {selectedItems.summons.map((summon) => (
-                <Grid item xs={4} sm={3} md={2} key={summon.id}>
+            <Grid container spacing={2}>
+              {selectedItems.summons.map((summon) => {
+                // 備考を取得
+                const note = summonNotes[summon.id] || '';
+                
+                return (
+                <Grid item xs={6} sm={4} md={3} key={summon.id}>
                   <Box sx={{ 
-                    position: 'relative',
-                    p: 0.5, 
-                    border: '1px solid', 
-                    borderColor: 'divider', 
-                    borderRadius: 1,
                     display: 'flex',
-                    justifyContent: 'center',
+                    flexDirection: 'column',
                     alignItems: 'center',
-                    height: 60,
-                    width: 60,
-                    margin: '0 auto'
+                    gap: 1,
+                    p: 1,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    height: '100%',
                   }}>
-                    {summon.imageUrl ? (
-                      <>
-                        <img 
-                          src={summon.imageUrl} 
-                          alt={summon.name} 
-                          style={{ 
-                            maxHeight: '100%', 
-                            maxWidth: '100%', 
-                            objectFit: 'contain' 
-                          }} 
-                        />
-                        {/* 未所持アイテムの場合、暗いレイヤーを追加 */}
-                        {summon.isUnowned && (
-                          <Box
-                            sx={{
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            <Typography variant="caption" sx={{ color: 'white', fontWeight: 'bold' }}>
-                              未所持
-                            </Typography>
-                          </Box>
-                        )}
-                      </>
-                    ) : (
-                      <Typography variant="caption" noWrap>
-                        {summon.name}
+                    {/* 召喚石名 */}
+                    <Typography 
+                      variant="subtitle2" 
+                      sx={{ 
+                        width: '100%',
+                        textAlign: 'center',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {summon.name}
+                    </Typography>
+                    
+                    {/* 召喚石画像 */}
+                    <Box sx={{ 
+                      position: 'relative',
+                      p: 0.5, 
+                      border: '1px solid', 
+                      borderColor: 'divider', 
+                      borderRadius: 1,
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      height: 60,
+                      width: 60
+                    }}>
+                      {summon.imageUrl ? (
+                        <>
+                          <img 
+                            src={summon.imageUrl} 
+                            alt={summon.name} 
+                            style={{ 
+                              maxHeight: '100%', 
+                              maxWidth: '100%', 
+                              objectFit: 'contain' 
+                            }} 
+                          />
+                          {/* 未所持アイテムの場合、暗いレイヤーを追加 */}
+                          {summon.isUnowned && (
+                            <Box
+                              sx={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <Typography variant="caption" sx={{ color: 'white', fontWeight: 'bold' }}>
+                                未所持
+                              </Typography>
+                            </Box>
+                          )}
+                        </>
+                      ) : (
+                        <Typography variant="caption" noWrap>
+                          {summon.name}
+                        </Typography>
+                      )}
+                    </Box>
+                    
+                    {/* 備考 */}
+                    {note && (
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          width: '100%',
+                          textAlign: 'center',
+                          color: 'text.secondary',
+                          mt: 0.5
+                        }}
+                      >
+                        {note}
                       </Typography>
                     )}
                   </Box>
                 </Grid>
-              ))}
+                );
+              })}
             </Grid>
           </Box>
         )}
