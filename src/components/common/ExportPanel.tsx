@@ -285,7 +285,13 @@ export function ExportPanel({ selectedCount }: ExportPanelProps) {
             selectedSummons,
             inputValues,
             weaponCounts,
-            weaponAwakenings
+            weaponAwakenings,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined
           );
           
           // 結果に基づいてスナックバーを表示

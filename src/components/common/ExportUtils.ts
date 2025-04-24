@@ -148,12 +148,12 @@ export const generateCSV = (
   
   // セクション区切り - アイテム
   csvData.push(['#SECTION', 'ITEMS']);
-  csvData.push(['タイプ', 'ID', '名前', '所持数', '覚醒']);
+  csvData.push(['タイプ', 'ID', '名前', '所持数', '覚醒', '備考']);
   
   // キャラ
   if (pageItems.characters.length > 0) {
     pageItems.characters.forEach(char => {
-      csvData.push(['character', char.id, char.name, '', '']);
+      csvData.push(['character', char.id, char.name, '', '', char.note || '']);
     });
   }
   
@@ -173,14 +173,14 @@ export const generateCSV = (
         awakeningInfo = awakeningParts.join(',');
       }
       
-      csvData.push(['weapon', weapon.id, weapon.name, count.toString(), awakeningInfo]);
+      csvData.push(['weapon', weapon.id, weapon.name, count.toString(), awakeningInfo, weapon.note || '']);
     });
   }
   
   // 召喚石
   if (pageItems.summons.length > 0) {
     pageItems.summons.forEach(summon => {
-      csvData.push(['summon', summon.id, summon.name, '', '']);
+      csvData.push(['summon', summon.id, summon.name, '', '', summon.note || '']);
     });
   }
   
@@ -246,7 +246,13 @@ export const importCSV = (
   currentSelectedSummons: string[],
   currentInputValues: Record<string, any>,
   currentWeaponCounts: Record<string, number>,
-  currentWeaponAwakenings: Record<string, WeaponAwakenings>
+  currentWeaponAwakenings: Record<string, WeaponAwakenings>,
+  setCharacterNotes?: (notes: Record<string, string>) => void,
+  setWeaponNotes?: (notes: Record<string, string>) => void,
+  setSummonNotes?: (notes: Record<string, string>) => void,
+  currentCharacterNotes?: Record<string, string>,
+  currentWeaponNotes?: Record<string, string>,
+  currentSummonNotes?: Record<string, string>
 ): { success: boolean; message: string } => {
   try {
     const results = Papa.parse(csvData, { header: false });
@@ -280,7 +286,7 @@ export const importCSV = (
         
         // アイテムセクションの処理
         if (currentSection === 'ITEMS' && row.length >= 3) {
-          const [type, id, count, awakening] = row;
+          const [type, id, name, count, awakening, note] = row;
           if (id && typeof id === 'string' && !id.startsWith('#') && !id.startsWith('タイプ')) {
             importedIds.push(id);
             
@@ -312,6 +318,27 @@ export const importCSV = (
                 if (Object.keys(newAwakenings).length > 0) {
                   importedWeaponAwakenings[id] = newAwakenings;
                 }
+              }
+              
+              // 備考を取得
+              if (note && setWeaponNotes && currentWeaponNotes) {
+                const newNotes = { ...currentWeaponNotes };
+                newNotes[id] = note;
+                setWeaponNotes(newNotes);
+              }
+            } else if (type === 'character') {
+              // キャラクターの備考を取得
+              if (note && setCharacterNotes && currentCharacterNotes) {
+                const newNotes = { ...currentCharacterNotes };
+                newNotes[id] = note;
+                setCharacterNotes(newNotes);
+              }
+            } else if (type === 'summon') {
+              // 召喚石の備考を取得
+              if (note && setSummonNotes && currentSummonNotes) {
+                const newNotes = { ...currentSummonNotes };
+                newNotes[id] = note;
+                setSummonNotes(newNotes);
               }
             }
           }

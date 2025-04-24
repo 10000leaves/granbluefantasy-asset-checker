@@ -404,6 +404,24 @@ export const WeaponCard = ({
               </IconButton>
             </Box>
             
+            {/* 備考表示エリア */}
+            {note && (
+              <Box sx={{ mt: 1 }}>
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    display: 'block',
+                    color: 'text.secondary',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {note}
+                </Typography>
+              </Box>
+            )}
+            
             {/* 覚醒情報表示 */}
             <Box 
               sx={{ 
