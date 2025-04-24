@@ -113,15 +113,6 @@ export function ExportContentItems({
       
       {/* 選択アイテムセクション */}
       <Box sx={{ mb: 2 }}>
-        <Typography variant="h6" gutterBottom sx={isPdfMode ? undefined : { 
-          bgcolor: 'primary.main', 
-          color: 'primary.contrastText', 
-          px: 2, 
-          py: 1, 
-          borderRadius: 1 
-        }}>
-          選択アイテム ({totalSelectedItems})
-        </Typography>
         
         {/* キャラ */}
         {filterSettings.showCharacters && selectedItems.characters.length > 0 && (

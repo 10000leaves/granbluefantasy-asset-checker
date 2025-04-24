@@ -131,24 +131,6 @@ export const getInputItems = cacheFunction(async () => {
   return rows;
 });
 
-// セッションの作成
-export const createSession = async (inputValues: any, selectedItems: string[]) => {
-  const { rows } = await pool.query(`
-    INSERT INTO user_sessions (input_values, selected_items)
-    VALUES ($1, $2)
-    RETURNING id
-  `, [JSON.stringify(inputValues), JSON.stringify(selectedItems)]);
-  return rows[0];
-};
-
-// セッションの取得
-export const getSession = cacheFunction(async (id: string) => {
-  const { rows } = await pool.query(`
-    SELECT * FROM user_sessions WHERE id = $1
-  `, [id]);
-  return rows[0];
-});
-
 // 画像のアップロード
 export const uploadImage = async (file: File) => {
   const blob = await put(file.name, file, {

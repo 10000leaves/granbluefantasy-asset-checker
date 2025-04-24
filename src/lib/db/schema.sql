@@ -61,14 +61,6 @@ CREATE TABLE item_tags (
   UNIQUE(item_id, tag_value_id)
 );
 
--- ユーザーセッションテーブル
-CREATE TABLE user_sessions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  input_values JSONB NOT NULL DEFAULT '{}',
-  selected_items JSONB NOT NULL DEFAULT '[]',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
 -- インデックスの作成
 CREATE INDEX idx_input_items_group_id ON input_items(group_id);
 CREATE INDEX idx_input_items_order ON input_items(order_index);

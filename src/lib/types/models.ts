@@ -67,14 +67,6 @@ export interface ItemTag {
   createdAt: Date;
 }
 
-// ユーザー情報（一時保存）の型
-export interface UserSession {
-  sessionId: string;
-  inputValues: Record<string, any>;
-  selectedItems: string[];
-  createdAt: Date;
-}
-
 // 管理者設定の型
 export interface AdminSettings {
   itemTypes: ItemType[];
