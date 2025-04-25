@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { NextRequest, NextResponse } from "next/server";
+import { query } from "@/lib/db";
 
 // 入力項目グループの取得
 export async function GET(request: NextRequest) {
@@ -27,10 +27,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(rows);
   } catch (error) {
-    console.error('Error fetching input items:', error);
+    console.error("Error fetching input items:", error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
+      { error: "Internal Server Error" },
+      { status: 500 },
     );
   }
 }
@@ -42,24 +42,29 @@ export async function POST(request: NextRequest) {
     const { name } = body;
 
     // 最大の order_index を取得
-    const { rows: [{ max_order }] } = await query(`
+    const {
+      rows: [{ max_order }],
+    } = await query(`
       SELECT COALESCE(MAX(order_index), 0) as max_order
       FROM input_groups
     `);
 
     // グループを作成
-    const { rows } = await query(`
+    const { rows } = await query(
+      `
       INSERT INTO input_groups (name, order_index)
       VALUES ($1, $2)
       RETURNING *
-    `, [name, max_order + 1]);
+    `,
+      [name, max_order + 1],
+    );
 
     return NextResponse.json(rows[0]);
   } catch (error) {
-    console.error('Error creating input group:', error);
+    console.error("Error creating input group:", error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
+      { error: "Internal Server Error" },
+      { status: 500 },
     );
   }
 }

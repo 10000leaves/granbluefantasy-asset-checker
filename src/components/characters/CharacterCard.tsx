@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import Image from 'next/image';
+import React, { useState } from "react";
+import Image from "next/image";
 import {
   Card,
   CardContent,
@@ -10,32 +10,32 @@ import {
   IconButton,
   Tooltip,
   Skeleton,
-} from '@mui/material';
-import { useAtom } from 'jotai';
-import { characterNotesAtom } from '@/atoms';
+} from "@mui/material";
+import { useAtom } from "jotai";
+import { characterNotesAtom } from "@/atoms";
 import {
   BrokenImage as BrokenImageIcon,
   Edit as EditIcon,
-} from '@mui/icons-material';
-import { NoteDialog } from '../common/NoteDialog';
+} from "@mui/icons-material";
+import { NoteDialog } from "../common/NoteDialog";
 
-import { translateElement } from '../../lib/utils/helpers';
-import { 
-  elementIcons, 
-  checkboxStyle, 
-  elementIconStyle, 
-  noteButtonStyle, 
-  cardStyle, 
-  noteTextStyle, 
-  rarityChipStyle 
-} from '../../lib/utils/cardUtils';
+import { translateElement } from "../../lib/utils/helpers";
+import {
+  elementIcons,
+  checkboxStyle,
+  elementIconStyle,
+  noteButtonStyle,
+  cardStyle,
+  noteTextStyle,
+  rarityChipStyle,
+} from "../../lib/utils/cardUtils";
 
 interface CharacterCardProps {
   id: string;
   name: string;
   imageUrl: string;
-  element: 'fire' | 'water' | 'earth' | 'wind' | 'light' | 'dark';
-  rarity: 'SSR' | 'SR' | 'R';
+  element: "fire" | "water" | "earth" | "wind" | "light" | "dark";
+  rarity: "SSR" | "SR" | "R";
   selected: boolean;
   onSelect: (id: string, selected: boolean) => void;
 }
@@ -54,21 +54,21 @@ export const CharacterCard = ({
   const [error, setError] = useState(false);
   const [characterNotes, setCharacterNotes] = useAtom(characterNotesAtom);
   const [showNoteDialog, setShowNoteDialog] = useState(false);
-  
+
   // 備考を取得
-  const note = characterNotes[id] || '';
-  
+  const note = characterNotes[id] || "";
+
   // 備考ダイアログを開く
   const openNoteDialog = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowNoteDialog(true);
   };
-  
+
   // 備考を保存
   const handleSaveNote = (newNote: string) => {
-    setCharacterNotes(prev => ({
+    setCharacterNotes((prev) => ({
       ...prev,
-      [id]: newNote
+      [id]: newNote,
     }));
   };
 
@@ -83,43 +83,40 @@ export const CharacterCard = ({
   };
 
   return (
-    <Card
-      sx={cardStyle}
-      onClick={() => onSelect(id, !selected)}
-    >
-      <Box sx={{ position: 'relative', height: 160, width: '100%' }}>
+    <Card sx={cardStyle} onClick={() => onSelect(id, !selected)}>
+      <Box sx={{ position: "relative", height: 160, width: "100%" }}>
         {loading && (
           <Skeleton
             variant="rectangular"
             width="100%"
             height={160}
             animation="wave"
-            sx={{ position: 'absolute', top: 0, left: 0 }}
+            sx={{ position: "absolute", top: 0, left: 0 }}
           />
         )}
-        
+
         {error ? (
           <Box
             sx={{
               height: 160,
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              bgcolor: 'rgba(0, 0, 0, 0.1)',
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              bgcolor: "rgba(0, 0, 0, 0.1)",
             }}
           >
-            <BrokenImageIcon sx={{ fontSize: 60, color: 'text.disabled' }} />
+            <BrokenImageIcon sx={{ fontSize: 60, color: "text.disabled" }} />
           </Box>
         ) : (
-          <Box sx={{ position: 'relative', height: 160, width: '100%' }}>
+          <Box sx={{ position: "relative", height: 160, width: "100%" }}>
             <Image
               src={imageUrl}
               alt={name}
               fill
-              style={{ 
-                objectFit: 'cover',
-                filter: selected ? 'brightness(0.8)' : 'none',
+              style={{
+                objectFit: "cover",
+                filter: selected ? "brightness(0.8)" : "none",
               }}
               onLoad={handleImageLoad}
               onError={handleImageError}
@@ -127,7 +124,7 @@ export const CharacterCard = ({
             />
           </Box>
         )}
-        
+
         <Checkbox
           checked={selected}
           onChange={(e) => {
@@ -137,62 +134,52 @@ export const CharacterCard = ({
           onClick={(e) => e.stopPropagation()}
           sx={checkboxStyle}
         />
-          <Tooltip title={`${translateElement(element)}属性`}>
-            <IconButton
-              size="small"
-              sx={elementIconStyle(element)}
-            >
-              <ElementIcon />
-            </IconButton>
-          </Tooltip>
-          
-          {/* 備考編集アイコンを画像の右下に配置 */}
-          <Tooltip title="備考を編集">
-            <IconButton
-              size="small"
-              onClick={openNoteDialog}
-              sx={noteButtonStyle(!!note)}
-            >
-              <EditIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+        <Tooltip title={`${translateElement(element)}属性`}>
+          <IconButton size="small" sx={elementIconStyle(element)}>
+            <ElementIcon />
+          </IconButton>
+        </Tooltip>
+
+        {/* 備考編集アイコンを画像の右下に配置 */}
+        <Tooltip title="備考を編集">
+          <IconButton
+            size="small"
+            onClick={openNoteDialog}
+            sx={noteButtonStyle(!!note)}
+          >
+            <EditIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
       </Box>
-      <CardContent sx={{ pt: 1, pb: '8px !important', flexShrink: 0 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <CardContent sx={{ pt: 1, pb: "8px !important", flexShrink: 0 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Typography
             variant="subtitle2"
             component="div"
             sx={{
               flexGrow: 1,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
             }}
           >
             {name}
           </Typography>
-          <Chip
-            label={rarity}
-            size="small"
-            sx={rarityChipStyle(rarity)}
-          />
+          <Chip label={rarity} size="small" sx={rarityChipStyle(rarity)} />
         </Box>
-        
+
         {/* 備考エリア */}
         <Box onClick={(e) => e.stopPropagation()}>
           {note && (
             <Box sx={{ mt: 1 }}>
-              <Typography 
-                variant="caption" 
-                sx={noteTextStyle}
-              >
+              <Typography variant="caption" sx={noteTextStyle}>
                 {note}
               </Typography>
             </Box>
           )}
         </Box>
       </CardContent>
-      
+
       {/* 備考編集ダイアログ */}
       <NoteDialog
         open={showNoteDialog}

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo } from "react";
 
 /**
  * 所持アイテムのみを表示するフィルターのためのカスタムフック
@@ -10,7 +10,7 @@ import { useState, useMemo } from 'react';
 export function useOwnedFilter<T extends { id: string }>(
   items: T[],
   selectedItemIds: string[],
-  filterFn?: (item: T) => boolean
+  filterFn?: (item: T) => boolean,
 ) {
   // 所持のみフィルターの状態
   const [ownedOnly, setOwnedOnly] = useState(false);
@@ -35,6 +35,6 @@ export function useOwnedFilter<T extends { id: string }>(
   return {
     ownedOnly,
     setOwnedOnly,
-    filteredItems
+    filteredItems,
   };
 }

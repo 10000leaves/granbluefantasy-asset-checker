@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Box, Chip } from '@mui/material';
+import React from "react";
+import { Box, Chip } from "@mui/material";
 
 interface OwnedOnlyFilterProps {
   ownedOnly: boolean;
@@ -13,7 +13,7 @@ interface OwnedOnlyFilterProps {
  */
 export function OwnedOnlyFilter({ ownedOnly, onChange }: OwnedOnlyFilterProps) {
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+    <Box sx={{ display: "flex", alignItems: "center", mb: 1.5 }}>
       <Chip
         label="所持のみ"
         size="small"
@@ -21,10 +21,10 @@ export function OwnedOnlyFilter({ ownedOnly, onChange }: OwnedOnlyFilterProps) {
         color={ownedOnly ? "primary" : "default"}
         onClick={() => onChange(!ownedOnly)}
         sx={{
-          borderRadius: '16px',
-          transition: 'all 0.2s',
-          '&:hover': {
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          borderRadius: "16px",
+          transition: "all 0.2s",
+          "&:hover": {
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
           },
         }}
       />

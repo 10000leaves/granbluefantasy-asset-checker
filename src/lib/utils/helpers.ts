@@ -1,15 +1,15 @@
 // ユーティリティ関数
 
-import { InputItem, ItemType } from '../types';
-import { TagCategory, TagValue } from '@/hooks/useTags';
+import { InputItem, ItemType } from "../types";
+import { TagCategory, TagValue } from "@/hooks/useTags";
 
 /**
  * UUIDを生成する
  */
 export const generateId = (): string => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
 };
@@ -26,7 +26,7 @@ export const getCurrentTimestamp = (): Date => {
  */
 export const filterTagsByItemType = (
   categories: TagCategory[],
-  itemType: ItemType
+  itemType: ItemType,
 ): TagCategory[] => {
   return categories.filter((category) => category.itemType === itemType);
 };
@@ -36,7 +36,7 @@ export const filterTagsByItemType = (
  */
 export const filterTagValuesByCategoryId = (
   values: TagValue[],
-  categoryId: string
+  categoryId: string,
 ): TagValue[] => {
   return values.filter((value) => value.categoryId === categoryId);
 };
@@ -46,21 +46,24 @@ export const filterTagValuesByCategoryId = (
  */
 export const validateInputValue = (
   value: any,
-  inputItem: InputItem
+  inputItem: InputItem,
 ): { isValid: boolean; error?: string } => {
-  if (inputItem.required && (value === undefined || value === null || value === '')) {
-    return { isValid: false, error: '必須項目です' };
+  if (
+    inputItem.required &&
+    (value === undefined || value === null || value === "")
+  ) {
+    return { isValid: false, error: "必須項目です" };
   }
 
   switch (inputItem.type) {
-    case 'number':
-      if (value !== '' && isNaN(Number(value))) {
-        return { isValid: false, error: '数値を入力してください' };
+    case "number":
+      if (value !== "" && isNaN(Number(value))) {
+        return { isValid: false, error: "数値を入力してください" };
       }
       break;
-    case 'date':
-      if (value !== '' && isNaN(Date.parse(value))) {
-        return { isValid: false, error: '正しい日付を入力してください' };
+    case "date":
+      if (value !== "" && isNaN(Date.parse(value))) {
+        return { isValid: false, error: "正しい日付を入力してください" };
       }
       break;
   }
@@ -86,12 +89,12 @@ export const pluck = <T, K extends keyof T>(array: T[], key: K): T[K][] => {
  * 日付をフォーマットする
  */
 export const formatDate = (date: Date): string => {
-  return new Intl.DateTimeFormat('ja-JP', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
+  return new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
   }).format(date);
 };
 
@@ -99,12 +102,15 @@ export const formatDate = (date: Date): string => {
  * オブジェクトの配列をIDでインデックス化する
  */
 export const indexById = <T extends { id: string }>(
-  items: T[]
+  items: T[],
 ): { [key: string]: T } => {
-  return items.reduce((acc, item) => {
-    acc[item.id] = item;
-    return acc;
-  }, {} as { [key: string]: T });
+  return items.reduce(
+    (acc, item) => {
+      acc[item.id] = item;
+      return acc;
+    },
+    {} as { [key: string]: T },
+  );
 };
 
 /**
@@ -113,8 +119,8 @@ export const indexById = <T extends { id: string }>(
 export const toSlug = (str: string): string => {
   return str
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 };
 
 /**
@@ -122,13 +128,20 @@ export const toSlug = (str: string): string => {
  */
 export const convertElementJaToEn = (jaValue: string): string => {
   switch (jaValue) {
-    case '火': return 'fire';
-    case '水': return 'water';
-    case '土': return 'earth';
-    case '風': return 'wind';
-    case '光': return 'light';
-    case '闇': return 'dark';
-    default: return jaValue.toLowerCase();
+    case "火":
+      return "fire";
+    case "水":
+      return "water";
+    case "土":
+      return "earth";
+    case "風":
+      return "wind";
+    case "光":
+      return "light";
+    case "闇":
+      return "dark";
+    default:
+      return jaValue.toLowerCase();
   }
 };
 
@@ -137,12 +150,12 @@ export const convertElementJaToEn = (jaValue: string): string => {
  */
 export const translateElement = (element: string): string => {
   const elementTranslations: { [key: string]: string } = {
-    fire: '火',
-    water: '水',
-    earth: '土',
-    wind: '風',
-    light: '光',
-    dark: '闇',
+    fire: "火",
+    water: "水",
+    earth: "土",
+    wind: "風",
+    light: "光",
+    dark: "闇",
   };
 
   return elementTranslations[element] || element;
@@ -153,29 +166,31 @@ export const translateElement = (element: string): string => {
  * カテゴリIDをキーとして、動的に生成したフィルターキー（a, b, c, ...）を値とするマップを返す
  */
 export const createTagCategoryMap = (
-  tagCategories: TagCategory[]
+  tagCategories: TagCategory[],
 ): Record<string, string> => {
   const map: Record<string, string> = {};
-  
+
   // 属性カテゴリは特別扱い（UI表示のため）
-  const elementCategory = tagCategories.find(c => c.name.toLowerCase() === '属性');
+  const elementCategory = tagCategories.find(
+    (c) => c.name.toLowerCase() === "属性",
+  );
   if (elementCategory) {
-    map[elementCategory.id] = 'elements';
+    map[elementCategory.id] = "elements";
   }
-  
+
   // その他のカテゴリには動的にキーを割り当て
-  const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+  const alphabet = "abcdefghijklmnopqrstuvwxyz";
   let index = 0;
-  
-  tagCategories.forEach(category => {
+
+  tagCategories.forEach((category) => {
     // 属性カテゴリは既に処理済みなのでスキップ
     if (category.id === elementCategory?.id) return;
-    
+
     // アルファベットの文字を順番に割り当て
     const key = alphabet[index];
     map[category.id] = key;
     index++;
-    
+
     // アルファベットを超える場合は複数文字のキーを生成
     if (index >= alphabet.length) {
       const majorIndex = Math.floor(index / alphabet.length);
@@ -183,7 +198,7 @@ export const createTagCategoryMap = (
       map[category.id] = alphabet[majorIndex - 1] + alphabet[minorIndex];
     }
   });
-  
+
   return map;
 };
 
@@ -194,13 +209,13 @@ export const createTagCategoryMap = (
 export const generateItemTagData = (
   item: any,
   tagCategories: TagCategory[],
-  tagValueMap: Record<string, { categoryId: string, value: string }>,
-  tagCategoryMap: Record<string, string>
+  tagValueMap: Record<string, { categoryId: string; value: string }>,
+  tagCategoryMap: Record<string, string>,
 ): Record<string, string[]> => {
   if (!item.tags) return {};
-  
+
   const tagData: Record<string, string[]> = {};
-  
+
   // タグの形式をチェック
   if (Array.isArray(item.tags)) {
     // 配列形式のタグ
@@ -208,66 +223,68 @@ export const generateItemTagData = (
       // タグの形式によって処理を分岐
       if (tag.categoryId && tag.valueId) {
         // { categoryId, valueId } 形式
-        const category = tagCategories.find(c => c.id === tag.categoryId);
+        const category = tagCategories.find((c) => c.id === tag.categoryId);
         if (!category) return;
-        
+
         const tagValue = tagValueMap[tag.valueId]?.value;
         if (!tagValue) return;
-        
+
         // カテゴリに対応するフィルターキーを取得
         const filterKey = tagCategoryMap[category.id];
         if (!filterKey) return;
-        
+
         // フィルターキーに対応するタグ値を追加
         if (!tagData[filterKey]) {
           tagData[filterKey] = [];
         }
-        
+
         // 全てのタグ値を日本語のまま保持
         tagData[filterKey].push(tagValue);
       } else if (tag.category_id && tag.value_id) {
         // { category_id, value_id } 形式
-        const category = tagCategories.find(c => c.id === tag.category_id);
+        const category = tagCategories.find((c) => c.id === tag.category_id);
         if (!category) return;
-        
+
         const tagValue = tagValueMap[tag.value_id]?.value;
         if (!tagValue) return;
-        
+
         // カテゴリに対応するフィルターキーを取得
         const filterKey = tagCategoryMap[category.id];
         if (!filterKey) return;
-        
+
         // フィルターキーに対応するタグ値を追加
         if (!tagData[filterKey]) {
           tagData[filterKey] = [];
         }
-        
+
         // 全てのタグ値を日本語のまま保持
         tagData[filterKey].push(tagValue);
       }
     });
-  } else if (typeof item.tags === 'object') {
+  } else if (typeof item.tags === "object") {
     // オブジェクト形式のタグ
     Object.entries(item.tags).forEach(([categoryName, values]) => {
       // カテゴリ名からカテゴリを検索
-      const category = tagCategories.find(c => c.name.toLowerCase() === categoryName.toLowerCase());
+      const category = tagCategories.find(
+        (c) => c.name.toLowerCase() === categoryName.toLowerCase(),
+      );
       if (!category) return;
-      
+
       // カテゴリに対応するフィルターキーを取得
       const filterKey = tagCategoryMap[category.id];
       if (!filterKey) return;
-      
+
       // フィルターキーに対応するタグ値を追加
       if (!tagData[filterKey]) {
         tagData[filterKey] = [];
       }
-      
+
       // 値が配列の場合
       if (Array.isArray(values)) {
-        (values as string[]).forEach(value => {
+        (values as string[]).forEach((value) => {
           tagData[filterKey].push(value);
         });
-      } else if (typeof values === 'string') {
+      } else if (typeof values === "string") {
         // 値が文字列の場合
         tagData[filterKey].push(values as string);
       }
@@ -282,25 +299,25 @@ export const generateItemTagData = (
  */
 export const getItemAttributes = (
   item: any,
-  tagData: Record<string, string[]>
-): { element: string, rarity: string } => {
+  tagData: Record<string, string[]>,
+): { element: string; rarity: string } => {
   // 属性の取得と日本語から英語への変換
-  let element = 'fire';
+  let element = "fire";
   if (tagData.elements && tagData.elements.length > 0) {
     const jaValue = tagData.elements[0];
     // 日本語から英語への変換
     const enValue = convertElementJaToEn(jaValue);
     element = enValue;
   }
-  
+
   // レアリティの取得
-  let rarity = 'SSR';
+  let rarity = "SSR";
   if (tagData.rarities && tagData.rarities.length > 0) {
     const rarityValue = tagData.rarities[0].toUpperCase();
-    if (rarityValue === 'SSR' || rarityValue === 'SR' || rarityValue === 'R') {
+    if (rarityValue === "SSR" || rarityValue === "SR" || rarityValue === "R") {
       rarity = rarityValue;
     }
   }
-  
+
   return { element, rarity };
 };

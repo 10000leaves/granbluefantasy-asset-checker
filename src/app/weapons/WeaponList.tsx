@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { OwnedOnlyFilter } from '@/components/common/OwnedOnlyFilter';
-import { useOwnedFilter } from '@/hooks/useOwnedFilter';
+import React, { useState, useMemo, useEffect } from "react";
+import { OwnedOnlyFilter } from "@/components/common/OwnedOnlyFilter";
+import { useOwnedFilter } from "@/hooks/useOwnedFilter";
 import {
   Typography,
   Box,
@@ -19,22 +19,22 @@ import {
   CircularProgress,
   Alert,
   Button,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Search as SearchIcon,
   FilterList as FilterListIcon,
   Close as CloseIcon,
   CheckBox as CheckBoxIcon,
-} from '@mui/icons-material';
-import { WeaponCard } from '@/components/weapons/WeaponCard';
-import { ExportPanel } from '@/components/common/ExportPanel';
-import { useItems } from '@/hooks/useItems';
-import { useTags } from '@/hooks/useTags';
+} from "@mui/icons-material";
+import { WeaponCard } from "@/components/weapons/WeaponCard";
+import { ExportPanel } from "@/components/common/ExportPanel";
+import { useItems } from "@/hooks/useItems";
+import { useTags } from "@/hooks/useTags";
 import {
   createTagCategoryMap,
   generateItemTagData,
-  getItemAttributes
-} from '@/lib/utils/helpers';
+  getItemAttributes,
+} from "@/lib/utils/helpers";
 
 // 武器データの型定義
 interface Weapon {
@@ -46,14 +46,21 @@ interface Weapon {
 }
 
 export function WeaponList() {
-  const { items, loading, error, toggleItem, selectedItems: selectedWeapons, setSelectedItems } = useItems('weapon');
-  const { tagCategories, tagValues } = useTags('weapon');
-  
+  const {
+    items,
+    loading,
+    error,
+    toggleItem,
+    selectedItems: selectedWeapons,
+    setSelectedItems,
+  } = useItems("weapon");
+  const { tagCategories, tagValues } = useTags("weapon");
+
   // 状態管理
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(true);
   const [filters, setFilters] = useState<Record<string, string[]>>({
-    elements: []
+    elements: [],
   });
 
   // タグカテゴリが読み込まれたら、動的にフィルター状態を初期化
@@ -61,16 +68,16 @@ export function WeaponList() {
     if (tagCategories.length > 0) {
       const tagCategoryMap = createTagCategoryMap(tagCategories);
       const initialFilters: Record<string, string[]> = {};
-      
+
       // 全てのカテゴリに対応するフィルターキーを初期化
-      Object.values(tagCategoryMap).forEach(key => {
+      Object.values(tagCategoryMap).forEach((key) => {
         initialFilters[key] = [];
       });
-      
+
       setFilters(initialFilters);
     }
   }, [tagCategories]);
-  
+
   // タグカテゴリのマッピングを動的に生成
   const tagCategoryMap = useMemo(() => {
     return createTagCategoryMap(tagCategories);
@@ -78,8 +85,8 @@ export function WeaponList() {
 
   // タグ値のマッピング
   const tagValueMap = useMemo(() => {
-    const map: Record<string, { categoryId: string, value: string }> = {};
-    tagValues.forEach(value => {
+    const map: Record<string, { categoryId: string; value: string }> = {};
+    tagValues.forEach((value) => {
       map[value.id] = {
         categoryId: value.categoryId,
         value: value.value,
@@ -87,19 +94,24 @@ export function WeaponList() {
     });
     return map;
   }, [tagValues]);
-  
+
   // 武器データの整形
   const weapons = useMemo(() => {
-    return items.map(item => {
+    return items.map((item) => {
       // タグデータを動的に生成
-      const tagData = generateItemTagData(item, tagCategories, tagValueMap, tagCategoryMap);
-      
+      const tagData = generateItemTagData(
+        item,
+        tagCategories,
+        tagValueMap,
+        tagCategoryMap,
+      );
+
       return {
         id: item.id,
         name: item.name,
         imageUrl: item.imageUrl,
         tags: item.tags,
-        tagData
+        tagData,
       } as Weapon;
     });
   }, [items, tagCategories, tagValueMap, tagCategoryMap]);
@@ -108,13 +120,13 @@ export function WeaponList() {
   const { ownedOnly, setOwnedOnly } = useOwnedFilter(
     weapons,
     selectedWeapons,
-    undefined
+    undefined,
   );
 
   // アクティブなフィルター数
   const activeFilterCount = Object.values(filters).reduce(
     (count, filterArray) => count + filterArray.length,
-    0
+    0,
   );
 
   // フィルター処理
@@ -136,12 +148,14 @@ export function WeaponList() {
       // タグデータによるフィルタリング
       for (const [category, selectedValues] of Object.entries(filters)) {
         if (selectedValues.length === 0) continue;
-        
+
         const weaponValues = weapon.tagData?.[category] || [];
-        
+
         // いずれかの値が一致するかチェック
-        const hasMatch = selectedValues.some(value => weaponValues.includes(value));
-        
+        const hasMatch = selectedValues.some((value) =>
+          weaponValues.includes(value),
+        );
+
         if (!hasMatch) return false;
       }
 
@@ -153,7 +167,7 @@ export function WeaponList() {
   const handleFilterChange = (
     category: keyof typeof filters,
     value: string,
-    checked: boolean
+    checked: boolean,
   ) => {
     setFilters((prev) => ({
       ...prev,
@@ -166,12 +180,12 @@ export function WeaponList() {
   // フィルターのクリア
   const clearFilters = () => {
     const emptyFilters: Record<string, string[]> = {};
-    
+
     // 全てのフィルターキーを空の配列で初期化
-    Object.keys(filters).forEach(key => {
+    Object.keys(filters).forEach((key) => {
       emptyFilters[key] = [];
     });
-    
+
     setFilters(emptyFilters);
   };
 
@@ -191,7 +205,7 @@ export function WeaponList() {
   // すべて選択処理
   const handleSelectAll = () => {
     // フィルター後のアイテムのIDを取得
-    const filteredIds = filteredWeapons.map(weapon => weapon.id);
+    const filteredIds = filteredWeapons.map((weapon) => weapon.id);
     // 選択状態を更新
     setSelectedItems(filteredIds);
   };
@@ -200,33 +214,37 @@ export function WeaponList() {
   const renderFilterSection = (
     title: string,
     category: keyof typeof filters,
-    options: { value: string; label: string }[]
+    options: { value: string; label: string }[],
   ) => (
     <Box sx={{ mb: 2 }}>
-      <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold' }}>
+      <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: "bold" }}>
         {title}
       </Typography>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
         {options.map((option) => (
           <Chip
             key={option.value}
             label={option.label}
             size="small"
-            variant={filters[category].includes(option.value) ? "filled" : "outlined"}
-            color={filters[category].includes(option.value) ? "primary" : "default"}
-            onClick={() => 
+            variant={
+              filters[category].includes(option.value) ? "filled" : "outlined"
+            }
+            color={
+              filters[category].includes(option.value) ? "primary" : "default"
+            }
+            onClick={() =>
               handleFilterChange(
-                category, 
-                option.value, 
-                !filters[category].includes(option.value)
+                category,
+                option.value,
+                !filters[category].includes(option.value),
               )
             }
-            sx={{ 
-              borderRadius: '16px',
-              transition: 'all 0.2s',
-              '&:hover': {
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              }
+            sx={{
+              borderRadius: "16px",
+              transition: "all 0.2s",
+              "&:hover": {
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              },
             }}
           />
         ))}
@@ -236,10 +254,9 @@ export function WeaponList() {
 
   return (
     <Box sx={{ pb: 8 }}>
-
       {/* 検索・フィルターエリア */}
       <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 2, borderRadius: 2 }}>
-        <Box sx={{ display: 'flex', gap: 1, mb: 1.5 }}>
+        <Box sx={{ display: "flex", gap: 1, mb: 1.5 }}>
           <TextField
             placeholder="武器名で検索"
             variant="outlined"
@@ -254,22 +271,22 @@ export function WeaponList() {
                 </InputAdornment>
               ),
             }}
-            sx={{ 
-              '& .MuiOutlinedInput-root': {
-                borderRadius: '8px',
-              }
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "8px",
+              },
             }}
           />
           <IconButton
             aria-label="フィルター"
             onClick={() => setShowFilters(!showFilters)}
             sx={{
-              bgcolor: showFilters ? 'primary.main' : 'inherit',
-              color: showFilters ? 'primary.contrastText' : 'inherit',
-              '&:hover': {
-                bgcolor: showFilters ? 'primary.dark' : 'inherit',
+              bgcolor: showFilters ? "primary.main" : "inherit",
+              color: showFilters ? "primary.contrastText" : "inherit",
+              "&:hover": {
+                bgcolor: showFilters ? "primary.dark" : "inherit",
               },
-              borderRadius: '8px',
+              borderRadius: "8px",
             }}
           >
             <FilterListIcon />
@@ -277,54 +294,55 @@ export function WeaponList() {
         </Box>
 
         {/* 所持のみフィルター */}
-        <OwnedOnlyFilter 
-          ownedOnly={ownedOnly} 
-          onChange={setOwnedOnly} 
-        />
+        <OwnedOnlyFilter ownedOnly={ownedOnly} onChange={setOwnedOnly} />
 
         {/* アクティブフィルター表示 */}
         {activeFilterCount > 0 && (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1.5 }}>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1.5 }}>
             {Object.entries(filters).map(([category, values]) =>
               values.map((value) => {
                 let label = value;
-                let categoryName = '';
-                
+                let categoryName = "";
+
                 // カテゴリIDを逆引き
                 const categoryId = Object.entries(tagCategoryMap).find(
-                  ([_, key]) => key === category
+                  ([_, key]) => key === category,
                 )?.[0];
-                
+
                 // カテゴリ名を取得
                 if (categoryId) {
-                  const categoryObj = tagCategories.find(c => c.id === categoryId);
+                  const categoryObj = tagCategories.find(
+                    (c) => c.id === categoryId,
+                  );
                   if (categoryObj) {
                     categoryName = categoryObj.name;
                   }
                 }
-                
+
                 // 属性も含めて全て日本語のまま表示
-                
+
                 return (
                   <Chip
                     key={`${category}-${value}`}
                     label={`${categoryName}: ${label}`}
                     size="small"
-                    onDelete={() => clearFilter(category as keyof typeof filters, value)}
+                    onDelete={() =>
+                      clearFilter(category as keyof typeof filters, value)
+                    }
                     deleteIcon={<CloseIcon fontSize="small" />}
                     color="primary"
                     variant="outlined"
-                    sx={{ borderRadius: '16px' }}
+                    sx={{ borderRadius: "16px" }}
                   />
                 );
-              })
+              }),
             )}
             <Chip
               label="クリア"
               size="small"
               onClick={clearFilters}
               color="default"
-              sx={{ borderRadius: '16px' }}
+              sx={{ borderRadius: "16px" }}
             />
           </Box>
         )}
@@ -338,25 +356,25 @@ export function WeaponList() {
                 {tagCategories.map((category) => {
                   // カテゴリに対応するフィルターキーを取得
                   const filterKey = Object.entries(tagCategoryMap).find(
-                    ([id, _]) => id === category.id
+                    ([id, _]) => id === category.id,
                   )?.[1] as keyof typeof filters;
-                  
+
                   if (!filterKey) return null;
-                  
+
                   // カテゴリに属するタグ値を取得
                   const categoryValues = tagValues.filter(
-                    (value) => value.categoryId === category.id
+                    (value) => value.categoryId === category.id,
                   );
-                  
+
                   // タグ値がない場合はスキップ
                   if (categoryValues.length === 0) return null;
-                  
+
                   // フィルターオプションを作成
                   const options = categoryValues.map((value) => ({
                     value: value.value,
                     label: value.value,
                   }));
-                  
+
                   return (
                     <Grid item xs={12} key={category.id}>
                       {renderFilterSection(category.name, filterKey, options)}
@@ -371,17 +389,27 @@ export function WeaponList() {
 
       {/* 武器一覧エリア */}
       <Paper sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, alignItems: 'center' }}>
-          <Typography variant="h6" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            mb: 2,
+            alignItems: "center",
+          }}
+        >
+          <Typography
+            variant="h6"
+            sx={{ fontSize: { xs: "1rem", sm: "1.25rem" } }}
+          >
             武器一覧 ({filteredWeapons.length})
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Button
               variant="outlined"
               size="small"
               startIcon={<CheckBoxIcon />}
               onClick={handleSelectAll}
-              sx={{ borderRadius: '20px' }}
+              sx={{ borderRadius: "20px" }}
             >
               すべて選択
             </Button>
@@ -394,7 +422,7 @@ export function WeaponList() {
           </Box>
         </Box>
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
             <CircularProgress />
           </Box>
         ) : error ? (
@@ -404,21 +432,24 @@ export function WeaponList() {
         ) : (
           <Box
             sx={{
-              display: 'grid',
+              display: "grid",
               gridTemplateColumns: {
-                xs: 'repeat(2, 1fr)',
-                sm: 'repeat(3, 1fr)',
-                md: 'repeat(4, 1fr)',
-                lg: 'repeat(5, 1fr)',
-                xl: 'repeat(6, 1fr)',
+                xs: "repeat(2, 1fr)",
+                sm: "repeat(3, 1fr)",
+                md: "repeat(4, 1fr)",
+                lg: "repeat(5, 1fr)",
+                xl: "repeat(6, 1fr)",
               },
               gap: { xs: 1, sm: 1.5, md: 2 },
-              width: '100%',
+              width: "100%",
             }}
           >
             {filteredWeapons.map((weapon) => {
               // タグデータから属性とレアリティを取得
-              const { element, rarity } = getItemAttributes(weapon, weapon.tagData || {});
+              const { element, rarity } = getItemAttributes(
+                weapon,
+                weapon.tagData || {},
+              );
 
               return (
                 <WeaponCard
@@ -426,8 +457,16 @@ export function WeaponList() {
                   id={weapon.id}
                   name={weapon.name}
                   imageUrl={weapon.imageUrl}
-                  element={element as 'fire' | 'water' | 'earth' | 'wind' | 'light' | 'dark'}
-                  rarity={rarity as 'SSR' | 'SR' | 'R'}
+                  element={
+                    element as
+                      | "fire"
+                      | "water"
+                      | "earth"
+                      | "wind"
+                      | "light"
+                      | "dark"
+                  }
+                  rarity={rarity as "SSR" | "SR" | "R"}
                   selected={selectedWeapons.includes(weapon.id)}
                   onSelect={handleWeaponSelect}
                 />
@@ -438,9 +477,7 @@ export function WeaponList() {
       </Paper>
 
       {/* エクスポートパネル */}
-      <ExportPanel
-        selectedCount={selectedWeapons.length}
-      />
+      <ExportPanel selectedCount={selectedWeapons.length} />
     </Box>
   );
 }

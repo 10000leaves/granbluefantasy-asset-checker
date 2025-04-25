@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { getCookie } from 'cookies-next';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { getCookie } from "cookies-next";
 
 // 認証情報を保存するためのセッションクッキー名
-const AUTH_USER_TYPE_COOKIE = 'auth_user_type';
+const AUTH_USER_TYPE_COOKIE = "auth_user_type";
 
-export type UserType = 'admin' | 'user' | null;
+export type UserType = "admin" | "user" | null;
 
 export function useAuth() {
   const [userType, setUserType] = useState<UserType>(null);
@@ -22,10 +22,10 @@ export function useAuth() {
   }, []);
 
   // 管理者かどうかを判定
-  const isAdmin = userType === 'admin';
+  const isAdmin = userType === "admin";
 
   // 一般ユーザーかどうかを判定
-  const isUser = userType === 'user';
+  const isUser = userType === "user";
 
   // 認証されているかどうかを判定
   const isAuthenticated = userType !== null;
@@ -33,7 +33,7 @@ export function useAuth() {
   // 管理画面へのアクセスを制限
   const requireAdmin = () => {
     if (!isLoading && !isAdmin) {
-      router.push('/');
+      router.push("/");
       return false;
     }
     return true;

@@ -16,7 +16,7 @@ const SQL_INJECTION_PATTERNS = [
   /OR\s+'[^']*'\s*=\s*'[^']*'/i,
   /--/,
   /\/\*/,
-  /\*\//
+  /\*\//,
 ];
 
 // XSS攻撃の可能性がある危険なパターン
@@ -26,7 +26,7 @@ const XSS_PATTERNS = [
   /on\w+=/i,
   /<iframe/i,
   /<embed/i,
-  /<object/i
+  /<object/i,
 ];
 
 /**
@@ -35,8 +35,8 @@ const XSS_PATTERNS = [
  * @returns 危険なパターンを含む場合はtrue、そうでない場合はfalse
  */
 export const hasSqlInjectionRisk = (input: string): boolean => {
-  if (typeof input !== 'string') return false;
-  return SQL_INJECTION_PATTERNS.some(pattern => pattern.test(input));
+  if (typeof input !== "string") return false;
+  return SQL_INJECTION_PATTERNS.some((pattern) => pattern.test(input));
 };
 
 /**
@@ -45,8 +45,8 @@ export const hasSqlInjectionRisk = (input: string): boolean => {
  * @returns 危険なパターンを含む場合はtrue、そうでない場合はfalse
  */
 export const hasXssRisk = (input: string): boolean => {
-  if (typeof input !== 'string') return false;
-  return XSS_PATTERNS.some(pattern => pattern.test(input));
+  if (typeof input !== "string") return false;
+  return XSS_PATTERNS.some((pattern) => pattern.test(input));
 };
 
 /**
@@ -55,13 +55,13 @@ export const hasXssRisk = (input: string): boolean => {
  * @returns サニタイズされた文字列
  */
 export const sanitizeString = (input: string): string => {
-  if (typeof input !== 'string') return '';
+  if (typeof input !== "string") return "";
   return input
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 };
 
 /**
@@ -69,37 +69,39 @@ export const sanitizeString = (input: string): string => {
  * @param obj サニタイズするオブジェクト
  * @returns サニタイズされたオブジェクト
  */
-export const sanitizeObject = <T extends Record<string, any>>(obj: T): Record<string, any> => {
+export const sanitizeObject = <T extends Record<string, any>>(
+  obj: T,
+): Record<string, any> => {
   // nullまたはundefinedの場合は、そのまま返す
   if (obj === null || obj === undefined) {
     return obj;
   }
-  
+
   // 配列の場合は、各要素をサニタイズ
   if (Array.isArray(obj)) {
-    return obj.map(item => {
-      if (typeof item === 'string') {
+    return obj.map((item) => {
+      if (typeof item === "string") {
         return sanitizeString(item);
-      } else if (typeof item === 'object' && item !== null) {
+      } else if (typeof item === "object" && item !== null) {
         return sanitizeObject(item);
       }
       return item;
     });
   }
-  
+
   // オブジェクトの場合は、各プロパティをサニタイズ
   const result: Record<string, any> = { ...obj };
-  
+
   for (const key in result) {
-    if (typeof result[key] === 'string') {
+    if (typeof result[key] === "string") {
       result[key] = sanitizeString(result[key]);
     } else if (Array.isArray(result[key])) {
       result[key] = sanitizeObject(result[key]);
-    } else if (typeof result[key] === 'object' && result[key] !== null) {
+    } else if (typeof result[key] === "object" && result[key] !== null) {
       result[key] = sanitizeObject(result[key]);
     }
   }
-  
+
   return result as T;
 };
 
@@ -110,7 +112,7 @@ export const sanitizeObject = <T extends Record<string, any>>(obj: T): Record<st
  * @returns 安全な場合はtrue、危険な場合はfalse
  */
 export const isInputSafe = (input: string): boolean => {
-  if (typeof input !== 'string') return true;
+  if (typeof input !== "string") return true;
   return !hasSqlInjectionRisk(input) && !hasXssRisk(input);
 };
 
@@ -122,22 +124,26 @@ export const isInputSafe = (input: string): boolean => {
  */
 export const validateRequestBody = (
   body: Record<string, any>,
-  requiredFields: string[] = []
+  requiredFields: string[] = [],
 ): { valid: boolean; error?: string } => {
   // 必須フィールドのチェック
   for (const field of requiredFields) {
-    if (body[field] === undefined || body[field] === null || body[field] === '') {
+    if (
+      body[field] === undefined ||
+      body[field] === null ||
+      body[field] === ""
+    ) {
       return { valid: false, error: `${field} is required` };
     }
   }
-  
+
   // 各フィールドの安全性チェック
   for (const [key, value] of Object.entries(body)) {
-    if (typeof value === 'string' && !isInputSafe(value)) {
+    if (typeof value === "string" && !isInputSafe(value)) {
       return { valid: false, error: `Invalid input in ${key}` };
     }
   }
-  
+
   return { valid: true };
 };
 
@@ -149,18 +155,18 @@ export const validateRequestBody = (
  */
 export const validateQueryParams = (
   params: URLSearchParams,
-  allowedParams: string[] = []
+  allowedParams: string[] = [],
 ): { valid: boolean; error?: string } => {
   // 許可されたパラメータのみを受け入れる
   for (const [key, value] of params.entries()) {
     if (!allowedParams.includes(key)) {
       return { valid: false, error: `Invalid parameter: ${key}` };
     }
-    
+
     if (!isInputSafe(value)) {
       return { valid: false, error: `Invalid value for parameter: ${key}` };
     }
   }
-  
+
   return { valid: true };
 };

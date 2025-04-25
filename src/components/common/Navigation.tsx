@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -19,28 +19,30 @@ import {
   Menu,
   MenuItem,
   Tooltip,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Menu as MenuIcon,
   Brightness4 as DarkModeIcon,
   Brightness7 as LightModeIcon,
   SettingsBrightness as SystemThemeIcon,
-} from '@mui/icons-material';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useThemeContext } from './ThemeProvider';
-import { useAuth } from '@/hooks/useAuth';
+} from "@mui/icons-material";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useThemeContext } from "./ThemeProvider";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Navigation = () => {
   const pathname = usePathname();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { mode, setMode } = useThemeContext();
   const { isAdmin } = useAuth();
-  
+
   // テーマメニュー用の状態
-  const [themeMenuAnchor, setThemeMenuAnchor] = useState<null | HTMLElement>(null);
+  const [themeMenuAnchor, setThemeMenuAnchor] = useState<null | HTMLElement>(
+    null,
+  );
   const themeMenuOpen = Boolean(themeMenuAnchor);
 
   const isActive = (path: string) => {
@@ -49,23 +51,24 @@ export const Navigation = () => {
 
   // ナビゲーションアイテム（管理者の場合のみ管理画面へのリンクを表示）
   const navItems = [
-    { name: 'ホーム', path: '/' },
-    { name: 'キャラ', path: '/characters' },
-    { name: '武器', path: '/weapons' },
-    { name: '召喚石', path: '/summons' },
-    ...(isAdmin ? [{ name: '管理', path: '/admin' }] : []),
+    { name: "ホーム", path: "/" },
+    { name: "キャラ", path: "/characters" },
+    { name: "武器", path: "/weapons" },
+    { name: "召喚石", path: "/summons" },
+    ...(isAdmin ? [{ name: "管理", path: "/admin" }] : []),
   ];
 
-  const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
-    if (
-      event.type === 'keydown' &&
-      ((event as React.KeyboardEvent).key === 'Tab' ||
-        (event as React.KeyboardEvent).key === 'Shift')
-    ) {
-      return;
-    }
-    setDrawerOpen(open);
-  };
+  const toggleDrawer =
+    (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
+      if (
+        event.type === "keydown" &&
+        ((event as React.KeyboardEvent).key === "Tab" ||
+          (event as React.KeyboardEvent).key === "Shift")
+      ) {
+        return;
+      }
+      setDrawerOpen(open);
+    };
 
   // テーマメニューを開く
   const handleThemeMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -78,7 +81,7 @@ export const Navigation = () => {
   };
 
   // テーマを変更する
-  const handleThemeChange = (newMode: 'light' | 'dark' | 'system') => {
+  const handleThemeChange = (newMode: "light" | "dark" | "system") => {
     setMode(newMode);
     handleThemeMenuClose();
   };
@@ -86,11 +89,11 @@ export const Navigation = () => {
   // 現在のテーマに応じたアイコンを表示
   const ThemeIcon = () => {
     switch (mode) {
-      case 'light':
+      case "light":
         return <LightModeIcon />;
-      case 'dark':
+      case "dark":
         return <DarkModeIcon />;
-      case 'system':
+      case "system":
         return <SystemThemeIcon />;
     }
   };
@@ -121,19 +124,19 @@ export const Navigation = () => {
   return (
     <AppBar position="static" color="primary">
       <Container maxWidth="lg">
-        <Toolbar disableGutters sx={{ flexWrap: 'wrap' }}>
+        <Toolbar disableGutters sx={{ flexWrap: "wrap" }}>
           <Typography
             variant="h6"
             component={Link}
             href="/"
             sx={{
-              textDecoration: 'none',
-              color: 'inherit',
+              textDecoration: "none",
+              color: "inherit",
               flexGrow: 1,
-              fontWeight: 'bold',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
+              fontWeight: "bold",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             }}
           >
             グラブル所持チェッカー
@@ -149,29 +152,29 @@ export const Navigation = () => {
               <ThemeIcon />
             </IconButton>
           </Tooltip>
-          
+
           <Menu
             anchorEl={themeMenuAnchor}
             open={themeMenuOpen}
             onClose={handleThemeMenuClose}
           >
-            <MenuItem 
-              onClick={() => handleThemeChange('light')}
-              selected={mode === 'light'}
+            <MenuItem
+              onClick={() => handleThemeChange("light")}
+              selected={mode === "light"}
             >
               <LightModeIcon sx={{ mr: 1 }} />
               ライトモード
             </MenuItem>
-            <MenuItem 
-              onClick={() => handleThemeChange('dark')}
-              selected={mode === 'dark'}
+            <MenuItem
+              onClick={() => handleThemeChange("dark")}
+              selected={mode === "dark"}
             >
               <DarkModeIcon sx={{ mr: 1 }} />
               ダークモード
             </MenuItem>
-            <MenuItem 
-              onClick={() => handleThemeChange('system')}
-              selected={mode === 'system'}
+            <MenuItem
+              onClick={() => handleThemeChange("system")}
+              selected={mode === "system"}
             >
               <SystemThemeIcon sx={{ mr: 1 }} />
               システム設定に合わせる
@@ -197,7 +200,7 @@ export const Navigation = () => {
               </Drawer>
             </>
           ) : (
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: "flex", gap: 2 }}>
               {navItems.map((item) => (
                 <Button
                   key={item.path}
@@ -205,7 +208,7 @@ export const Navigation = () => {
                   component={Link}
                   href={item.path}
                   sx={{
-                    fontWeight: isActive(item.path) ? 'bold' : 'normal',
+                    fontWeight: isActive(item.path) ? "bold" : "normal",
                   }}
                 >
                   {item.name}

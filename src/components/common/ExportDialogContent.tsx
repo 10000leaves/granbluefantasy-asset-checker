@@ -1,24 +1,22 @@
-'use client';
+"use client";
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from "react";
+import { Box, Typography, CircularProgress, Button } from "@mui/material";
+import { ItemType } from "@/lib/types";
+import { useInputItems } from "@/hooks/useInputItems";
+import { useTags } from "@/hooks/useTags";
 import {
-  Box,
-  Typography,
-  CircularProgress,
-  Button,
-} from '@mui/material';
-import { ItemType } from '@/lib/types';
-import { useInputItems } from '@/hooks/useInputItems';
-import { useTags } from '@/hooks/useTags';
-import { ExportFilterSettings, ExportFilterSettingsComponent } from './ExportFilterSettings';
-import { ExportContentItems } from './ExportContentItems';
-import { ExportActionButtons } from './ExportActionButtons';
-import { WeaponAwakenings } from '@/atoms';
-import { createTagCategoryMap, generateItemTagData } from '@/lib/utils/helpers';
-import { useItems } from '@/hooks/useItems';
+  ExportFilterSettings,
+  ExportFilterSettingsComponent,
+} from "./ExportFilterSettings";
+import { ExportContentItems } from "./ExportContentItems";
+import { ExportActionButtons } from "./ExportActionButtons";
+import { WeaponAwakenings } from "@/atoms";
+import { createTagCategoryMap, generateItemTagData } from "@/lib/utils/helpers";
+import { useItems } from "@/hooks/useItems";
 
 interface ExportDialogContentProps {
-  exportType: 'image' | 'pdf' | 'csv';
+  exportType: "image" | "pdf" | "csv";
   isExporting: boolean;
   exportedImageUrl: string | null;
   handleDownload: () => void;
@@ -48,36 +46,45 @@ export function ExportDialogContent({
   handleDownload,
   handleExport,
   selectedItems,
-  sessionData
+  sessionData,
 }: ExportDialogContentProps) {
   // 入力項目の情報を取得
   const { inputGroups } = useInputItems();
-  
+
   // タブ状態
-  const [currentItemType, setCurrentItemType] = useState<ItemType>('character');
-  
+  const [currentItemType, setCurrentItemType] = useState<ItemType>("character");
+
   // 画像プレビュー表示状態
   const [showImagePreview, setShowImagePreview] = useState(false);
-  
+
   // 全アイテムを取得
-  const { items: allCharacters } = useItems('character');
-  const { items: allWeapons } = useItems('weapon');
-  const { items: allSummons } = useItems('summon');
-  
+  const { items: allCharacters } = useItems("character");
+  const { items: allWeapons } = useItems("weapon");
+  const { items: allSummons } = useItems("summon");
+
   // タグ情報を取得
-  const { tagCategories: characterTagCategories, tagValues: characterTagValues } = useTags('character');
-  const { tagCategories: weaponTagCategories, tagValues: weaponTagValues } = useTags('weapon');
-  const { tagCategories: summonTagCategories, tagValues: summonTagValues } = useTags('summon');
-  
+  const {
+    tagCategories: characterTagCategories,
+    tagValues: characterTagValues,
+  } = useTags("character");
+  const { tagCategories: weaponTagCategories, tagValues: weaponTagValues } =
+    useTags("weapon");
+  const { tagCategories: summonTagCategories, tagValues: summonTagValues } =
+    useTags("summon");
+
   // 全てのタグカテゴリとタグ値を結合
   const allTagCategories = useMemo(() => {
-    return [...characterTagCategories, ...weaponTagCategories, ...summonTagCategories];
+    return [
+      ...characterTagCategories,
+      ...weaponTagCategories,
+      ...summonTagCategories,
+    ];
   }, [characterTagCategories, weaponTagCategories, summonTagCategories]);
-  
+
   const allTagValues = useMemo(() => {
     return [...characterTagValues, ...weaponTagValues, ...summonTagValues];
   }, [characterTagValues, weaponTagValues, summonTagValues]);
-  
+
   // エクスポートフィルター設定
   const [filterSettings, setFilterSettings] = useState<ExportFilterSettings>({
     showUserInfo: true,
@@ -88,8 +95,8 @@ export function ExportDialogContent({
     tagFilters: {
       character: {},
       weapon: {},
-      summon: {}
-    }
+      summon: {},
+    },
   });
 
   // タグカテゴリのマッピングを動的に生成
@@ -104,34 +111,42 @@ export function ExportDialogContent({
       const initialTagFilters = {
         character: {} as Record<string, string[]>,
         weapon: {} as Record<string, string[]>,
-        summon: {} as Record<string, string[]>
+        summon: {} as Record<string, string[]>,
       };
-      
+
       // 全てのカテゴリに対応するフィルターキーを初期化
       Object.entries(tagCategoryMap).forEach(([categoryId, key]) => {
         // カテゴリIDからアイテムタイプを判断
-        let itemType: ItemType = 'character';
-        
-        if (characterTagCategories.some(cat => cat.id === categoryId)) {
-          itemType = 'character';
-        } else if (weaponTagCategories.some(cat => cat.id === categoryId)) {
-          itemType = 'weapon';
-        } else if (summonTagCategories.some(cat => cat.id === categoryId)) {
-          itemType = 'summon';
+        let itemType: ItemType = "character";
+
+        if (characterTagCategories.some((cat) => cat.id === categoryId)) {
+          itemType = "character";
+        } else if (weaponTagCategories.some((cat) => cat.id === categoryId)) {
+          itemType = "weapon";
+        } else if (summonTagCategories.some((cat) => cat.id === categoryId)) {
+          itemType = "summon";
         }
-        
+
         initialTagFilters[itemType][key] = [];
       });
-      
-      setFilterSettings(prev => ({
+
+      setFilterSettings((prev) => ({
         ...prev,
-        tagFilters: initialTagFilters
+        tagFilters: initialTagFilters,
       }));
     }
-  }, [allTagCategories, characterTagCategories, weaponTagCategories, summonTagCategories]);
+  }, [
+    allTagCategories,
+    characterTagCategories,
+    weaponTagCategories,
+    summonTagCategories,
+  ]);
 
   // フィルター設定の変更ハンドラー
-  const handleFilterChange = (setting: keyof ExportFilterSettings, checked: boolean) => {
+  const handleFilterChange = (
+    setting: keyof ExportFilterSettings,
+    checked: boolean,
+  ) => {
     setFilterSettings({
       ...filterSettings,
       [setting]: checked,
@@ -143,9 +158,9 @@ export function ExportDialogContent({
     itemType: ItemType,
     category: string,
     value: string,
-    checked: boolean
+    checked: boolean,
   ) => {
-    setFilterSettings(prev => ({
+    setFilterSettings((prev) => ({
       ...prev,
       tagFilters: {
         ...prev.tagFilters,
@@ -153,9 +168,11 @@ export function ExportDialogContent({
           ...prev.tagFilters[itemType],
           [category]: checked
             ? [...(prev.tagFilters[itemType][category] || []), value]
-            : (prev.tagFilters[itemType][category] || []).filter(item => item !== value)
-        }
-      }
+            : (prev.tagFilters[itemType][category] || []).filter(
+                (item) => item !== value,
+              ),
+        },
+      },
     }));
   };
 
@@ -163,48 +180,50 @@ export function ExportDialogContent({
   const handleClearTagFilter = (
     itemType: ItemType,
     category: string,
-    value: string
+    value: string,
   ) => {
-    setFilterSettings(prev => ({
+    setFilterSettings((prev) => ({
       ...prev,
       tagFilters: {
         ...prev.tagFilters,
         [itemType]: {
           ...prev.tagFilters[itemType],
-          [category]: (prev.tagFilters[itemType][category] || []).filter(item => item !== value)
-        }
-      }
+          [category]: (prev.tagFilters[itemType][category] || []).filter(
+            (item) => item !== value,
+          ),
+        },
+      },
     }));
   };
 
   // 全てのタグフィルターのクリア
   const handleClearAllTagFilters = (itemType: ItemType) => {
     const emptyTagFilters = { ...filterSettings.tagFilters };
-    
+
     // 指定されたアイテムタイプのフィルターをクリア
-    Object.keys(emptyTagFilters[itemType]).forEach(key => {
+    Object.keys(emptyTagFilters[itemType]).forEach((key) => {
       emptyTagFilters[itemType][key] = [];
     });
-    
-    setFilterSettings(prev => ({
+
+    setFilterSettings((prev) => ({
       ...prev,
-      tagFilters: emptyTagFilters
+      tagFilters: emptyTagFilters,
     }));
   };
-  
+
   // 項目IDから項目名を取得するマップを作成
   const itemNameMap = useMemo(() => {
     const map: Record<string, string> = {};
-    
-    inputGroups.forEach(group => {
-      group.items.forEach(item => {
+
+    inputGroups.forEach((group) => {
+      group.items.forEach((item) => {
         map[item.id] = item.name;
       });
     });
-    
+
     return map;
   }, [inputGroups]);
-  
+
   // 項目IDから項目名を取得する関数
   const getItemName = (itemId: string): string => {
     return itemNameMap[itemId] || itemId;
@@ -216,46 +235,58 @@ export function ExportDialogContent({
       return {
         characters: selectedItems.characters,
         weapons: selectedItems.weapons,
-        summons: selectedItems.summons
+        summons: selectedItems.summons,
       };
     }
 
     // 選択されたアイテムのIDを取得
-    const selectedCharacterIds = new Set(selectedItems.characters.map(item => item.id));
-    const selectedWeaponIds = new Set(selectedItems.weapons.map(item => item.id));
-    const selectedSummonIds = new Set(selectedItems.summons.map(item => item.id));
+    const selectedCharacterIds = new Set(
+      selectedItems.characters.map((item) => item.id),
+    );
+    const selectedWeaponIds = new Set(
+      selectedItems.weapons.map((item) => item.id),
+    );
+    const selectedSummonIds = new Set(
+      selectedItems.summons.map((item) => item.id),
+    );
 
     // 全アイテムから未所持アイテムを抽出
     const unownedCharacters = allCharacters
       ? allCharacters
-          .filter(item => !selectedCharacterIds.has(item.id))
-          .map(item => ({ ...item, isUnowned: true }))
+          .filter((item) => !selectedCharacterIds.has(item.id))
+          .map((item) => ({ ...item, isUnowned: true }))
       : [];
-    
+
     const unownedWeapons = allWeapons
       ? allWeapons
-          .filter(item => !selectedWeaponIds.has(item.id))
-          .map(item => ({ ...item, isUnowned: true }))
+          .filter((item) => !selectedWeaponIds.has(item.id))
+          .map((item) => ({ ...item, isUnowned: true }))
       : [];
-    
+
     const unownedSummons = allSummons
       ? allSummons
-          .filter(item => !selectedSummonIds.has(item.id))
-          .map(item => ({ ...item, isUnowned: true }))
+          .filter((item) => !selectedSummonIds.has(item.id))
+          .map((item) => ({ ...item, isUnowned: true }))
       : [];
 
     // 選択されたアイテムと未所持アイテムを結合
     return {
       characters: [...selectedItems.characters, ...unownedCharacters],
       weapons: [...selectedItems.weapons, ...unownedWeapons],
-      summons: [...selectedItems.summons, ...unownedSummons]
+      summons: [...selectedItems.summons, ...unownedSummons],
     };
-  }, [selectedItems, filterSettings.includeUnowned, allCharacters, allWeapons, allSummons]);
+  }, [
+    selectedItems,
+    filterSettings.includeUnowned,
+    allCharacters,
+    allWeapons,
+    allSummons,
+  ]);
 
   // タグ値のマッピングを作成
   const tagValueMap = useMemo(() => {
-    const map: Record<string, { categoryId: string, value: string }> = {};
-    allTagValues.forEach(value => {
+    const map: Record<string, { categoryId: string; value: string }> = {};
+    allTagValues.forEach((value) => {
       map[value.id] = {
         categoryId: value.categoryId,
         value: value.value,
@@ -270,28 +301,43 @@ export function ExportDialogContent({
     const characterTagFilters = filterSettings.tagFilters.character;
     const weaponTagFilters = filterSettings.tagFilters.weapon;
     const summonTagFilters = filterSettings.tagFilters.summon;
-    
+
     // タグフィルターが空かどうかをチェック
-    const hasCharacterFilters = Object.values(characterTagFilters).some(filters => filters.length > 0);
-    const hasWeaponFilters = Object.values(weaponTagFilters).some(filters => filters.length > 0);
-    const hasSummonFilters = Object.values(summonTagFilters).some(filters => filters.length > 0);
+    const hasCharacterFilters = Object.values(characterTagFilters).some(
+      (filters) => filters.length > 0,
+    );
+    const hasWeaponFilters = Object.values(weaponTagFilters).some(
+      (filters) => filters.length > 0,
+    );
+    const hasSummonFilters = Object.values(summonTagFilters).some(
+      (filters) => filters.length > 0,
+    );
 
     // キャラクターのフィルタリング
     const filteredCharacters = hasCharacterFilters
-      ? itemsWithUnowned.characters.filter(character => {
+      ? itemsWithUnowned.characters.filter((character) => {
           // タグでのフィルタリング
-          const characterTagData = generateItemTagData(character, characterTagCategories, tagValueMap, tagCategoryMap);
-          
+          const characterTagData = generateItemTagData(
+            character,
+            characterTagCategories,
+            tagValueMap,
+            tagCategoryMap,
+          );
+
           // 各フィルターカテゴリをチェック
-          for (const [category, selectedValues] of Object.entries(characterTagFilters)) {
+          for (const [category, selectedValues] of Object.entries(
+            characterTagFilters,
+          )) {
             // 選択されていないカテゴリはスキップ
             if (selectedValues.length === 0) continue;
-            
+
             const characterValues = characterTagData[category] || [];
-            
+
             // いずれかの値が一致するかチェック
-            const hasMatch = selectedValues.some(value => characterValues.includes(value));
-            
+            const hasMatch = selectedValues.some((value) =>
+              characterValues.includes(value),
+            );
+
             // 一致しない場合はフィルタリング
             if (!hasMatch) return false;
           }
@@ -302,20 +348,29 @@ export function ExportDialogContent({
 
     // 武器のフィルタリング
     const filteredWeapons = hasWeaponFilters
-      ? itemsWithUnowned.weapons.filter(weapon => {
+      ? itemsWithUnowned.weapons.filter((weapon) => {
           // タグでのフィルタリング
-          const weaponTagData = generateItemTagData(weapon, weaponTagCategories, tagValueMap, tagCategoryMap);
-          
+          const weaponTagData = generateItemTagData(
+            weapon,
+            weaponTagCategories,
+            tagValueMap,
+            tagCategoryMap,
+          );
+
           // 各フィルターカテゴリをチェック
-          for (const [category, selectedValues] of Object.entries(weaponTagFilters)) {
+          for (const [category, selectedValues] of Object.entries(
+            weaponTagFilters,
+          )) {
             // 選択されていないカテゴリはスキップ
             if (selectedValues.length === 0) continue;
-            
+
             const weaponValues = weaponTagData[category] || [];
-            
+
             // いずれかの値が一致するかチェック
-            const hasMatch = selectedValues.some(value => weaponValues.includes(value));
-            
+            const hasMatch = selectedValues.some((value) =>
+              weaponValues.includes(value),
+            );
+
             // 一致しない場合はフィルタリング
             if (!hasMatch) return false;
           }
@@ -326,20 +381,29 @@ export function ExportDialogContent({
 
     // 召喚石のフィルタリング
     const filteredSummons = hasSummonFilters
-      ? itemsWithUnowned.summons.filter(summon => {
+      ? itemsWithUnowned.summons.filter((summon) => {
           // タグでのフィルタリング
-          const summonTagData = generateItemTagData(summon, summonTagCategories, tagValueMap, tagCategoryMap);
-          
+          const summonTagData = generateItemTagData(
+            summon,
+            summonTagCategories,
+            tagValueMap,
+            tagCategoryMap,
+          );
+
           // 各フィルターカテゴリをチェック
-          for (const [category, selectedValues] of Object.entries(summonTagFilters)) {
+          for (const [category, selectedValues] of Object.entries(
+            summonTagFilters,
+          )) {
             // 選択されていないカテゴリはスキップ
             if (selectedValues.length === 0) continue;
-            
+
             const summonValues = summonTagData[category] || [];
-            
+
             // いずれかの値が一致するかチェック
-            const hasMatch = selectedValues.some(value => summonValues.includes(value));
-            
+            const hasMatch = selectedValues.some((value) =>
+              summonValues.includes(value),
+            );
+
             // 一致しない場合はフィルタリング
             if (!hasMatch) return false;
           }
@@ -351,33 +415,36 @@ export function ExportDialogContent({
     return {
       characters: filteredCharacters,
       weapons: filteredWeapons,
-      summons: filteredSummons
+      summons: filteredSummons,
     };
   }, [
-    itemsWithUnowned, 
-    filterSettings.tagFilters, 
-    characterTagCategories, 
-    weaponTagCategories, 
-    summonTagCategories, 
-    tagCategoryMap
+    itemsWithUnowned,
+    filterSettings.tagFilters,
+    characterTagCategories,
+    weaponTagCategories,
+    summonTagCategories,
+    tagCategoryMap,
   ]);
-  
+
   // エクスポート中の表示
   if (isExporting) {
     return (
       <Box
         sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
           py: 8,
         }}
       >
         <CircularProgress size={60} thickness={4} />
         <Typography variant="h6" sx={{ mt: 3 }}>
-          {exportType === 'image' ? '画像を生成中...' : 
-           exportType === 'pdf' ? 'PDFを生成中...' : 'CSVを生成中...'}
+          {exportType === "image"
+            ? "画像を生成中..."
+            : exportType === "pdf"
+              ? "PDFを生成中..."
+              : "CSVを生成中..."}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
           しばらくお待ちください
@@ -387,13 +454,13 @@ export function ExportDialogContent({
   }
 
   // 画像出力の場合（画像が生成済み）
-  if (exportType === 'image' && exportedImageUrl && showImagePreview) {
+  if (exportType === "image" && exportedImageUrl && showImagePreview) {
     return (
-      <Box sx={{ textAlign: 'center' }}>
+      <Box sx={{ textAlign: "center" }}>
         <Box
           sx={{
-            maxWidth: '100%',
-            overflow: 'auto',
+            maxWidth: "100%",
+            overflow: "auto",
             boxShadow: 3,
             borderRadius: 2,
             mb: 3,
@@ -402,14 +469,11 @@ export function ExportDialogContent({
           <img
             src={exportedImageUrl}
             alt="エクスポート画像"
-            style={{ maxWidth: '100%', display: 'block' }}
+            style={{ maxWidth: "100%", display: "block" }}
           />
         </Box>
-        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-          <Button
-            variant="outlined"
-            onClick={() => setShowImagePreview(false)}
-          >
+        <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
+          <Button variant="outlined" onClick={() => setShowImagePreview(false)}>
             設定に戻る
           </Button>
           <ExportActionButtons
@@ -424,9 +488,9 @@ export function ExportDialogContent({
   }
 
   // CSV出力の場合（フィルター設定なし）
-  if (exportType === 'csv') {
+  if (exportType === "csv") {
     return (
-      <Box sx={{ py: 2, textAlign: 'center' }}>
+      <Box sx={{ py: 2, textAlign: "center" }}>
         {/* アクションボタン */}
         <ExportActionButtons
           exportType={exportType}
@@ -434,16 +498,16 @@ export function ExportDialogContent({
           handleDownload={handleDownload}
           handleExport={handleExport}
         />
-        
+
         {/* エクスポートコンテンツ（CSV出力用） - 非表示 */}
-        <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+        <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
           <Box
             id="export-content"
             sx={{
-              width: '800px',
+              width: "800px",
               p: 3,
-              bgcolor: 'background.paper',
-              color: 'text.primary',
+              bgcolor: "background.paper",
+              color: "text.primary",
               borderRadius: 1,
               boxShadow: 1,
             }}
@@ -458,8 +522,8 @@ export function ExportDialogContent({
                 tagFilters: {
                   character: {},
                   weapon: {},
-                  summon: {}
-                }
+                  summon: {},
+                },
               }}
               selectedItems={selectedItems}
               sessionData={sessionData}
@@ -492,7 +556,7 @@ export function ExportDialogContent({
         exportedImageUrl={exportedImageUrl}
         handleDownload={handleDownload}
         handleExport={() => {
-          if (exportType === 'image') {
+          if (exportType === "image") {
             handleExport();
             // 画像生成後にプレビューを表示
             setTimeout(() => {
@@ -509,11 +573,11 @@ export function ExportDialogContent({
         id="export-content"
         sx={{
           p: 3,
-          bgcolor: 'background.paper',
+          bgcolor: "background.paper",
           borderRadius: 2,
           boxShadow: 2,
-          border: '1px solid',
-          borderColor: 'divider',
+          border: "1px solid",
+          borderColor: "divider",
         }}
       >
         <ExportContentItems
@@ -521,7 +585,7 @@ export function ExportDialogContent({
           selectedItems={filteredItems}
           sessionData={sessionData}
           getItemName={getItemName}
-          isPdfMode={exportType === 'pdf'}
+          isPdfMode={exportType === "pdf"}
         />
       </Box>
     </Box>

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -11,8 +11,8 @@ import {
   IconButton,
   Typography,
   Box,
-} from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
+} from "@mui/material";
+import { Close as CloseIcon } from "@mui/icons-material";
 
 interface NoteDialogProps {
   open: boolean;
@@ -51,9 +51,20 @@ export function NoteDialog({
       fullWidth
       onClick={(e) => e.stopPropagation()}
     >
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <DialogTitle
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <Typography variant="h6">{title}</Typography>
-        <IconButton edge="end" color="inherit" onClick={onClose} aria-label="close">
+        <IconButton
+          edge="end"
+          color="inherit"
+          onClick={onClose}
+          aria-label="close"
+        >
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -62,8 +73,14 @@ export function NoteDialog({
           <Typography variant="subtitle2" gutterBottom>
             {itemName}
           </Typography>
-          <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
-            例: 十天衆の場合: 240、賢者の場合: 最終済4アビ未、終末の場合: 220渾身、神石の場合: 230 など
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            display="block"
+            sx={{ mb: 2 }}
+          >
+            例: 十天衆の場合: 240、賢者の場合: 最終済4アビ未、終末の場合:
+            220渾身、神石の場合: 230 など
           </Typography>
           <TextField
             autoFocus

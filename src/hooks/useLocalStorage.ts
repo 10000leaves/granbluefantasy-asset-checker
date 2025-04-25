@@ -1,29 +1,31 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useAtom } from 'jotai';
-import { 
-  selectedCharactersAtom, 
-  selectedWeaponsAtom, 
+import { useEffect } from "react";
+import { useAtom } from "jotai";
+import {
+  selectedCharactersAtom,
+  selectedWeaponsAtom,
   selectedSummonsAtom,
   inputValuesAtom,
   weaponCountsAtom,
   weaponAwakeningsAtom,
   loadFromLocalStorage,
   saveToLocalStorage,
-  WeaponAwakenings
-} from '@/atoms';
+  WeaponAwakenings,
+} from "@/atoms";
 
 // ローカルストレージのキー
-const SELECTED_CHARACTERS_KEY = 'selectedCharacters';
-const SELECTED_WEAPONS_KEY = 'selectedWeapons';
-const SELECTED_SUMMONS_KEY = 'selectedSummons';
-const INPUT_VALUES_KEY = 'inputValues';
-const WEAPON_COUNTS_KEY = 'weaponCounts';
-const WEAPON_AWAKENINGS_KEY = 'weaponAwakenings';
+const SELECTED_CHARACTERS_KEY = "selectedCharacters";
+const SELECTED_WEAPONS_KEY = "selectedWeapons";
+const SELECTED_SUMMONS_KEY = "selectedSummons";
+const INPUT_VALUES_KEY = "inputValues";
+const WEAPON_COUNTS_KEY = "weaponCounts";
+const WEAPON_AWAKENINGS_KEY = "weaponAwakenings";
 
 export function useLocalStorage() {
-  const [selectedCharacters, setSelectedCharacters] = useAtom(selectedCharactersAtom);
+  const [selectedCharacters, setSelectedCharacters] = useAtom(
+    selectedCharactersAtom,
+  );
   const [selectedWeapons, setSelectedWeapons] = useAtom(selectedWeaponsAtom);
   const [selectedSummons, setSelectedSummons] = useAtom(selectedSummonsAtom);
   const [inputValues, setInputValues] = useAtom(inputValuesAtom);
@@ -32,12 +34,29 @@ export function useLocalStorage() {
 
   // ページ読み込み時にローカルストレージから値を読み込む
   useEffect(() => {
-    const loadedCharacters = loadFromLocalStorage<string[]>(SELECTED_CHARACTERS_KEY, []);
-    const loadedWeapons = loadFromLocalStorage<string[]>(SELECTED_WEAPONS_KEY, []);
-    const loadedSummons = loadFromLocalStorage<string[]>(SELECTED_SUMMONS_KEY, []);
-    const loadedInputValues = loadFromLocalStorage<Record<string, any>>(INPUT_VALUES_KEY, {});
-    const loadedWeaponCounts = loadFromLocalStorage<Record<string, number>>(WEAPON_COUNTS_KEY, {});
-    const loadedWeaponAwakenings = loadFromLocalStorage<Record<string, WeaponAwakenings>>(WEAPON_AWAKENINGS_KEY, {});
+    const loadedCharacters = loadFromLocalStorage<string[]>(
+      SELECTED_CHARACTERS_KEY,
+      [],
+    );
+    const loadedWeapons = loadFromLocalStorage<string[]>(
+      SELECTED_WEAPONS_KEY,
+      [],
+    );
+    const loadedSummons = loadFromLocalStorage<string[]>(
+      SELECTED_SUMMONS_KEY,
+      [],
+    );
+    const loadedInputValues = loadFromLocalStorage<Record<string, any>>(
+      INPUT_VALUES_KEY,
+      {},
+    );
+    const loadedWeaponCounts = loadFromLocalStorage<Record<string, number>>(
+      WEAPON_COUNTS_KEY,
+      {},
+    );
+    const loadedWeaponAwakenings = loadFromLocalStorage<
+      Record<string, WeaponAwakenings>
+    >(WEAPON_AWAKENINGS_KEY, {});
 
     setSelectedCharacters(loadedCharacters);
     setSelectedWeapons(loadedWeapons);
@@ -45,7 +64,14 @@ export function useLocalStorage() {
     setInputValues(loadedInputValues);
     setWeaponCounts(loadedWeaponCounts);
     setWeaponAwakenings(loadedWeaponAwakenings);
-  }, [setSelectedCharacters, setSelectedWeapons, setSelectedSummons, setInputValues, setWeaponCounts, setWeaponAwakenings]);
+  }, [
+    setSelectedCharacters,
+    setSelectedWeapons,
+    setSelectedSummons,
+    setInputValues,
+    setWeaponCounts,
+    setWeaponAwakenings,
+  ]);
 
   // 値が変更されたらローカルストレージに保存
   useEffect(() => {

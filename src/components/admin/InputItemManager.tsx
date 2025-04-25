@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Paper,
@@ -30,14 +30,14 @@ import {
   CircularProgress,
   Alert,
   Snackbar,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   ExpandMore as ExpandMoreIcon,
-} from '@mui/icons-material';
-import { useInputItems } from '@/hooks/useInputItems';
+} from "@mui/icons-material";
+import { useInputItems } from "@/hooks/useInputItems";
 
 export function InputItemManager() {
   const {
@@ -56,26 +56,26 @@ export function InputItemManager() {
   const [isEditMode, setIsEditMode] = useState(false);
 
   // フォームの状態
-  const [groupName, setGroupName] = useState('');
+  const [groupName, setGroupName] = useState("");
   const [itemForm, setItemForm] = useState({
-    id: '',
-    name: '',
-    type: 'text',
+    id: "",
+    name: "",
+    type: "text",
     required: false,
-    defaultValue: '',
-    groupId: '',
+    defaultValue: "",
+    groupId: "",
   });
 
   // 通知の状態
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: '',
-    severity: 'success' as 'success' | 'error',
+    message: "",
+    severity: "success" as "success" | "error",
   });
 
   // グループダイアログを開く
   const handleOpenGroupDialog = () => {
-    setGroupName('');
+    setGroupName("");
     setOpenGroupDialog(true);
   };
 
@@ -88,11 +88,11 @@ export function InputItemManager() {
   const handleOpenItemDialog = (groupId: string) => {
     setIsEditMode(false);
     setItemForm({
-      id: '',
-      name: '',
-      type: 'text',
+      id: "",
+      name: "",
+      type: "text",
       required: false,
-      defaultValue: '',
+      defaultValue: "",
       groupId,
     });
     setOpenItemDialog(true);
@@ -106,7 +106,7 @@ export function InputItemManager() {
       name: item.name,
       type: item.type,
       required: item.required,
-      defaultValue: item.default_value || '',
+      defaultValue: item.default_value || "",
       groupId,
     });
     setOpenItemDialog(true);
@@ -126,14 +126,14 @@ export function InputItemManager() {
       handleCloseGroupDialog();
       setSnackbar({
         open: true,
-        message: 'グループを作成しました',
-        severity: 'success',
+        message: "グループを作成しました",
+        severity: "success",
       });
     } catch (error) {
       setSnackbar({
         open: true,
-        message: '作成に失敗しました',
-        severity: 'error',
+        message: "作成に失敗しました",
+        severity: "error",
       });
     }
   };
@@ -143,7 +143,7 @@ export function InputItemManager() {
     const { name, value, type, checked } = e.target;
     setItemForm({
       ...itemForm,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === "checkbox" ? checked : value,
     });
   };
 
@@ -170,8 +170,8 @@ export function InputItemManager() {
         });
         setSnackbar({
           open: true,
-          message: '項目を更新しました',
-          severity: 'success',
+          message: "項目を更新しました",
+          severity: "success",
         });
       } else {
         await createItem({
@@ -183,36 +183,36 @@ export function InputItemManager() {
         });
         setSnackbar({
           open: true,
-          message: '項目を作成しました',
-          severity: 'success',
+          message: "項目を作成しました",
+          severity: "success",
         });
       }
       handleCloseItemDialog();
     } catch (error) {
       setSnackbar({
         open: true,
-        message: '保存に失敗しました',
-        severity: 'error',
+        message: "保存に失敗しました",
+        severity: "error",
       });
     }
   };
 
   // 項目を削除
   const handleDeleteItem = async (id: string) => {
-    if (!window.confirm('この項目を削除してもよろしいですか？')) return;
+    if (!window.confirm("この項目を削除してもよろしいですか？")) return;
 
     try {
       await deleteItem(id);
       setSnackbar({
         open: true,
-        message: '項目を削除しました',
-        severity: 'success',
+        message: "項目を削除しました",
+        severity: "success",
       });
     } catch (error) {
       setSnackbar({
         open: true,
-        message: '削除に失敗しました',
-        severity: 'error',
+        message: "削除に失敗しました",
+        severity: "error",
       });
     }
   };
@@ -228,18 +228,18 @@ export function InputItemManager() {
   // 項目タイプのラベルを取得
   const getTypeLabel = (type: string) => {
     switch (type) {
-      case 'text':
-        return 'テキスト';
-      case 'number':
-        return '数値';
-      case 'checkbox':
-        return 'チェックボックス';
-      case 'radio':
-        return 'ラジオボタン';
-      case 'select':
-        return 'セレクトボックス';
-      case 'date':
-        return '日付';
+      case "text":
+        return "テキスト";
+      case "number":
+        return "数値";
+      case "checkbox":
+        return "チェックボックス";
+      case "radio":
+        return "ラジオボタン";
+      case "select":
+        return "セレクトボックス";
+      case "date":
+        return "日付";
       default:
         return type;
     }
@@ -247,7 +247,7 @@ export function InputItemManager() {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
         <CircularProgress />
       </Box>
     );
@@ -263,7 +263,14 @@ export function InputItemManager() {
 
   return (
     <Box sx={{ mb: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 2,
+        }}
+      >
         <Typography variant="h6">ユーザー入力項目管理</Typography>
         <Button
           variant="contained"
@@ -276,7 +283,7 @@ export function InputItemManager() {
       </Box>
 
       {inputGroups.length === 0 ? (
-        <Paper sx={{ p: 3, textAlign: 'center' }}>
+        <Paper sx={{ p: 3, textAlign: "center" }}>
           <Typography color="textSecondary">
             入力項目グループがありません。「グループを追加」ボタンをクリックして作成してください。
           </Typography>
@@ -285,7 +292,9 @@ export function InputItemManager() {
         inputGroups.map((group) => (
           <Accordion key={group.group_id} sx={{ mb: 2 }}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", width: "100%" }}
+              >
                 <Typography variant="subtitle1" sx={{ flexGrow: 1 }}>
                   {group.group_name}
                 </Typography>
@@ -311,7 +320,10 @@ export function InputItemManager() {
               </Box>
 
               {group.items?.length === 0 ? (
-                <Typography color="textSecondary" sx={{ textAlign: 'center', py: 2 }}>
+                <Typography
+                  color="textSecondary"
+                  sx={{ textAlign: "center", py: 2 }}
+                >
                   項目がありません。「項目を追加」ボタンをクリックして作成してください。
                 </Typography>
               ) : (
@@ -322,8 +334,10 @@ export function InputItemManager() {
                       <ListItem>
                         <ListItemText
                           primary={
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <Typography variant="body1">{item.name}</Typography>
+                            <Box sx={{ display: "flex", alignItems: "center" }}>
+                              <Typography variant="body1">
+                                {item.name}
+                              </Typography>
                               {item.required && (
                                 <Chip
                                   label="必須"
@@ -335,12 +349,21 @@ export function InputItemManager() {
                             </Box>
                           }
                           secondary={
-                            <Box sx={{ display: 'flex', flexDirection: 'column', mt: 0.5 }}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                flexDirection: "column",
+                                mt: 0.5,
+                              }}
+                            >
                               <Typography variant="body2" color="textSecondary">
                                 タイプ: {getTypeLabel(item.type)}
                               </Typography>
                               {item.default_value && (
-                                <Typography variant="body2" color="textSecondary">
+                                <Typography
+                                  variant="body2"
+                                  color="textSecondary"
+                                >
                                   デフォルト値: {item.default_value}
                                 </Typography>
                               )}
@@ -351,7 +374,9 @@ export function InputItemManager() {
                           <IconButton
                             edge="end"
                             aria-label="edit"
-                            onClick={() => handleOpenEditItemDialog(item, group.group_id)}
+                            onClick={() =>
+                              handleOpenEditItemDialog(item, group.group_id)
+                            }
                           >
                             <EditIcon />
                           </IconButton>
@@ -388,7 +413,11 @@ export function InputItemManager() {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseGroupDialog}>キャンセル</Button>
-          <Button onClick={handleCreateGroup} color="primary" disabled={!groupName.trim()}>
+          <Button
+            onClick={handleCreateGroup}
+            color="primary"
+            disabled={!groupName.trim()}
+          >
             作成
           </Button>
         </DialogActions>
@@ -396,7 +425,7 @@ export function InputItemManager() {
 
       {/* 項目作成/編集ダイアログ */}
       <Dialog open={openItemDialog} onClose={handleCloseItemDialog}>
-        <DialogTitle>{isEditMode ? '項目を編集' : '項目を追加'}</DialogTitle>
+        <DialogTitle>{isEditMode ? "項目を編集" : "項目を追加"}</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -411,7 +440,11 @@ export function InputItemManager() {
 
           <FormControl fullWidth margin="dense" sx={{ mb: 2 }}>
             <InputLabel>タイプ</InputLabel>
-            <Select value={itemForm.type} onChange={handleTypeChange} label="タイプ">
+            <Select
+              value={itemForm.type}
+              onChange={handleTypeChange}
+              label="タイプ"
+            >
               <MenuItem value="text">テキスト</MenuItem>
               <MenuItem value="number">数値</MenuItem>
               <MenuItem value="checkbox">チェックボックス</MenuItem>
@@ -432,7 +465,7 @@ export function InputItemManager() {
             label="必須項目"
           />
 
-          {itemForm.type !== 'checkbox' && (
+          {itemForm.type !== "checkbox" && (
             <TextField
               margin="dense"
               name="defaultValue"
@@ -440,10 +473,10 @@ export function InputItemManager() {
               fullWidth
               value={itemForm.defaultValue}
               onChange={handleItemFormChange}
-              type={itemForm.type === 'number' ? 'number' : 'text'}
+              type={itemForm.type === "number" ? "number" : "text"}
               inputProps={
-                itemForm.type === 'number' 
-                  ? { step: 'any' } // 小数点の入力を許可
+                itemForm.type === "number"
+                  ? { step: "any" } // 小数点の入力を許可
                   : {}
               }
             />
@@ -451,8 +484,12 @@ export function InputItemManager() {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseItemDialog}>キャンセル</Button>
-          <Button onClick={handleSaveItem} color="primary" disabled={!itemForm.name.trim()}>
-            {isEditMode ? '更新' : '作成'}
+          <Button
+            onClick={handleSaveItem}
+            color="primary"
+            disabled={!itemForm.name.trim()}
+          >
+            {isEditMode ? "更新" : "作成"}
           </Button>
         </DialogActions>
       </Dialog>
@@ -462,7 +499,7 @@ export function InputItemManager() {
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
         <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>
           {snackbar.message}

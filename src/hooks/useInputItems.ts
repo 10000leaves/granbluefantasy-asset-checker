@@ -1,8 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useAtom } from 'jotai';
-import { inputGroupsAtom, inputValuesAtom, InputGroup, InputItem } from '@/atoms';
+import { useState, useEffect } from "react";
+import { useAtom } from "jotai";
+import {
+  inputGroupsAtom,
+  inputValuesAtom,
+  InputGroup,
+  InputItem,
+} from "@/atoms";
 
 interface UseInputItemsResult {
   loading: boolean;
@@ -41,15 +46,15 @@ export function useInputItems(): UseInputItemsResult {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/input-items');
+      const response = await fetch("/api/input-items");
       if (!response.ok) {
-        throw new Error('Failed to fetch input items');
+        throw new Error("Failed to fetch input items");
       }
 
       const data = await response.json();
       setInputGroups(data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred';
+      const message = err instanceof Error ? err.message : "An error occurred";
       setError(message);
     } finally {
       setLoading(false);
@@ -63,9 +68,9 @@ export function useInputItems(): UseInputItemsResult {
 
   // 入力値を設定
   const setInputValue = (id: string, value: any) => {
-    setInputValues(prev => ({
+    setInputValues((prev) => ({
       ...prev,
-      [id]: value
+      [id]: value,
     }));
   };
 
@@ -75,20 +80,20 @@ export function useInputItems(): UseInputItemsResult {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/input-items', {
-        method: 'POST',
+      const response = await fetch("/api/input-items", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ name }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create input group');
+        throw new Error("Failed to create input group");
       }
 
       const newGroup = await response.json();
-      
+
       // 新しいグループを追加
       const updatedGroup = {
         group_id: newGroup.id,
@@ -96,12 +101,12 @@ export function useInputItems(): UseInputItemsResult {
         group_order: newGroup.order_index,
         items: [],
       };
-      
+
       setInputGroups([...inputGroups, updatedGroup]);
-      
+
       return updatedGroup;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred';
+      const message = err instanceof Error ? err.message : "An error occurred";
       setError(message);
       throw new Error(message);
     } finally {
@@ -121,20 +126,20 @@ export function useInputItems(): UseInputItemsResult {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/input-items/items', {
-        method: 'POST',
+      const response = await fetch("/api/input-items/items", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(item),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create input item');
+        throw new Error("Failed to create input item");
       }
 
       const newItem = await response.json();
-      
+
       // 対応するグループに新しい項目を追加
       setInputGroups(
         inputGroups.map((group) => {
@@ -145,12 +150,12 @@ export function useInputItems(): UseInputItemsResult {
             };
           }
           return group;
-        })
+        }),
       );
-      
+
       return newItem;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred';
+      const message = err instanceof Error ? err.message : "An error occurred";
       setError(message);
       throw new Error(message);
     } finally {
@@ -170,20 +175,20 @@ export function useInputItems(): UseInputItemsResult {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/input-items/items', {
-        method: 'PUT',
+      const response = await fetch("/api/input-items/items", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(item),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update input item');
+        throw new Error("Failed to update input item");
       }
 
       const updatedItem = await response.json();
-      
+
       // 対応する項目を更新
       setInputGroups(
         inputGroups.map((group) => {
@@ -196,12 +201,12 @@ export function useInputItems(): UseInputItemsResult {
               return i;
             }),
           };
-        })
+        }),
       );
-      
+
       return updatedItem;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred';
+      const message = err instanceof Error ? err.message : "An error occurred";
       setError(message);
       throw new Error(message);
     } finally {
@@ -216,11 +221,11 @@ export function useInputItems(): UseInputItemsResult {
       setError(null);
 
       const response = await fetch(`/api/input-items/items?id=${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete input item');
+        throw new Error("Failed to delete input item");
       }
 
       // 対応する項目を削除
@@ -230,12 +235,12 @@ export function useInputItems(): UseInputItemsResult {
             ...group,
             items: group.items.filter((item) => item.id !== id),
           };
-        })
+        }),
       );
-      
+
       return true;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred';
+      const message = err instanceof Error ? err.message : "An error occurred";
       setError(message);
       throw new Error(message);
     } finally {

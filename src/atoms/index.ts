@@ -1,19 +1,26 @@
-'use client';
+"use client";
 
-import { atom } from 'jotai';
+import { atom } from "jotai";
 
 // 型定義
 export interface Character {
   id: string;
   name: string;
   imageUrl: string;
-  element?: 'fire' | 'water' | 'earth' | 'wind' | 'light' | 'dark';
-  rarity?: 'SSR' | 'SR' | 'R';
+  element?: "fire" | "water" | "earth" | "wind" | "light" | "dark";
+  rarity?: "SSR" | "SR" | "R";
   tags?: any[];
 }
 
 // 覚醒タイプの定義
-export type AwakeningType = '攻撃' | '防御' | '特殊' | '連撃' | '回復' | '奥義' | 'アビD';
+export type AwakeningType =
+  | "攻撃"
+  | "防御"
+  | "特殊"
+  | "連撃"
+  | "回復"
+  | "奥義"
+  | "アビD";
 
 // 覚醒情報の型定義
 export interface Awakening {
@@ -30,9 +37,9 @@ export interface Weapon {
   id: string;
   name: string;
   imageUrl: string;
-  element?: 'fire' | 'water' | 'earth' | 'wind' | 'light' | 'dark';
+  element?: "fire" | "water" | "earth" | "wind" | "light" | "dark";
   weaponType?: string;
-  rarity?: 'SSR' | 'SR' | 'R';
+  rarity?: "SSR" | "SR" | "R";
   tags?: any[];
   count?: number;
   awakenings?: WeaponAwakenings;
@@ -42,8 +49,8 @@ export interface Summon {
   id: string;
   name: string;
   imageUrl: string;
-  element?: 'fire' | 'water' | 'earth' | 'wind' | 'light' | 'dark';
-  rarity?: 'SSR' | 'SR' | 'R';
+  element?: "fire" | "water" | "earth" | "wind" | "light" | "dark";
+  rarity?: "SSR" | "SR" | "R";
   tags?: any[];
 }
 
@@ -84,31 +91,31 @@ export const inputGroupsAtom = atom<InputGroup[]>([]);
 export const inputValuesAtom = atom<Record<string, any>>({});
 
 // テーマ設定用アトム
-export const themeTypeAtom = atom<'light' | 'dark' | 'system'>('dark');
+export const themeTypeAtom = atom<"light" | "dark" | "system">("dark");
 
 // 派生アトム
 export const selectedCharacterItemsAtom = atom((get) => {
   const characters = get(charactersAtom);
   const selectedIds = get(selectedCharactersAtom);
-  return characters.filter(char => selectedIds.includes(char.id));
+  return characters.filter((char) => selectedIds.includes(char.id));
 });
 
 export const selectedWeaponItemsAtom = atom((get) => {
   const weapons = get(weaponsAtom);
   const selectedIds = get(selectedWeaponsAtom);
-  return weapons.filter(weapon => selectedIds.includes(weapon.id));
+  return weapons.filter((weapon) => selectedIds.includes(weapon.id));
 });
 
 export const selectedSummonItemsAtom = atom((get) => {
   const summons = get(summonsAtom);
   const selectedIds = get(selectedSummonsAtom);
-  return summons.filter(summon => selectedIds.includes(summon.id));
+  return summons.filter((summon) => selectedIds.includes(summon.id));
 });
 
 // ローカルストレージ永続化のためのヘルパー関数
 export const loadFromLocalStorage = <T>(key: string, defaultValue: T): T => {
-  if (typeof window === 'undefined') return defaultValue;
-  
+  if (typeof window === "undefined") return defaultValue;
+
   try {
     const item = window.localStorage.getItem(key);
     return item ? JSON.parse(item) : defaultValue;
@@ -119,8 +126,8 @@ export const loadFromLocalStorage = <T>(key: string, defaultValue: T): T => {
 };
 
 export const saveToLocalStorage = <T>(key: string, value: T): void => {
-  if (typeof window === 'undefined') return;
-  
+  if (typeof window === "undefined") return;
+
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
   } catch (error) {

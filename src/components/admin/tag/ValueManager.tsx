@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -17,16 +17,16 @@ import {
   IconButton,
   Divider,
   Alert,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Delete as DeleteIcon,
   Edit as EditIcon,
   Add as AddIcon,
   Save as SaveIcon,
   Cancel as CancelIcon,
-} from '@mui/icons-material';
-import { ItemType } from '@/lib/types';
-import { TagCategory, TagValue } from '@/hooks/useTags';
+} from "@mui/icons-material";
+import { ItemType } from "@/lib/types";
+import { TagCategory, TagValue } from "@/hooks/useTags";
 
 interface ValueManagerProps {
   tagCategories: TagCategory[];
@@ -51,16 +51,16 @@ export function ValueManager({
   onDeleteValue,
   getCategoryValues,
 }: ValueManagerProps) {
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [valueForm, setValueForm] = useState<ValueForm>({
-    value: '',
+    value: "",
   });
   const [editValueMode, setEditValueMode] = useState<boolean>(false);
 
   // フォームリセット
   const resetForm = () => {
     setValueForm({
-      value: '',
+      value: "",
     });
     setEditValueMode(false);
   };
@@ -82,17 +82,20 @@ export function ValueManager({
     if (!selectedCategory && !valueForm.categoryId) return;
 
     try {
-      await onSaveValue({
-        id: valueForm.id,
-        value: valueForm.value,
-        categoryId: editValueMode ? valueForm.categoryId : selectedCategory,
-      }, editValueMode);
-      
+      await onSaveValue(
+        {
+          id: valueForm.id,
+          value: valueForm.value,
+          categoryId: editValueMode ? valueForm.categoryId : selectedCategory,
+        },
+        editValueMode,
+      );
+
       // フォームをリセット
-      setValueForm({ value: '' });
+      setValueForm({ value: "" });
       setEditValueMode(false);
     } catch (err) {
-      console.error('Error saving tag value:', err);
+      console.error("Error saving tag value:", err);
     }
   };
 
@@ -105,8 +108,8 @@ export function ValueManager({
         component="form"
         onSubmit={handleValueSubmit}
         sx={{
-          display: 'flex',
-          flexDirection: 'column',
+          display: "flex",
+          flexDirection: "column",
           gap: 2,
           mb: 3,
         }}
@@ -120,14 +123,21 @@ export function ValueManager({
               if (!editValueMode) {
                 setSelectedCategory(e.target.value);
               } else {
-                setValueForm(prev => ({ ...prev, categoryId: e.target.value }));
+                setValueForm((prev) => ({
+                  ...prev,
+                  categoryId: e.target.value,
+                }));
               }
             }}
             disabled={editValueMode}
           >
             <MenuItem value="">選択してください</MenuItem>
             {tagCategories
-              .filter(category => category.itemType === currentItemType || category.item_type === currentItemType)
+              .filter(
+                (category) =>
+                  category.itemType === currentItemType ||
+                  category.item_type === currentItemType,
+              )
               .map((category) => (
                 <MenuItem key={category.id} value={category.id}>
                   {category.name}
@@ -146,7 +156,7 @@ export function ValueManager({
           required
         />
 
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: "flex", gap: 1 }}>
           <Button
             type="submit"
             variant="contained"
@@ -155,9 +165,9 @@ export function ValueManager({
             disabled={!selectedCategory && !valueForm.categoryId}
             sx={{ flex: 1 }}
           >
-            {editValueMode ? '更新' : '追加'}
+            {editValueMode ? "更新" : "追加"}
           </Button>
-          
+
           {editValueMode && (
             <Button
               variant="outlined"
@@ -176,24 +186,26 @@ export function ValueManager({
       </Typography>
 
       {!selectedCategory && !editValueMode ? (
-        <Alert severity="info">
-          左側からカテゴリを選択してください。
-        </Alert>
+        <Alert severity="info">左側からカテゴリを選択してください。</Alert>
       ) : (
         <>
           <Typography variant="subtitle2" gutterBottom>
-            {editValueMode 
-              ? tagCategories.find(c => c.id === valueForm.categoryId)?.name 
-              : tagCategories.find(c => c.id === selectedCategory)?.name}
+            {editValueMode
+              ? tagCategories.find((c) => c.id === valueForm.categoryId)?.name
+              : tagCategories.find((c) => c.id === selectedCategory)?.name}
           </Typography>
-          
-          {getCategoryValues(editValueMode ? valueForm.categoryId! : selectedCategory).length === 0 ? (
+
+          {getCategoryValues(
+            editValueMode ? valueForm.categoryId! : selectedCategory,
+          ).length === 0 ? (
             <Alert severity="info">
               値がありません。上のフォームから追加してください。
             </Alert>
           ) : (
             <List>
-              {getCategoryValues(editValueMode ? valueForm.categoryId! : selectedCategory).map((value, index) => (
+              {getCategoryValues(
+                editValueMode ? valueForm.categoryId! : selectedCategory,
+              ).map((value, index) => (
                 <React.Fragment key={value.id}>
                   {index > 0 && <Divider />}
                   <ListItem>

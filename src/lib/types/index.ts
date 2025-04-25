@@ -1,7 +1,13 @@
 // データモデルの型定義
 
 // ユーザー入力項目の型
-export type InputItemType = 'text' | 'number' | 'checkbox' | 'radio' | 'select' | 'date';
+export type InputItemType =
+  | "text"
+  | "number"
+  | "checkbox"
+  | "radio"
+  | "select"
+  | "date";
 
 export interface InputItem {
   id: string;
@@ -25,10 +31,16 @@ export interface InputGroup {
 }
 
 // タグカテゴリの型
-export type ItemType = 'character' | 'weapon' | 'summon';
+export type ItemType = "character" | "weapon" | "summon";
 
-export type ElementType = 'fire' | 'water' | 'earth' | 'wind' | 'light' | 'dark';
-export type RarityType = 'SSR' | 'SR' | 'R';
+export type ElementType =
+  | "fire"
+  | "water"
+  | "earth"
+  | "wind"
+  | "light"
+  | "dark";
+export type RarityType = "SSR" | "SR" | "R";
 
 export interface TagCategory {
   id: string;
@@ -84,71 +96,111 @@ export interface AdminSettings {
 }
 
 // 初期設定のタグカテゴリ
-export const DEFAULT_TAG_CATEGORIES: AdminSettings['defaultTagCategories'] = {
+export const DEFAULT_TAG_CATEGORIES: AdminSettings["defaultTagCategories"] = {
   character: [
     {
-      name: '属性',
+      name: "属性",
       multipleSelect: false,
       required: true,
-      values: ['火', '水', '土', '風', '光', '闇']
+      values: ["火", "水", "土", "風", "光", "闇"],
     },
     {
-      name: '得意武器',
+      name: "得意武器",
       multipleSelect: true,
       required: false,
-      values: ['剣', '槍', '斧', '弓', '杖', '短剣', '格闘', '銃', '刀', '楽器']
+      values: [
+        "剣",
+        "槍",
+        "斧",
+        "弓",
+        "杖",
+        "短剣",
+        "格闘",
+        "銃",
+        "刀",
+        "楽器",
+      ],
     },
     {
-      name: '性別',
+      name: "性別",
       multipleSelect: false,
       required: false,
-      values: ['♂', '♀', '不明']
+      values: ["♂", "♀", "不明"],
     },
     {
-      name: '種族',
+      name: "種族",
       multipleSelect: false,
       required: false,
-      values: ['ヒューマン', 'ドラフ', 'エルーン', 'ハーヴィン', 'その他', '星晶獣']
+      values: [
+        "ヒューマン",
+        "ドラフ",
+        "エルーン",
+        "ハーヴィン",
+        "その他",
+        "星晶獣",
+      ],
     },
     {
-      name: 'タイプ',
+      name: "タイプ",
       multipleSelect: false,
       required: true,
-      values: ['攻撃', '防御', '回復', 'バランス', '特殊']
+      values: ["攻撃", "防御", "回復", "バランス", "特殊"],
     },
     {
-      name: '解放武器',
+      name: "解放武器",
       multipleSelect: false,
       required: false,
-      values: ['剣', '槍', '斧', '弓', '杖', '短剣', '格闘', '銃', '刀', '楽器']
+      values: [
+        "剣",
+        "槍",
+        "斧",
+        "弓",
+        "杖",
+        "短剣",
+        "格闘",
+        "銃",
+        "刀",
+        "楽器",
+      ],
     },
     {
-      name: '入手方法',
+      name: "入手方法",
       multipleSelect: false,
       required: false,
-      values: ['恒常', 'リミテッド', '季節限定', 'コラボ', 'その他']
-    }
+      values: ["恒常", "リミテッド", "季節限定", "コラボ", "その他"],
+    },
   ],
   weapon: [
     {
-      name: '属性',
+      name: "属性",
       multipleSelect: false,
       required: true,
-      values: ['火', '水', '土', '風', '光', '闇']
+      values: ["火", "水", "土", "風", "光", "闇"],
     },
     {
-      name: '武器種',
+      name: "武器種",
       multipleSelect: false,
       required: true,
-      values: ['剣', '槍', '斧', '弓', '杖', '短剣', '格闘', '銃', '刀', '楽器']
-    }
+      values: [
+        "剣",
+        "槍",
+        "斧",
+        "弓",
+        "杖",
+        "短剣",
+        "格闘",
+        "銃",
+        "刀",
+        "楽器",
+      ],
+    },
   ],
   summon: [
     {
-      name: '属性',
+      name: "属性",
       multipleSelect: false,
       required: true,
-      values: ['火', '水', '土', '風', '光', '闇']
-    }
-  ]
+      values: ["火", "水", "土", "風", "光", "闇"],
+    },
+  ],
 };

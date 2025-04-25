@@ -1,6 +1,6 @@
-import React from 'react';
-import { Container, Box } from '@mui/material';
-import { Navigation } from './Navigation';
+import React from "react";
+import { Container, Box } from "@mui/material";
+import { Navigation } from "./Navigation";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,10 +10,10 @@ export const Layout = ({ children }: LayoutProps) => {
   return (
     <Box
       sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100vh',
-        bgcolor: 'background.default',
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "100vh",
+        bgcolor: "background.default",
       }}
     >
       <Navigation />
@@ -32,14 +32,14 @@ export const Layout = ({ children }: LayoutProps) => {
         sx={{
           py: 3,
           px: 2,
-          mt: 'auto',
-          backgroundColor: 'background.paper',
+          mt: "auto",
+          backgroundColor: "background.paper",
           borderTop: 1,
-          borderColor: 'divider',
+          borderColor: "divider",
         }}
       >
         <Container maxWidth="lg">
-          <Box sx={{ textAlign: 'center', color: 'text.secondary' }}>
+          <Box sx={{ textAlign: "center", color: "text.secondary" }}>
             © {new Date().getFullYear()} グラブル所持チェッカー
           </Box>
         </Container>

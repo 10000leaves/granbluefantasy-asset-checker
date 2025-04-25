@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export interface TagValue {
   id: string;
@@ -56,8 +56,12 @@ interface UseTagsResult {
   toggleTag: (categoryId: string, value: string) => void;
   clearTags: () => void;
   isTagSelected: (categoryId: string, value: string) => boolean;
-  createTagCategory: (category: CreateTagCategoryParams) => Promise<TagCategory>;
-  updateTagCategory: (category: UpdateTagCategoryParams) => Promise<TagCategory>;
+  createTagCategory: (
+    category: CreateTagCategoryParams,
+  ) => Promise<TagCategory>;
+  updateTagCategory: (
+    category: UpdateTagCategoryParams,
+  ) => Promise<TagCategory>;
   deleteTagCategory: (id: string) => Promise<boolean>;
   createTagValue: (value: CreateTagValueParams) => Promise<TagValue>;
   updateTagValue: (value: UpdateTagValueParams) => Promise<TagValue>;
@@ -71,49 +75,57 @@ export function useTags(itemType?: string): UseTagsResult {
   const [tagValues, setTagValues] = useState<TagValue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTags, setSelectedTags] = useState<Record<string, string[]>>({});
+  const [selectedTags, setSelectedTags] = useState<Record<string, string[]>>(
+    {},
+  );
 
   const fetchTags = async () => {
     try {
       setLoading(true);
 
       // タグカテゴリを取得
-      const categoryUrl = itemType ? `/api/tags?itemType=${itemType}` : '/api/tags';
+      const categoryUrl = itemType
+        ? `/api/tags?itemType=${itemType}`
+        : "/api/tags";
       const categoryResponse = await fetch(categoryUrl);
       if (!categoryResponse.ok) {
-        throw new Error('Failed to fetch tag categories');
+        throw new Error("Failed to fetch tag categories");
       }
       const categoryData = await categoryResponse.json();
-      
+
       // APIレスポンスのフィールド名を標準化
       const normalizedCategories = categoryData.map((category: any) => ({
         ...category,
         itemType: category.item_type,
         multipleSelect: category.multiple_select,
       }));
-      
+
       setTagCategories(normalizedCategories);
 
       // タグ値を取得
-      const valueResponse = await fetch('/api/tags/values');
+      const valueResponse = await fetch("/api/tags/values");
       if (!valueResponse.ok) {
-        throw new Error('Failed to fetch tag values');
+        throw new Error("Failed to fetch tag values");
       }
       const valueData = await valueResponse.json();
-      
+
       // APIレスポンスのフィールド名を標準化
       const normalizedValues = valueData.map((value: any) => ({
         ...value,
         categoryId: value.category_id,
       }));
-      
+
       setTagValues(normalizedValues);
 
       // タグカテゴリとタグ値を結合
-      const tagsWithValues = normalizedCategories.map((category: TagCategory) => ({
-        ...category,
-        values: normalizedValues.filter((value: TagValue) => value.categoryId === category.id),
-      }));
+      const tagsWithValues = normalizedCategories.map(
+        (category: TagCategory) => ({
+          ...category,
+          values: normalizedValues.filter(
+            (value: TagValue) => value.categoryId === category.id,
+          ),
+        }),
+      );
       setTags(tagsWithValues);
 
       setError(null);
@@ -125,7 +137,7 @@ export function useTags(itemType?: string): UseTagsResult {
       });
       setSelectedTags(initialSelectedTags);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -172,30 +184,32 @@ export function useTags(itemType?: string): UseTagsResult {
     return (selectedTags[categoryId] || []).includes(value);
   };
 
-  const createTagCategory = async (category: CreateTagCategoryParams): Promise<TagCategory> => {
+  const createTagCategory = async (
+    category: CreateTagCategoryParams,
+  ): Promise<TagCategory> => {
     try {
       setLoading(true);
-      const response = await fetch('/api/tags', {
-        method: 'POST',
+      const response = await fetch("/api/tags", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(category),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create tag category');
+        throw new Error("Failed to create tag category");
       }
 
       const newCategory = await response.json();
-      
+
       // APIレスポンスのフィールド名を標準化
       const normalizedCategory = {
         ...newCategory,
         itemType: newCategory.item_type,
         multipleSelect: newCategory.multiple_select,
       };
-      
+
       setTagCategories((prev) => [...prev, normalizedCategory]);
 
       // 選択状態を更新
@@ -206,7 +220,7 @@ export function useTags(itemType?: string): UseTagsResult {
 
       return normalizedCategory;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred';
+      const message = err instanceof Error ? err.message : "An error occurred";
       setError(message);
       throw new Error(message);
     } finally {
@@ -214,37 +228,39 @@ export function useTags(itemType?: string): UseTagsResult {
     }
   };
 
-  const updateTagCategory = async (category: UpdateTagCategoryParams): Promise<TagCategory> => {
+  const updateTagCategory = async (
+    category: UpdateTagCategoryParams,
+  ): Promise<TagCategory> => {
     try {
       setLoading(true);
-      const response = await fetch('/api/tags', {
-        method: 'PUT',
+      const response = await fetch("/api/tags", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(category),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update tag category');
+        throw new Error("Failed to update tag category");
       }
 
       const updatedCategory = await response.json();
-      
+
       // APIレスポンスのフィールド名を標準化
       const normalizedCategory = {
         ...updatedCategory,
         itemType: updatedCategory.item_type,
         multipleSelect: updatedCategory.multiple_select,
       };
-      
+
       setTagCategories((prev) =>
-        prev.map((c) => (c.id === category.id ? normalizedCategory : c))
+        prev.map((c) => (c.id === category.id ? normalizedCategory : c)),
       );
 
       return normalizedCategory;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred';
+      const message = err instanceof Error ? err.message : "An error occurred";
       setError(message);
       throw new Error(message);
     } finally {
@@ -256,11 +272,11 @@ export function useTags(itemType?: string): UseTagsResult {
     try {
       setLoading(true);
       const response = await fetch(`/api/tags?id=${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete tag category');
+        throw new Error("Failed to delete tag category");
       }
 
       setTagCategories((prev) => prev.filter((c) => c.id !== id));
@@ -274,7 +290,7 @@ export function useTags(itemType?: string): UseTagsResult {
 
       return true;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred';
+      const message = err instanceof Error ? err.message : "An error occurred";
       setError(message);
       throw new Error(message);
     } finally {
@@ -282,34 +298,36 @@ export function useTags(itemType?: string): UseTagsResult {
     }
   };
 
-  const createTagValue = async (value: CreateTagValueParams): Promise<TagValue> => {
+  const createTagValue = async (
+    value: CreateTagValueParams,
+  ): Promise<TagValue> => {
     try {
       setLoading(true);
-      const response = await fetch('/api/tags/values', {
-        method: 'POST',
+      const response = await fetch("/api/tags/values", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(value),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create tag value');
+        throw new Error("Failed to create tag value");
       }
 
       const newValue = await response.json();
-      
+
       // APIレスポンスのフィールド名を標準化
       const normalizedValue = {
         ...newValue,
         categoryId: newValue.category_id,
       };
-      
+
       setTagValues((prev) => [...prev, normalizedValue]);
 
       return normalizedValue;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred';
+      const message = err instanceof Error ? err.message : "An error occurred";
       setError(message);
       throw new Error(message);
     } finally {
@@ -317,36 +335,38 @@ export function useTags(itemType?: string): UseTagsResult {
     }
   };
 
-  const updateTagValue = async (value: UpdateTagValueParams): Promise<TagValue> => {
+  const updateTagValue = async (
+    value: UpdateTagValueParams,
+  ): Promise<TagValue> => {
     try {
       setLoading(true);
-      const response = await fetch('/api/tags/values', {
-        method: 'PUT',
+      const response = await fetch("/api/tags/values", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(value),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update tag value');
+        throw new Error("Failed to update tag value");
       }
 
       const updatedValue = await response.json();
-      
+
       // APIレスポンスのフィールド名を標準化
       const normalizedValue = {
         ...updatedValue,
         categoryId: updatedValue.category_id,
       };
-      
+
       setTagValues((prev) =>
-        prev.map((v) => (v.id === value.id ? normalizedValue : v))
+        prev.map((v) => (v.id === value.id ? normalizedValue : v)),
       );
 
       return normalizedValue;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred';
+      const message = err instanceof Error ? err.message : "An error occurred";
       setError(message);
       throw new Error(message);
     } finally {
@@ -358,18 +378,18 @@ export function useTags(itemType?: string): UseTagsResult {
     try {
       setLoading(true);
       const response = await fetch(`/api/tags/values?id=${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete tag value');
+        throw new Error("Failed to delete tag value");
       }
 
       setTagValues((prev) => prev.filter((v) => v.id !== id));
 
       return true;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred';
+      const message = err instanceof Error ? err.message : "An error occurred";
       setError(message);
       throw new Error(message);
     } finally {

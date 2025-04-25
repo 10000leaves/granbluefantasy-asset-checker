@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -16,16 +16,16 @@ import {
   Divider,
   Alert,
   Chip,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Delete as DeleteIcon,
   Edit as EditIcon,
   Add as AddIcon,
   Save as SaveIcon,
   Cancel as CancelIcon,
-} from '@mui/icons-material';
-import { ItemType } from '@/lib/types';
-import { TagCategory } from '@/hooks/useTags';
+} from "@mui/icons-material";
+import { ItemType } from "@/lib/types";
+import { TagCategory } from "@/hooks/useTags";
 
 interface CategoryManagerProps {
   tagCategories: TagCategory[];
@@ -50,7 +50,7 @@ export function CategoryManager({
   getCategoryValues,
 }: CategoryManagerProps) {
   const [categoryForm, setCategoryForm] = useState<CategoryForm>({
-    name: '',
+    name: "",
     multipleSelect: false,
     required: false,
   });
@@ -59,7 +59,7 @@ export function CategoryManager({
   // フォームリセット
   const resetForm = () => {
     setCategoryForm({
-      name: '',
+      name: "",
       multipleSelect: false,
       required: false,
     });
@@ -80,20 +80,23 @@ export function CategoryManager({
   // カテゴリ送信
   const handleCategorySubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    
+
     try {
-      await onSaveCategory({
-        id: categoryForm.id,
-        name: categoryForm.name,
-        itemType: currentItemType,
-        multipleSelect: categoryForm.multipleSelect,
-        required: categoryForm.required,
-      }, editMode);
-      
+      await onSaveCategory(
+        {
+          id: categoryForm.id,
+          name: categoryForm.name,
+          itemType: currentItemType,
+          multipleSelect: categoryForm.multipleSelect,
+          required: categoryForm.required,
+        },
+        editMode,
+      );
+
       // フォームをリセット
       resetForm();
     } catch (err) {
-      console.error('Error saving tag category:', err);
+      console.error("Error saving tag category:", err);
     }
   };
 
@@ -106,8 +109,8 @@ export function CategoryManager({
         component="form"
         onSubmit={handleCategorySubmit}
         sx={{
-          display: 'flex',
-          flexDirection: 'column',
+          display: "flex",
+          flexDirection: "column",
           gap: 2,
           mb: 3,
         }}
@@ -152,7 +155,7 @@ export function CategoryManager({
           label="必須"
         />
 
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: "flex", gap: 1 }}>
           <Button
             type="submit"
             variant="contained"
@@ -160,9 +163,9 @@ export function CategoryManager({
             startIcon={editMode ? <SaveIcon /> : <AddIcon />}
             sx={{ flex: 1 }}
           >
-            {editMode ? '更新' : '追加'}
+            {editMode ? "更新" : "追加"}
           </Button>
-          
+
           {editMode && (
             <Button
               variant="outlined"
@@ -179,22 +182,31 @@ export function CategoryManager({
       <Typography variant="subtitle1" gutterBottom>
         カテゴリ一覧
       </Typography>
-      
-      {tagCategories.filter(cat => cat.itemType === currentItemType || cat.item_type === currentItemType).length === 0 ? (
+
+      {tagCategories.filter(
+        (cat) =>
+          cat.itemType === currentItemType || cat.item_type === currentItemType,
+      ).length === 0 ? (
         <Alert severity="info">
           カテゴリがありません。上のフォームから追加してください。
         </Alert>
       ) : (
         <List>
           {tagCategories
-            .filter(category => category.itemType === currentItemType || category.item_type === currentItemType)
+            .filter(
+              (category) =>
+                category.itemType === currentItemType ||
+                category.item_type === currentItemType,
+            )
             .map((category, index) => (
               <React.Fragment key={category.id}>
                 {index > 0 && <Divider />}
                 <ListItem>
                   <ListItemText
                     primary={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
                         <Typography variant="body1">{category.name}</Typography>
                         {category.required && (
                           <Chip
@@ -204,7 +216,8 @@ export function CategoryManager({
                             sx={{ height: 20 }}
                           />
                         )}
-                        {(category.multipleSelect || category.multiple_select) && (
+                        {(category.multipleSelect ||
+                          category.multiple_select) && (
                           <Chip
                             label="複数選択"
                             size="small"

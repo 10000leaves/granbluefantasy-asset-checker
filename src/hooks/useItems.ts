@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useAtom } from 'jotai';
-import { 
-  charactersAtom, 
-  weaponsAtom, 
+import { useState, useEffect } from "react";
+import { useAtom } from "jotai";
+import {
+  charactersAtom,
+  weaponsAtom,
   summonsAtom,
   selectedCharactersAtom,
   selectedWeaponsAtom,
   selectedSummonsAtom,
-} from '@/atoms';
+} from "@/atoms";
 
 interface ItemTag {
   categoryId: string;
@@ -58,51 +58,74 @@ interface UseItemsResult<T> {
 export function useItems(category?: string): UseItemsResult<any> {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // カテゴリに応じたアトムを選択
   const [characters, setCharacters] = useAtom(charactersAtom);
   const [weapons, setWeapons] = useAtom(weaponsAtom);
   const [summons, setSummons] = useAtom(summonsAtom);
-  
-  const [selectedCharacters, setSelectedCharacters] = useAtom(selectedCharactersAtom);
+
+  const [selectedCharacters, setSelectedCharacters] = useAtom(
+    selectedCharactersAtom,
+  );
   const [selectedWeapons, setSelectedWeapons] = useAtom(selectedWeaponsAtom);
   const [selectedSummons, setSelectedSummons] = useAtom(selectedSummonsAtom);
- 
+
   // 管理者画面用の状態（カテゴリが指定されていない場合）
   const [adminItems, setAdminItems] = useState<Item[]>([]);
   const [adminSelectedItems, setAdminSelectedItems] = useState<string[]>([]);
-  
+
   // カテゴリに応じたアイテムと選択状態を取得
   const getItemsAndSelected = () => {
     switch (category) {
-      case 'character':
-        return { items: characters, setItems: setCharacters, selectedItems: selectedCharacters, setSelectedItems: setSelectedCharacters };
-      case 'weapon':
-        return { items: weapons, setItems: setWeapons, selectedItems: selectedWeapons, setSelectedItems: setSelectedWeapons };
-      case 'summon':
-        return { items: summons, setItems: setSummons, selectedItems: selectedSummons, setSelectedItems: setSelectedSummons };
+      case "character":
+        return {
+          items: characters,
+          setItems: setCharacters,
+          selectedItems: selectedCharacters,
+          setSelectedItems: setSelectedCharacters,
+        };
+      case "weapon":
+        return {
+          items: weapons,
+          setItems: setWeapons,
+          selectedItems: selectedWeapons,
+          setSelectedItems: setSelectedWeapons,
+        };
+      case "summon":
+        return {
+          items: summons,
+          setItems: setSummons,
+          selectedItems: selectedSummons,
+          setSelectedItems: setSelectedSummons,
+        };
       default:
         // カテゴリが指定されていない場合は管理者画面用の状態を返す
-        return { items: adminItems, setItems: setAdminItems, selectedItems: adminSelectedItems, setSelectedItems: setAdminSelectedItems };
+        return {
+          items: adminItems,
+          setItems: setAdminItems,
+          selectedItems: adminSelectedItems,
+          setSelectedItems: setAdminSelectedItems,
+        };
     }
   };
-  
-  const { items, setItems, selectedItems, setSelectedItems } = getItemsAndSelected();
+
+  const { items, setItems, selectedItems, setSelectedItems } =
+    getItemsAndSelected();
 
   const fetchItems = async () => {
     try {
       setLoading(true);
       // カテゴリが指定されていない場合は全てのカテゴリのアイテムを取得
-      const url = category ? `/api/items?category=${category}` : '/api/items';
+      const url = category ? `/api/items?category=${category}` : "/api/items";
       const response = await fetch(url);
       if (!response.ok) {
-        throw new Error('Failed to fetch items');
+        throw new Error("Failed to fetch items");
       }
       const data = await response.json();
       setItems(data);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -116,23 +139,23 @@ export function useItems(category?: string): UseItemsResult<any> {
     setSelectedItems((prev) =>
       prev.includes(id)
         ? prev.filter((itemId) => itemId !== id)
-        : [...prev, id]
+        : [...prev, id],
     );
   };
 
   const createItem = async (item: CreateItemParams): Promise<Item> => {
     try {
       setLoading(true);
-      const response = await fetch('/api/items', {
-        method: 'POST',
+      const response = await fetch("/api/items", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(item),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create item');
+        throw new Error("Failed to create item");
       }
 
       const newItem = await response.json();
@@ -140,7 +163,7 @@ export function useItems(category?: string): UseItemsResult<any> {
       setItems((prev) => [...prev, newItem]);
       return newItem;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred';
+      const message = err instanceof Error ? err.message : "An error occurred";
       setError(message);
       throw new Error(message);
     } finally {
@@ -151,27 +174,27 @@ export function useItems(category?: string): UseItemsResult<any> {
   const updateItem = async (item: UpdateItemParams): Promise<Item> => {
     try {
       setLoading(true);
-      const response = await fetch('/api/items', {
-        method: 'PUT',
+      const response = await fetch("/api/items", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(item),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update item');
+        throw new Error("Failed to update item");
       }
 
       const updatedItem = await response.json();
       // @ts-ignore - 型の互換性を無視
       setItems((prev) =>
         // @ts-ignore - 型の互換性を無視
-        prev.map((i) => (i.id === item.id ? updatedItem : i))
+        prev.map((i) => (i.id === item.id ? updatedItem : i)),
       );
       return updatedItem;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred';
+      const message = err instanceof Error ? err.message : "An error occurred";
       setError(message);
       throw new Error(message);
     } finally {
@@ -183,18 +206,18 @@ export function useItems(category?: string): UseItemsResult<any> {
     try {
       setLoading(true);
       const response = await fetch(`/api/items?id=${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete item');
+        throw new Error("Failed to delete item");
       }
 
       // @ts-ignore - 型の互換性を無視
       setItems((prev) => prev.filter((item) => item.id !== id));
       return true;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred';
+      const message = err instanceof Error ? err.message : "An error occurred";
       setError(message);
       throw new Error(message);
     } finally {

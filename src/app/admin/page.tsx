@@ -1,19 +1,12 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
-import {
-  Container,
-  Box,
-  Typography,
-  Tabs,
-  Tab,
-  Paper,
-} from '@mui/material';
-import { ItemManager } from '@/components/admin/ItemManager';
-import { TagManager } from '@/components/admin/TagManager';
-import { InputItemManager } from '@/components/admin/InputItemManager';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { Container, Box, Typography, Tabs, Tab, Paper } from "@mui/material";
+import { ItemManager } from "@/components/admin/ItemManager";
+import { TagManager } from "@/components/admin/TagManager";
+import { InputItemManager } from "@/components/admin/InputItemManager";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -40,7 +33,7 @@ function TabPanel(props: TabPanelProps) {
 function a11yProps(index: number) {
   return {
     id: `admin-tab-${index}`,
-    'aria-controls': `admin-tabpanel-${index}`,
+    "aria-controls": `admin-tabpanel-${index}`,
   };
 }
 
@@ -52,7 +45,7 @@ export default function AdminPage() {
   // 管理者でない場合はホームページにリダイレクト
   useEffect(() => {
     if (!isLoading && !isAdmin) {
-      router.push('/');
+      router.push("/");
     }
   }, [isAdmin, isLoading, router]);
 
@@ -76,12 +69,12 @@ export default function AdminPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Paper sx={{ borderRadius: 2, overflow: 'hidden', mb: 4 }}>
+      <Paper sx={{ borderRadius: 2, overflow: "hidden", mb: 4 }}>
         <Box
           sx={{
             p: 3,
-            bgcolor: 'primary.main',
-            color: 'primary.contrastText',
+            bgcolor: "primary.main",
+            color: "primary.contrastText",
           }}
         >
           <Typography variant="h5" gutterBottom fontWeight="bold">
@@ -92,7 +85,7 @@ export default function AdminPage() {
           </Typography>
         </Box>
 
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Tabs
             value={tabValue}
             onChange={handleTabChange}

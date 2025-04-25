@@ -1,14 +1,14 @@
-import { Pool } from 'pg';
-import { put, del, list } from '@vercel/blob';
+import { Pool } from "pg";
+import { put, del, list } from "@vercel/blob";
 
 // 環境に応じてcache関数を使用するかどうかを切り替える
 // Node.js環境（マイグレーションスクリプトなど）では関数をそのまま返す
 const cacheFunction = <T extends (...args: any[]) => any>(fn: T): T => {
   // Next.js環境ではReactのcache関数を使用
-  if (typeof process !== 'undefined' && process.env.NEXT_RUNTIME === 'nodejs') {
+  if (typeof process !== "undefined" && process.env.NEXT_RUNTIME === "nodejs") {
     try {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { cache } = require('react');
+      const { cache } = require("react");
       return cache(fn);
     } catch (e) {
       // Reactのcache関数が使用できない場合は関数をそのまま返す
@@ -22,14 +22,17 @@ const cacheFunction = <T extends (...args: any[]) => any>(fn: T): T => {
 // データベースプールの設定
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? {
-    rejectUnauthorized: false, // 本番環境では自己署名証明書を許可
-  } : false, // 開発環境ではSSLを無効化
+  ssl:
+    process.env.NODE_ENV === "production"
+      ? {
+          rejectUnauthorized: false, // 本番環境では自己署名証明書を許可
+        }
+      : false, // 開発環境ではSSLを無効化
 });
 
 // 接続テスト
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
+pool.on("error", (err) => {
+  console.error("Unexpected error on idle client", err);
   process.exit(-1);
 });
 
@@ -37,18 +40,19 @@ pool.on('error', (err) => {
 export const testConnection = async () => {
   try {
     const client = await pool.connect();
-    console.log('Database connection successful');
+    console.log("Database connection successful");
     client.release();
     return true;
   } catch (error) {
-    console.error('Database connection error:', error);
+    console.error("Database connection error:", error);
     return false;
   }
 };
 
 // データベースクエリのキャッシュ
 export const getItems = cacheFunction(async (category: string) => {
-  const { rows } = await pool.query(`
+  const { rows } = await pool.query(
+    `
     SELECT
       i.*,
       COALESCE(
@@ -70,7 +74,9 @@ export const getItems = cacheFunction(async (category: string) => {
     WHERE i.category = $1
     GROUP BY i.id
     ORDER BY i.name
-  `, [category]);
+  `,
+    [category],
+  );
   return rows;
 });
 
@@ -81,16 +87,16 @@ export const getTagCategories = cacheFunction(async (itemType?: string) => {
       tc.*
     FROM tag_categories tc
   `;
-  
+
   const params = [];
-  
+
   if (itemType) {
     query += ` WHERE tc.item_type = $1`;
     params.push(itemType);
   }
-  
+
   query += ` ORDER BY tc.order_index`;
-  
+
   const { rows } = await pool.query(query, params);
   return rows;
 });
@@ -134,7 +140,7 @@ export const getInputItems = cacheFunction(async () => {
 // 画像のアップロード
 export const uploadImage = async (file: File) => {
   const blob = await put(file.name, file, {
-    access: 'public',
+    access: "public",
   });
   return blob.url;
 };
@@ -166,33 +172,33 @@ export const query = async (text: string, params?: any[]) => {
       /OR\s+'[^']*'\s*=\s*'[^']*'/i,
       /--/,
       /\/\*/,
-      /\*\//
+      /\*\//,
     ];
 
     // SQLクエリに危険なパターンが含まれていないか確認
-    if (dangerousPatterns.some(pattern => pattern.test(text))) {
-      console.error('Potentially malicious SQL query detected:', text);
-      throw new Error('Invalid SQL query');
+    if (dangerousPatterns.some((pattern) => pattern.test(text))) {
+      console.error("Potentially malicious SQL query detected:", text);
+      throw new Error("Invalid SQL query");
     }
 
     // パラメータのバリデーション
     if (params) {
-      params = params.map(param => {
+      params = params.map((param) => {
         // nullまたはundefinedの場合はそのまま返す
         if (param === null || param === undefined) {
           return param;
         }
-        
+
         // 文字列の場合は特殊文字をエスケープ
-        if (typeof param === 'string') {
+        if (typeof param === "string") {
           // SQLインジェクションの可能性がある文字列をチェック
-          if (dangerousPatterns.some(pattern => pattern.test(param))) {
-            console.error('Potentially malicious parameter detected:', param);
-            throw new Error('Invalid parameter');
+          if (dangerousPatterns.some((pattern) => pattern.test(param))) {
+            console.error("Potentially malicious parameter detected:", param);
+            throw new Error("Invalid parameter");
           }
           return param;
         }
-        
+
         return param;
       });
     }
@@ -201,16 +207,16 @@ export const query = async (text: string, params?: any[]) => {
     return pool.query(text, params);
   } catch (error) {
     // エラーログを記録
-    console.error('Database query error:', error);
-    
+    console.error("Database query error:", error);
+
     // エラーを再スロー（詳細情報は含めない）
-    throw new Error('Database query failed');
+    throw new Error("Database query failed");
   }
 };
 
 // プロセス終了時にプールを閉じる
-process.on('SIGTERM', () => {
+process.on("SIGTERM", () => {
   pool.end().then(() => {
-    console.log('Database pool has ended');
+    console.log("Database pool has ended");
   });
 });

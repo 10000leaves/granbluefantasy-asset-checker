@@ -1,5 +1,5 @@
-import { Container, Paper, Typography } from '@mui/material';
-import { CharacterList } from './CharacterList';
+import { Container, Paper, Typography } from "@mui/material";
+import { CharacterList } from "./CharacterList";
 
 export default function CharactersPage() {
   return (
@@ -11,16 +11,14 @@ export default function CharactersPage() {
           p: { xs: 2, sm: 3 },
           mb: 2,
           borderRadius: 2,
-          backgroundImage: 'linear-gradient(135deg, #1976d2 0%, #0d47a1 100%)',
-          color: 'white',
+          backgroundImage: "linear-gradient(135deg, #1976d2 0%, #0d47a1 100%)",
+          color: "white",
         }}
       >
         <Typography variant="h5" gutterBottom fontWeight="bold">
           キャラ一覧
         </Typography>
-        <Typography variant="body2">
-          所持キャラを選択してください。
-        </Typography>
+        <Typography variant="body2">所持キャラを選択してください。</Typography>
       </Paper>
       {/* キャラリスト */}
       <CharacterList />

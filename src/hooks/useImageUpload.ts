@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 
 interface UseImageUploadResult {
   uploading: boolean;
@@ -22,32 +22,32 @@ export function useImageUpload(): UseImageUploadResult {
       setProgress(0);
 
       // 画像ファイルのバリデーション
-      if (!file.type.startsWith('image/')) {
-        throw new Error('File must be an image');
+      if (!file.type.startsWith("image/")) {
+        throw new Error("File must be an image");
       }
 
       // 10MBを超えるファイルはアップロード不可
       if (file.size > 10 * 1024 * 1024) {
-        throw new Error('File size must be less than 10MB');
+        throw new Error("File size must be less than 10MB");
       }
 
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
+      const response = await fetch("/api/upload", {
+        method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Failed to upload image');
+        throw new Error("Failed to upload image");
       }
 
       const data = await response.json();
       setProgress(100);
       return data.url;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred';
+      const message = err instanceof Error ? err.message : "An error occurred";
       setError(message);
       throw new Error(message);
     } finally {
@@ -59,15 +59,18 @@ export function useImageUpload(): UseImageUploadResult {
     try {
       setError(null);
 
-      const response = await fetch(`/api/upload?url=${encodeURIComponent(url)}`, {
-        method: 'DELETE',
-      });
+      const response = await fetch(
+        `/api/upload?url=${encodeURIComponent(url)}`,
+        {
+          method: "DELETE",
+        },
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to delete image');
+        throw new Error("Failed to delete image");
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred';
+      const message = err instanceof Error ? err.message : "An error occurred";
       setError(message);
       throw new Error(message);
     }
