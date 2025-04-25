@@ -25,12 +25,13 @@ import {
   Save as SaveIcon,
   Cancel as CancelIcon,
 } from '@mui/icons-material';
+import { ItemType } from '@/lib/types';
 import { TagCategory, TagValue } from '@/hooks/useTags';
 
 interface ValueManagerProps {
   tagCategories: TagCategory[];
   tagValues: TagValue[];
-  currentItemType: 'character' | 'weapon' | 'summon';
+  currentItemType: ItemType;
   onSaveValue: (value: any, isEdit: boolean) => Promise<void>;
   onDeleteValue: (id: string) => Promise<void>;
   getCategoryValues: (categoryId: string) => any[];

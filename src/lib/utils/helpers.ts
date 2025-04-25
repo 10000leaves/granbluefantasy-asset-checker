@@ -1,6 +1,6 @@
 // ユーティリティ関数
 
-import { InputItem, ItemType } from '../types/models';
+import { InputItem, ItemType } from '../types';
 import { TagCategory, TagValue } from '@/hooks/useTags';
 
 /**

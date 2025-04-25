@@ -356,7 +356,7 @@ export function ExportContentItems({
                                 type === '特殊' ? '#FFAA44' :
                                 type === '連撃' ? '#AA44FF' :
                                 type === '回復' ? '#44FF44' :
-                                type === '奥義' ? '#FFFF44' :
+                                type === '奥義' ? '#FFD700' :
                                 type === 'アビD' ? '#FF44FF' :
                                 '#888888',
                               color: 'white',

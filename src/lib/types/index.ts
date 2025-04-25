@@ -27,6 +27,9 @@ export interface InputGroup {
 // タグカテゴリの型
 export type ItemType = 'character' | 'weapon' | 'summon';
 
+export type ElementType = 'fire' | 'water' | 'earth' | 'wind' | 'light' | 'dark';
+export type RarityType = 'SSR' | 'SR' | 'R';
+
 export interface TagCategory {
   id: string;
   name: string;

@@ -7,6 +7,7 @@ import {
   CircularProgress,
   Button,
 } from '@mui/material';
+import { ItemType } from '@/lib/types';
 import { useInputItems } from '@/hooks/useInputItems';
 import { useTags } from '@/hooks/useTags';
 import { ExportFilterSettings, ExportFilterSettingsComponent } from './ExportFilterSettings';
@@ -20,8 +21,6 @@ interface ExportDialogContentProps {
   exportType: 'image' | 'pdf' | 'csv';
   isExporting: boolean;
   exportedImageUrl: string | null;
-  tabValue: number;
-  handleTabChange: (event: React.SyntheticEvent, newValue: number) => void;
   handleDownload: () => void;
   handleExport: () => void;
   selectedItems: {
@@ -46,7 +45,6 @@ export function ExportDialogContent({
   exportType,
   isExporting,
   exportedImageUrl,
-  handleTabChange,
   handleDownload,
   handleExport,
   selectedItems,
@@ -56,7 +54,7 @@ export function ExportDialogContent({
   const { inputGroups } = useInputItems();
   
   // タブ状態
-  const [currentItemType, setCurrentItemType] = useState<'character' | 'weapon' | 'summon'>('character');
+  const [currentItemType, setCurrentItemType] = useState<ItemType>('character');
   
   // 画像プレビュー表示状態
   const [showImagePreview, setShowImagePreview] = useState(false);
@@ -112,7 +110,7 @@ export function ExportDialogContent({
       // 全てのカテゴリに対応するフィルターキーを初期化
       Object.entries(tagCategoryMap).forEach(([categoryId, key]) => {
         // カテゴリIDからアイテムタイプを判断
-        let itemType: 'character' | 'weapon' | 'summon' = 'character';
+        let itemType: ItemType = 'character';
         
         if (characterTagCategories.some(cat => cat.id === categoryId)) {
           itemType = 'character';
@@ -142,7 +140,7 @@ export function ExportDialogContent({
 
   // タグフィルターの変更ハンドラー
   const handleTagFilterChange = (
-    itemType: 'character' | 'weapon' | 'summon',
+    itemType: ItemType,
     category: string,
     value: string,
     checked: boolean
@@ -163,7 +161,7 @@ export function ExportDialogContent({
 
   // 特定のタグフィルターのクリア
   const handleClearTagFilter = (
-    itemType: 'character' | 'weapon' | 'summon',
+    itemType: ItemType,
     category: string,
     value: string
   ) => {
@@ -180,7 +178,7 @@ export function ExportDialogContent({
   };
 
   // 全てのタグフィルターのクリア
-  const handleClearAllTagFilters = (itemType: 'character' | 'weapon' | 'summon') => {
+  const handleClearAllTagFilters = (itemType: ItemType) => {
     const emptyTagFilters = { ...filterSettings.tagFilters };
     
     // 指定されたアイテムタイプのフィルターをクリア

@@ -24,11 +24,12 @@ import {
   Save as SaveIcon,
   Cancel as CancelIcon,
 } from '@mui/icons-material';
+import { ItemType } from '@/lib/types';
 import { TagCategory } from '@/hooks/useTags';
 
 interface CategoryManagerProps {
   tagCategories: TagCategory[];
-  currentItemType: 'character' | 'weapon' | 'summon';
+  currentItemType: ItemType;
   onSaveCategory: (category: any, isEdit: boolean) => Promise<void>;
   onDeleteCategory: (id: string) => Promise<void>;
   getCategoryValues: (categoryId: string) => any[];

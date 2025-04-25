@@ -16,18 +16,21 @@ import {
 import { useAtom } from 'jotai';
 import { summonNotesAtom } from '@/atoms';
 import {
-  Whatshot as FireIcon,
-  Water as WaterIcon,
-  Grass as EarthIcon,
-  Air as WindIcon,
-  LightMode as LightIcon,
-  DarkMode as DarkIcon,
   BrokenImage as BrokenImageIcon,
   Edit as EditIcon,
 } from '@mui/icons-material';
 import { NoteDialog } from '../common/NoteDialog';
 
 import { translateElement } from '../../lib/utils/helpers';
+import { 
+  elementIcons,
+  checkboxStyle, 
+  elementIconStyle, 
+  noteButtonStyle, 
+  cardStyle, 
+  noteTextStyle, 
+  rarityChipStyle 
+} from '../../lib/utils/cardUtils';
 
 interface SummonCardProps {
   id: string;
@@ -38,15 +41,6 @@ interface SummonCardProps {
   selected: boolean;
   onSelect: (id: string, selected: boolean) => void;
 }
-
-const elementIcons = {
-  fire: { icon: FireIcon, color: '#FF4444' },
-  water: { icon: WaterIcon, color: '#4444FF' },
-  earth: { icon: EarthIcon, color: '#BB8844' },
-  wind: { icon: WindIcon, color: '#44BB44' },
-  light: { icon: LightIcon, color: '#FFBB44' },
-  dark: { icon: DarkIcon, color: '#AA44FF' },
-};
 
 export const SummonCard = ({
   id,
@@ -92,18 +86,7 @@ export const SummonCard = ({
 
   return (
     <Card
-      sx={{
-        position: 'relative',
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        margin: '0 auto',
-        cursor: 'pointer',
-        '&:hover': {
-          boxShadow: 6,
-        },
-      }}
+      sx={cardStyle}
       onClick={() => onSelect(id, !selected)}
     >
       <Box sx={{ position: 'relative', height: 160, width: '100%' }}>
@@ -154,34 +137,27 @@ export const SummonCard = ({
             onSelect(id, e.target.checked);
           }}
           onClick={(e) => e.stopPropagation()}
-          sx={{
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            bgcolor: 'rgba(255, 255, 255, 0.8)',
-            borderRadius: 1,
-            '&:hover': {
-              bgcolor: 'rgba(255, 255, 255, 0.9)',
-            },
-          }}
+          sx={checkboxStyle}
         />
-        <Tooltip title={`${translateElement(element)}属性`}>
-          <IconButton
-            size="small"
-            sx={{
-              position: 'absolute',
-              top: 8,
-              left: 8,
-              bgcolor: elementIcons[element].color,
-              color: 'white',
-              '&:hover': {
-                bgcolor: elementIcons[element].color,
-              },
-            }}
-          >
-            <ElementIcon />
-          </IconButton>
-        </Tooltip>
+          <Tooltip title={`${translateElement(element)}属性`}>
+            <IconButton
+              size="small"
+              sx={elementIconStyle(element)}
+            >
+              <ElementIcon />
+            </IconButton>
+          </Tooltip>
+          
+          {/* 備考編集アイコンを画像の右下に配置 */}
+          <Tooltip title="備考を編集">
+            <IconButton
+              size="small"
+              onClick={openNoteDialog}
+              sx={noteButtonStyle(!!note)}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
       </Box>
       <CardContent sx={{ pt: 1, pb: '8px !important', flexShrink: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -201,61 +177,23 @@ export const SummonCard = ({
             <Chip
               label={rarity}
               size="small"
-              sx={{
-                bgcolor: rarity === 'SSR' ? '#FFD700' : rarity === 'SR' ? '#C0C0C0' : '#CD7F32',
-                color: rarity === 'SSR' ? '#000' : '#fff',
-                fontWeight: 'bold',
-                minWidth: 40,
-              }}
+              sx={rarityChipStyle(rarity)}
             />
           </Box>
         </Box>
         
         {/* 備考エリア */}
         <Box onClick={(e) => e.stopPropagation()}>
-          <Box sx={{ 
-            mt: 1, 
-            display: 'flex', 
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 1 
-          }}>
-            {note ? (
+          {note && (
+            <Box sx={{ mt: 1 }}>
               <Typography 
                 variant="caption" 
-                sx={{ 
-                  flexGrow: 1,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  color: 'text.secondary'
-                }}
+                sx={noteTextStyle}
               >
                 {note}
               </Typography>
-            ) : (
-              <Box sx={{ flexGrow: 1 }} />
-            )}
-            
-            <Tooltip title="備考を編集">
-              <IconButton
-                size="small"
-                onClick={openNoteDialog}
-                sx={{
-                  bgcolor: note ? 'primary.main' : 'action.hover',
-                  color: note ? 'white' : 'inherit',
-                  '&:hover': { 
-                    bgcolor: note ? 'primary.main' : 'action.selected',
-                    opacity: 0.8
-                  },
-                  width: 24,
-                  height: 24
-                }}
-              >
-                <EditIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </Box>
+            </Box>
+          )}
         </Box>
       </CardContent>
       

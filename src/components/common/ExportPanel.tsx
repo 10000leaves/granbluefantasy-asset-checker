@@ -86,7 +86,6 @@ export function ExportPanel({ selectedCount }: ExportPanelProps) {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
   const [exportMenuAnchorEl, setExportMenuAnchorEl] = useState<null | HTMLElement>(null);
-  const [tabValue, setTabValue] = useState(0);
   const [exportType, setExportType] = useState<'image' | 'pdf' | 'csv'>('image');
 
   // 選択されたアイテムを更新
@@ -126,12 +125,6 @@ export function ExportPanel({ selectedCount }: ExportPanelProps) {
     setExportType(type);
     setExportMenuAnchorEl(null);
     setIsDialogOpen(true);
-    setTabValue(0);
-  };
-
-  // タブ変更ハンドラー
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
   };
 
   // エクスポートダイアログが開いたときに実行
@@ -540,8 +533,6 @@ export function ExportPanel({ selectedCount }: ExportPanelProps) {
             exportType={exportType}
             isExporting={isExporting}
             exportedImageUrl={exportedImageUrl}
-            tabValue={tabValue}
-            handleTabChange={handleTabChange}
             handleDownload={handleDownload}
             handleExport={handleExport}
             selectedItems={selectedItemsState}

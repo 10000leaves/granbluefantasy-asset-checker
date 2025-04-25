@@ -24,6 +24,7 @@ import {
   Close as CloseIcon,
   ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
+import { ItemType } from '@/lib/types';
 import { useTags } from '@/hooks/useTags';
 import {
   createTagCategoryMap,
@@ -46,11 +47,11 @@ export interface ExportFilterSettings {
 interface ExportFilterSettingsProps {
   filterSettings: ExportFilterSettings;
   onFilterChange: (setting: keyof ExportFilterSettings, checked: boolean) => void;
-  onTagFilterChange?: (itemType: 'character' | 'weapon' | 'summon', category: string, value: string, checked: boolean) => void;
-  onClearTagFilter?: (itemType: 'character' | 'weapon' | 'summon', category: string, value: string) => void;
-  onClearAllTagFilters?: (itemType: 'character' | 'weapon' | 'summon') => void;
-  itemType?: 'character' | 'weapon' | 'summon';
-  onItemTypeChange?: (itemType: 'character' | 'weapon' | 'summon') => void;
+  onTagFilterChange?: (itemType: ItemType, category: string, value: string, checked: boolean) => void;
+  onClearTagFilter?: (itemType: ItemType, category: string, value: string) => void;
+  onClearAllTagFilters?: (itemType: ItemType) => void;
+  itemType?: ItemType;
+  onItemTypeChange?: (itemType: ItemType) => void;
 }
 
 /**
@@ -111,7 +112,7 @@ export function ExportFilterSettingsComponent({
   };
 
   // アイテムタイプの変更ハンドラー
-  const handleItemTypeChange = (_: React.SyntheticEvent, newValue: 'character' | 'weapon' | 'summon') => {
+  const handleItemTypeChange = (_: React.SyntheticEvent, newValue: ItemType) => {
     if (onItemTypeChange) {
       onItemTypeChange(newValue);
     }

@@ -20,12 +20,6 @@ import {
   Button,
 } from '@mui/material';
 import {
-  Whatshot as FireIcon,
-  Water as WaterIcon,
-  Grass as EarthIcon,
-  Air as WindIcon,
-  LightMode as LightIcon,
-  DarkMode as DarkIcon,
   BrokenImage as BrokenImageIcon,
   Add as AddIcon,
   Remove as RemoveIcon,
@@ -38,6 +32,16 @@ import { useAtom } from 'jotai';
 import { weaponCountsAtom, weaponAwakeningsAtom, weaponNotesAtom, AwakeningType } from '@/atoms';
 
 import { translateElement } from '../../lib/utils/helpers';
+import { 
+  elementIcons, 
+  awakeningColors, 
+  checkboxStyle, 
+  elementIconStyle, 
+  noteButtonStyle, 
+  cardStyle, 
+  noteTextStyle, 
+  rarityChipStyle 
+} from '../../lib/utils/cardUtils';
 
 interface WeaponCardProps {
   id: string;
@@ -51,32 +55,6 @@ interface WeaponCardProps {
 
 // 覚醒タイプの選択肢
 const awakeningTypes: AwakeningType[] = ['攻撃', '防御', '特殊', '連撃', '回復', '奥義', 'アビD'];
-
-// 覚醒タイプの色マッピング
-const awakeningColors: Record<AwakeningType, string> = {
-  '攻撃': '#FF4444',
-  '防御': '#44AAFF',
-  '特殊': '#FFAA44',
-  '連撃': '#AA44FF',
-  '回復': '#44FF44',
-  '奥義': '#FFFF44',
-  'アビD': '#FF44FF',
-};
-
-const elementIcons = {
-  fire: { icon: FireIcon, color: '#FF4444' },
-  water: { icon: WaterIcon, color: '#4444FF' },
-  earth: { icon: EarthIcon, color: '#BB8844' },
-  wind: { icon: WindIcon, color: '#44BB44' },
-  light: { icon: LightIcon, color: '#FFBB44' },
-  dark: { icon: DarkIcon, color: '#AA44FF' },
-};
-
-const rarityColors = {
-  SSR: '#FFD700',
-  SR: '#C0C0C0',
-  R: '#CD7F32',
-};
 
 export const WeaponCard = ({
   id,
@@ -212,18 +190,7 @@ export const WeaponCard = ({
   return (
     <>
       <Card
-        sx={{
-          position: 'relative',
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          margin: '0 auto',
-          cursor: 'pointer',
-          '&:hover': {
-            boxShadow: 6,
-          },
-        }}
+        sx={cardStyle}
         onClick={() => onSelect(id, !selected)}
       >
         <Box sx={{ position: 'relative', height: 160, width: '100%' }}>
@@ -274,32 +241,25 @@ export const WeaponCard = ({
               onSelect(id, e.target.checked);
             }}
             onClick={(e) => e.stopPropagation()}
-            sx={{
-              position: 'absolute',
-              top: 8,
-              right: 8,
-              bgcolor: 'rgba(255, 255, 255, 0.8)',
-              borderRadius: 1,
-              '&:hover': {
-                bgcolor: 'rgba(255, 255, 255, 0.9)',
-              },
-            }}
+            sx={checkboxStyle}
           />
           <Tooltip title={`${translateElement(element)}属性`}>
             <IconButton
               size="small"
-              sx={{
-                position: 'absolute',
-                top: 8,
-                left: 8,
-                bgcolor: elementIcons[element].color,
-                color: 'white',
-                '&:hover': {
-                  bgcolor: elementIcons[element].color,
-                },
-              }}
+              sx={elementIconStyle(element)}
             >
               <ElementIcon />
+            </IconButton>
+          </Tooltip>
+          
+          {/* 備考編集アイコンを画像の右下に配置 */}
+          <Tooltip title="備考を編集">
+            <IconButton
+              size="small"
+              onClick={openNoteDialog}
+              sx={noteButtonStyle(!!note)}
+            >
+              <EditIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         </Box>
@@ -320,45 +280,34 @@ export const WeaponCard = ({
             <Chip
               label={rarity}
               size="small"
-              sx={{
-                bgcolor: rarityColors[rarity],
-                color: 'white',
-                fontWeight: 'bold',
-                minWidth: 40,
-              }}
+              sx={rarityChipStyle(rarity)}
             />
           </Box>
           
           {/* 所持数と覚醒入力エリア */}
           <Box onClick={(e) => e.stopPropagation()}>
             {/* 所持数入力フィールド */}
-            <Box 
-              sx={{ 
-                mt: 1, 
-                display: 'flex', 
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 1 
-              }}
-            >
-              <Tooltip title="備考を編集">
-                <IconButton
-                  size="small"
-                  onClick={openNoteDialog}
-                  sx={{
-                    bgcolor: note ? 'primary.main' : 'action.hover',
-                    color: note ? 'white' : 'inherit',
-                    '&:hover': { 
-                      bgcolor: note ? 'primary.main' : 'action.selected',
-                      opacity: 0.8
-                    },
-                    width: 24,
-                    height: 24
-                  }}
-                >
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
+          {/* 備考表示エリア */}
+          {note && (
+            <Box sx={{ mt: 1 }}>
+              <Typography 
+                variant="caption" 
+                sx={noteTextStyle}
+              >
+                {note}
+              </Typography>
+            </Box>
+          )}
+          
+          <Box 
+            sx={{ 
+              mt: 1, 
+              display: 'flex', 
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 1 
+            }}
+          >
               <IconButton 
                 size="small" 
                 onClick={(e) => updateCount(count - 1, e)}
@@ -404,23 +353,6 @@ export const WeaponCard = ({
               </IconButton>
             </Box>
             
-            {/* 備考表示エリア */}
-            {note && (
-              <Box sx={{ mt: 1 }}>
-                <Typography 
-                  variant="caption" 
-                  sx={{ 
-                    display: 'block',
-                    color: 'text.secondary',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  {note}
-                </Typography>
-              </Box>
-            )}
             
             {/* 覚醒情報表示 */}
             <Box 

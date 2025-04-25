@@ -5,24 +5,19 @@ import {
   Box,
   Paper,
   Typography,
-  Button,
   Tabs,
   Tab,
   Alert,
   Snackbar,
   CircularProgress,
 } from '@mui/material';
+import { ItemType } from '@/lib/types';
 import { useTags } from '@/hooks/useTags';
 import { CategoryManager } from './tag/CategoryManager';
 import { ValueManager } from './tag/ValueManager';
 
-interface TagManagerProps {
-  itemType?: 'character' | 'weapon' | 'summon';
-  onTagsUpdated?: () => void;
-}
-
-export function TagManager({ itemType = 'character', onTagsUpdated }: TagManagerProps) {
-  const [currentItemType, setCurrentItemType] = useState<'character' | 'weapon' | 'summon'>(itemType);
+export function TagManager() {
+  const [currentItemType, setCurrentItemType] = useState<ItemType>('character');
   const { tagCategories, tagValues, loading, error, refreshTags } = useTags(currentItemType);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [snackbar, setSnackbar] = useState({
@@ -32,7 +27,7 @@ export function TagManager({ itemType = 'character', onTagsUpdated }: TagManager
   });
 
   // タブ切り替え
-  const handleItemTypeChange = (_: React.SyntheticEvent, newValue: 'character' | 'weapon' | 'summon') => {
+  const handleItemTypeChange = (_: React.SyntheticEvent, newValue: ItemType) => {
     setCurrentItemType(newValue);
     setSelectedCategory('');
   };
