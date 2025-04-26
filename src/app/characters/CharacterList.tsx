@@ -57,7 +57,7 @@ export function CharacterList() {
   // 所持のみフィルターのカスタムフック
   const { ownedOnly, setOwnedOnly } = useOwnedFilter(
     characters || [],
-    selectedItems,
+    selectedItems || [],
     undefined,
   );
 
@@ -95,7 +95,7 @@ export function CharacterList() {
 
   // アクティブなフィルター数
   const activeFilterCount = Object.values(filters).reduce(
-    (count, filterArray) => count + filterArray.length,
+    (count, filterArray) => count + (filterArray ? filterArray.length : 0),
     0,
   );
 
@@ -140,7 +140,7 @@ export function CharacterList() {
       }
 
       // 所持のみフィルター
-      if (ownedOnly && !selectedItems.includes(character.id)) {
+      if (ownedOnly && selectedItems && !selectedItems.includes(character.id)) {
         return false;
       }
 
@@ -154,7 +154,7 @@ export function CharacterList() {
 
       // 各フィルターカテゴリをチェック
       for (const [category, selectedValues] of Object.entries(filters)) {
-        if (selectedValues.length === 0) continue;
+        if (!selectedValues || selectedValues.length === 0) continue;
 
         const characterValues = characterTagData[category] || [];
 
@@ -184,12 +184,17 @@ export function CharacterList() {
     value: string,
     checked: boolean,
   ) => {
-    setFilters((prev) => ({
-      ...prev,
-      [category]: checked
-        ? [...prev[category], value]
-        : prev[category].filter((item) => item !== value),
-    }));
+    setFilters((prev) => {
+      // カテゴリが存在しない場合は空の配列を作成
+      const categoryValues = prev[category] || [];
+      
+      return {
+        ...prev,
+        [category]: checked
+          ? [...categoryValues, value]
+          : categoryValues.filter((item) => item !== value),
+      };
+    });
   };
 
   // フィルターのクリア
@@ -206,10 +211,15 @@ export function CharacterList() {
 
   // 特定のフィルターのクリア
   const clearFilter = (category: keyof typeof filters, value: string) => {
-    setFilters((prev) => ({
-      ...prev,
-      [category]: prev[category].filter((item) => item !== value),
-    }));
+    setFilters((prev) => {
+      // カテゴリが存在しない場合は何もしない
+      if (!prev[category]) return prev;
+      
+      return {
+        ...prev,
+        [category]: prev[category].filter((item) => item !== value),
+      };
+    });
   };
 
   // キャラ選択処理
@@ -236,33 +246,35 @@ export function CharacterList() {
         {title}
       </Typography>
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-        {options.map((option) => (
-          <Chip
-            key={option.value}
-            label={option.label}
-            size="small"
-            variant={
-              filters[category].includes(option.value) ? "filled" : "outlined"
-            }
-            color={
-              filters[category].includes(option.value) ? "primary" : "default"
-            }
-            onClick={() =>
-              handleFilterChange(
-                category,
-                option.value,
-                !filters[category].includes(option.value),
-              )
-            }
-            sx={{
-              borderRadius: "16px",
-              transition: "all 0.2s",
-              "&:hover": {
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              },
-            }}
-          />
-        ))}
+        {options.map((option) => {
+          // カテゴリが存在しない場合は空の配列を使用
+          const categoryValues = filters[category] || [];
+          const isSelected = categoryValues.includes(option.value);
+          
+          return (
+            <Chip
+              key={option.value}
+              label={option.label}
+              size="small"
+              variant={isSelected ? "filled" : "outlined"}
+              color={isSelected ? "primary" : "default"}
+              onClick={() =>
+                handleFilterChange(
+                  category,
+                  option.value,
+                  !isSelected,
+                )
+              }
+              sx={{
+                borderRadius: "16px",
+                transition: "all 0.2s",
+                "&:hover": {
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                },
+              }}
+            />
+          );
+        })}
       </Box>
     </Box>
   );
@@ -330,8 +342,11 @@ export function CharacterList() {
         {/* アクティブフィルター表示 */}
         {activeFilterCount > 0 && (
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1.5 }}>
-            {Object.entries(filters).map(([category, values]) =>
-              values.map((value) => {
+            {Object.entries(filters).map(([category, values]) => {
+              // valuesが存在しない場合は空の配列を使用
+              if (!values) return null;
+              
+              return values.map((value) => {
                 let label = value;
                 let categoryName = "";
 
@@ -364,8 +379,8 @@ export function CharacterList() {
                     sx={{ borderRadius: "16px" }}
                   />
                 );
-              }),
-            )}
+              });
+            })}
             <Chip
               label="クリア"
               size="small"
@@ -443,7 +458,7 @@ export function CharacterList() {
               すべて選択
             </Button>
             <Chip
-              label={`選択中: ${selectedItems.length}`}
+              label={`選択中: ${selectedItems ? selectedItems.length : 0}`}
               color="primary"
               size="small"
               variant="outlined"
@@ -482,7 +497,7 @@ export function CharacterList() {
                     | "dark"
                 }
                 rarity={rarity as "SSR" | "SR" | "R"}
-                selected={selectedItems.includes(character.id)}
+                selected={selectedItems ? selectedItems.includes(character.id) : false}
                 onSelect={handleCharacterSelect}
               />
             );
@@ -491,7 +506,7 @@ export function CharacterList() {
       </Paper>
 
       {/* エクスポートパネル */}
-      <ExportPanel selectedCount={selectedItems.length} />
+      <ExportPanel selectedCount={selectedItems ? selectedItems.length : 0} />
     </Box>
   );
 }

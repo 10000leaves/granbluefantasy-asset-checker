@@ -119,13 +119,13 @@ export function SummonList() {
   // 所持のみフィルターのカスタムフック
   const { ownedOnly, setOwnedOnly } = useOwnedFilter(
     summons,
-    selectedSummons,
+    selectedSummons || [],
     undefined,
   );
 
   // アクティブなフィルター数
   const activeFilterCount = Object.values(filters).reduce(
-    (count, filterArray) => count + filterArray.length,
+    (count, filterArray) => count + (filterArray ? filterArray.length : 0),
     0,
   );
 
@@ -141,13 +141,13 @@ export function SummonList() {
       }
 
       // 所持のみフィルター
-      if (ownedOnly && !selectedSummons.includes(summon.id)) {
+      if (ownedOnly && selectedSummons && !selectedSummons.includes(summon.id)) {
         return false;
       }
 
       // タグデータによるフィルタリング
       for (const [category, selectedValues] of Object.entries(filters)) {
-        if (selectedValues.length === 0) continue;
+        if (!selectedValues || selectedValues.length === 0) continue;
 
         const summonValues = summon.tagData?.[category] || [];
 
@@ -169,12 +169,17 @@ export function SummonList() {
     value: string,
     checked: boolean,
   ) => {
-    setFilters((prev) => ({
-      ...prev,
-      [category]: checked
-        ? [...prev[category], value]
-        : prev[category].filter((item) => item !== value),
-    }));
+    setFilters((prev) => {
+      // カテゴリが存在しない場合は空の配列を作成
+      const categoryValues = prev[category] || [];
+      
+      return {
+        ...prev,
+        [category]: checked
+          ? [...categoryValues, value]
+          : categoryValues.filter((item) => item !== value),
+      };
+    });
   };
 
   // フィルターのクリア
@@ -191,10 +196,15 @@ export function SummonList() {
 
   // 特定のフィルターのクリア
   const clearFilter = (category: keyof typeof filters, value: string) => {
-    setFilters((prev) => ({
-      ...prev,
-      [category]: prev[category].filter((item) => item !== value),
-    }));
+    setFilters((prev) => {
+      // カテゴリが存在しない場合は何もしない
+      if (!prev[category]) return prev;
+      
+      return {
+        ...prev,
+        [category]: prev[category].filter((item) => item !== value),
+      };
+    });
   };
 
   // 召喚石選択処理
@@ -221,33 +231,35 @@ export function SummonList() {
         {title}
       </Typography>
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-        {options.map((option) => (
-          <Chip
-            key={option.value}
-            label={option.label}
-            size="small"
-            variant={
-              filters[category].includes(option.value) ? "filled" : "outlined"
-            }
-            color={
-              filters[category].includes(option.value) ? "primary" : "default"
-            }
-            onClick={() =>
-              handleFilterChange(
-                category,
-                option.value,
-                !filters[category].includes(option.value),
-              )
-            }
-            sx={{
-              borderRadius: "16px",
-              transition: "all 0.2s",
-              "&:hover": {
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              },
-            }}
-          />
-        ))}
+        {options.map((option) => {
+          // カテゴリが存在しない場合は空の配列を使用
+          const categoryValues = filters[category] || [];
+          const isSelected = categoryValues.includes(option.value);
+          
+          return (
+            <Chip
+              key={option.value}
+              label={option.label}
+              size="small"
+              variant={isSelected ? "filled" : "outlined"}
+              color={isSelected ? "primary" : "default"}
+              onClick={() =>
+                handleFilterChange(
+                  category,
+                  option.value,
+                  !isSelected,
+                )
+              }
+              sx={{
+                borderRadius: "16px",
+                transition: "all 0.2s",
+                "&:hover": {
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                },
+              }}
+            />
+          );
+        })}
       </Box>
     </Box>
   );
@@ -299,8 +311,11 @@ export function SummonList() {
         {/* アクティブフィルター表示 */}
         {activeFilterCount > 0 && (
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1.5 }}>
-            {Object.entries(filters).map(([category, values]) =>
-              values.map((value) => {
+            {Object.entries(filters).map(([category, values]) => {
+              // valuesが存在しない場合は空の配列を使用
+              if (!values) return null;
+              
+              return values.map((value) => {
                 let label = value;
                 let categoryName = "";
 
@@ -333,8 +348,8 @@ export function SummonList() {
                     sx={{ borderRadius: "16px" }}
                   />
                 );
-              }),
-            )}
+              });
+            })}
             <Chip
               label="クリア"
               size="small"
@@ -412,7 +427,7 @@ export function SummonList() {
               すべて選択
             </Button>
             <Chip
-              label={`選択中: ${selectedSummons.length}`}
+              label={`選択中: ${selectedSummons ? selectedSummons.length : 0}`}
               color="primary"
               size="small"
               variant="outlined"
@@ -465,7 +480,7 @@ export function SummonList() {
                       | "dark"
                   }
                   rarity={rarity as "SSR" | "SR" | "R"}
-                  selected={selectedSummons.includes(summon.id)}
+                  selected={selectedSummons ? selectedSummons.includes(summon.id) : false}
                   onSelect={handleSummonSelect}
                 />
               );
@@ -475,7 +490,7 @@ export function SummonList() {
       </Paper>
 
       {/* エクスポートパネル */}
-      <ExportPanel selectedCount={selectedSummons.length} />
+      <ExportPanel selectedCount={selectedSummons ? selectedSummons.length : 0} />
     </Box>
   );
 }
