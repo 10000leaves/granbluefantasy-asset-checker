@@ -151,11 +151,13 @@ export function useItems(category?: string): UseItemsResult<any> {
   }, [category]);
 
   const toggleItem = (id: string) => {
-    setSelectedItems((prev) =>
-      prev.includes(id)
-        ? prev.filter((itemId) => itemId !== id)
-        : [...prev, id],
-    );
+    setSelectedItems((prev) => {
+      // 安全に処理
+      const prevItems = prev || [];
+      return prevItems.includes(id)
+        ? prevItems.filter((itemId) => itemId !== id)
+        : [...prevItems, id];
+    });
   };
 
   const createItem = async (item: CreateItemParams): Promise<Item> => {
@@ -260,7 +262,7 @@ export function useItems(category?: string): UseItemsResult<any> {
     items,
     loading,
     error,
-    selectedItems,
+    selectedItems: selectedItems || [], // 安全に返す
     setSelectedItems,
     toggleItem,
     createItem,

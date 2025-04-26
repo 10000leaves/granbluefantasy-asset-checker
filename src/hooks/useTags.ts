@@ -76,9 +76,7 @@ export function useTags(itemType?: string): UseTagsResult {
   const [tagValues, setTagValues] = useState<TagValue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTags, setSelectedTags] = useState<Record<string, string[]>>(
-    {},
-  );
+  const [selectedTags, setSelectedTags] = useState<Record<string, string[]>>({});
 
   const fetchTags = async (forceRefresh = false) => {
     try {
@@ -155,7 +153,16 @@ export function useTags(itemType?: string): UseTagsResult {
       normalizedCategories.forEach((category: TagCategory) => {
         initialSelectedTags[category.id] = [];
       });
-      setSelectedTags(initialSelectedTags);
+      setSelectedTags((prev) => {
+        // 既存の選択状態を保持しつつ、新しいカテゴリを追加
+        const newSelectedTags = { ...prev };
+        normalizedCategories.forEach((category: TagCategory) => {
+          if (!newSelectedTags[category.id]) {
+            newSelectedTags[category.id] = [];
+          }
+        });
+        return newSelectedTags;
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -172,6 +179,7 @@ export function useTags(itemType?: string): UseTagsResult {
       const category = tagCategories.find((t) => t.id === categoryId);
       if (!category) return prev;
 
+      // 安全に現在の値を取得
       const currentValues = prev[categoryId] || [];
       let newValues: string[];
 
@@ -201,7 +209,9 @@ export function useTags(itemType?: string): UseTagsResult {
   };
 
   const isTagSelected = (categoryId: string, value: string): boolean => {
-    return (selectedTags[categoryId] || []).includes(value);
+    // 安全にチェック
+    const values = selectedTags[categoryId];
+    return values ? values.includes(value) : false;
   };
 
   const createTagCategory = async (

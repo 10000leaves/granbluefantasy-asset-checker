@@ -66,8 +66,7 @@ export function useInputItems(): UseInputItemsResult {
       
       setInputGroups(data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "An error occurred";
-      setError(message);
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -114,7 +113,7 @@ export function useInputItems(): UseInputItemsResult {
         items: [],
       };
 
-      setInputGroups([...inputGroups, updatedGroup]);
+      setInputGroups([...(inputGroups || []), updatedGroup]);
       
       // キャッシュを更新
       await fetchInputGroups(true);
@@ -157,11 +156,11 @@ export function useInputItems(): UseInputItemsResult {
 
       // 対応するグループに新しい項目を追加
       setInputGroups(
-        inputGroups.map((group) => {
+        (inputGroups || []).map((group) => {
           if (group.group_id === item.groupId) {
             return {
               ...group,
-              items: [...group.items, newItem],
+              items: [...(group.items || []), newItem],
             };
           }
           return group;
@@ -209,10 +208,10 @@ export function useInputItems(): UseInputItemsResult {
 
       // 対応する項目を更新
       setInputGroups(
-        inputGroups.map((group) => {
+        (inputGroups || []).map((group) => {
           return {
             ...group,
-            items: group.items.map((i) => {
+            items: (group.items || []).map((i) => {
               if (i.id === item.id) {
                 return updatedItem;
               }
@@ -251,10 +250,10 @@ export function useInputItems(): UseInputItemsResult {
 
       // 対応する項目を削除
       setInputGroups(
-        inputGroups.map((group) => {
+        (inputGroups || []).map((group) => {
           return {
             ...group,
-            items: group.items.filter((item) => item.id !== id),
+            items: (group.items || []).filter((item) => item.id !== id),
           };
         }),
       );
@@ -280,8 +279,8 @@ export function useInputItems(): UseInputItemsResult {
   return {
     loading,
     error,
-    inputGroups,
-    inputValues,
+    inputGroups: inputGroups || [],
+    inputValues: inputValues || {},
     setInputValue,
     createGroup,
     createItem,
