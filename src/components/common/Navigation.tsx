@@ -19,12 +19,14 @@ import {
   Menu,
   MenuItem,
   Tooltip,
+  Divider,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
   Brightness4 as DarkModeIcon,
   Brightness7 as LightModeIcon,
   SettingsBrightness as SystemThemeIcon,
+  Logout as LogoutIcon,
 } from "@mui/icons-material";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -37,7 +39,7 @@ export const Navigation = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { mode, setMode } = useThemeContext();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isAuthenticated, logout } = useAuth();
 
   // テーマメニュー用の状態
   const [themeMenuAnchor, setThemeMenuAnchor] = useState<null | HTMLElement>(
@@ -86,6 +88,11 @@ export const Navigation = () => {
     handleThemeMenuClose();
   };
 
+  // ログアウト処理
+  const handleLogout = () => {
+    logout();
+  };
+
   // 現在のテーマに応じたアイコンを表示
   const ThemeIcon = () => {
     switch (mode) {
@@ -117,6 +124,17 @@ export const Navigation = () => {
             </ListItemButton>
           </ListItem>
         ))}
+        {isAuthenticated && (
+          <>
+            <Divider />
+            <ListItem disablePadding>
+              <ListItemButton onClick={handleLogout}>
+                <LogoutIcon sx={{ mr: 1 }} />
+                <ListItemText primary="ログアウト" />
+              </ListItemButton>
+            </ListItem>
+          </>
+        )}
       </List>
     </Box>
   );
@@ -180,6 +198,20 @@ export const Navigation = () => {
               システム設定に合わせる
             </MenuItem>
           </Menu>
+
+          {/* ログアウトボタン（認証されている場合のみ表示） */}
+          {isAuthenticated && !isMobile && (
+            <Tooltip title="ログアウト">
+              <Button
+                color="inherit"
+                onClick={handleLogout}
+                startIcon={<LogoutIcon />}
+                sx={{ ml: 1 }}
+              >
+                ログアウト
+              </Button>
+            </Tooltip>
+          )}
 
           {isMobile ? (
             <>

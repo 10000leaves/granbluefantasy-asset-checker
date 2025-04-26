@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getCookie } from "cookies-next";
+import { getCookie, deleteCookie } from "cookies-next";
 
 // 認証情報を保存するためのセッションクッキー名
 const AUTH_USER_TYPE_COOKIE = "auth_user_type";
@@ -39,6 +39,16 @@ export function useAuth() {
     return true;
   };
 
+  // ログアウト処理
+  const logout = () => {
+    // クッキーから認証情報を削除
+    deleteCookie(AUTH_USER_TYPE_COOKIE);
+    // 状態を更新
+    setUserType(null);
+    // ホームページにリダイレクト
+    router.push("/");
+  };
+
   return {
     userType,
     isAdmin,
@@ -46,5 +56,6 @@ export function useAuth() {
     isAuthenticated,
     isLoading,
     requireAdmin,
+    logout,
   };
 }
