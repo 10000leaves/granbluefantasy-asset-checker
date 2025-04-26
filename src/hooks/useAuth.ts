@@ -40,13 +40,24 @@ export function useAuth() {
   };
 
   // ログアウト処理
-  const logout = () => {
-    // クッキーから認証情報を削除
-    deleteCookie(AUTH_USER_TYPE_COOKIE);
-    // 状態を更新
-    setUserType(null);
-    // ホームページにリダイレクト
-    router.push("/");
+  const logout = async () => {
+    try {
+      // クッキーから認証情報を削除
+      deleteCookie(AUTH_USER_TYPE_COOKIE);
+      
+      // 状態を更新
+      setUserType(null);
+      
+      // ログアウトAPIを呼び出し
+      const response = await fetch("/api/auth/logout");
+      
+      // ホームページにリダイレクト
+      window.location.href = "/";
+    } catch (error) {
+      console.error("ログアウトエラー:", error);
+      // エラーが発生した場合でもホームページにリダイレクト
+      window.location.href = "/";
+    }
   };
 
   return {
