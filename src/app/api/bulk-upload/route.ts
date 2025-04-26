@@ -40,6 +40,19 @@ interface SummonCsvData {
 
 type CsvData = CharacterCsvData | WeaponCsvData | SummonCsvData;
 
+// CSVヘッダーとタグカテゴリ名の対応関係
+const csvHeaderToTagCategory: Record<string, string> = {
+  attribute: "属性",
+  rarity: "レアリティ",
+  type: "タイプ",
+  race: "種族",
+  gender: "性別",
+  weapons: "得意武器",
+  releaseWeapon: "解放武器",
+  obtainMethod: "入手方法",
+  weaponType: "武器種",
+};
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -113,17 +126,42 @@ export async function POST(request: NextRequest) {
           [category],
         );
 
-        // タグを保存
-        for (const tagCategory of tagCategories) {
-          // カテゴリ名をスネークケースに変換してレコードのキーと照合
-          const categoryKey = tagCategory.name
-            .toLowerCase()
-            .replace(/\s+/g, "_");
+        // CSVのヘッダーとレコードの値を処理
+        for (const [header, value] of Object.entries(record)) {
+          // nameとimageNameとimplementationDateはタグではないのでスキップ
+          if (
+            header === "name" ||
+            header === "imageName" ||
+            header === "implementationDate"
+          ) {
+            continue;
+          }
+
+          // 値が空の場合はスキップ
+          if (!value || value.trim() === "") {
+            continue;
+          }
+
+          // CSVヘッダーに対応するタグカテゴリ名を取得
+          const categoryName = csvHeaderToTagCategory[header];
+          if (!categoryName) {
+            console.log(`No tag category mapping for CSV header: ${header}`);
+            continue;
+          }
+
+          // タグカテゴリを検索
+          const tagCategory = tagCategories.find(
+            (cat) => cat.name === categoryName,
+          );
+          if (!tagCategory) {
+            console.log(`Tag category not found: ${categoryName}`);
+            continue;
+          }
 
           // 特殊処理: 得意武器（複数可能）
-          if (tagCategory.name === "得意武器" && record.weapons) {
+          if (categoryName === "得意武器" && header === "weapons") {
             // パイプ区切りで複数の武器を処理
-            const weaponValues = record.weapons.split("|");
+            const weaponValues = value.split("|");
             for (const weaponValue of weaponValues) {
               if (weaponValue.trim()) {
                 // タグ値を検索または作成
@@ -155,15 +193,14 @@ export async function POST(request: NextRequest) {
                 );
               }
             }
-          }
-          // 特殊処理: 解放武器
-          else if (tagCategory.name === "解放武器" && record.releaseWeapon) {
+          } else {
+            // 通常処理: その他のタグ
             // タグ値を検索または作成
             const {
               rows: [existingTagValue],
             } = await query(
               "SELECT * FROM tag_values WHERE category_id = $1 AND value = $2",
-              [tagCategory.id, record.releaseWeapon],
+              [tagCategory.id, value],
             );
 
             let tagValueId;
@@ -175,7 +212,7 @@ export async function POST(request: NextRequest) {
                 rows: [newTagValue],
               } = await query(
                 "INSERT INTO tag_values (category_id, value, order_index) VALUES ($1, $2, (SELECT COALESCE(MAX(order_index), 0) + 1 FROM tag_values WHERE category_id = $1)) RETURNING id",
-                [tagCategory.id, record.releaseWeapon],
+                [tagCategory.id, value],
               );
               tagValueId = newTagValue.id;
             }
@@ -185,40 +222,6 @@ export async function POST(request: NextRequest) {
               "INSERT INTO item_tags (item_id, tag_value_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
               [item.id, tagValueId],
             );
-          }
-          // 通常処理: その他のタグ
-          else {
-            const tagValue = record[categoryKey];
-
-            if (tagValue) {
-              // タグ値を検索または作成
-              const {
-                rows: [existingTagValue],
-              } = await query(
-                "SELECT * FROM tag_values WHERE category_id = $1 AND value = $2",
-                [tagCategory.id, tagValue],
-              );
-
-              let tagValueId;
-              if (existingTagValue) {
-                tagValueId = existingTagValue.id;
-              } else {
-                // 新しいタグ値を作成
-                const {
-                  rows: [newTagValue],
-                } = await query(
-                  "INSERT INTO tag_values (category_id, value, order_index) VALUES ($1, $2, (SELECT COALESCE(MAX(order_index), 0) + 1 FROM tag_values WHERE category_id = $1)) RETURNING id",
-                  [tagCategory.id, tagValue],
-                );
-                tagValueId = newTagValue.id;
-              }
-
-              // アイテムとタグを関連付け
-              await query(
-                "INSERT INTO item_tags (item_id, tag_value_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
-                [item.id, tagValueId],
-              );
-            }
           }
         }
 
