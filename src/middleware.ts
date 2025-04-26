@@ -4,9 +4,15 @@ import { NextRequest, NextResponse } from "next/server";
 const AUTH_USER_TYPE_COOKIE = "auth_user_type";
 
 export function middleware(req: NextRequest) {
+  const url = req.nextUrl;
+  
+  // ログアウトAPIへのアクセスの場合は認証チェックをスキップ
+  if (url.pathname === "/api/auth/logout") {
+    return NextResponse.next();
+  }
+  
   // 開発環境では認証をスキップするが、クエリパラメータで認証状態をテストできるようにする
   if (process.env.NODE_ENV === "development") {
-    const url = req.nextUrl;
     const userType = url.searchParams.get("userType");
 
     // クエリパラメータで認証状態をテストする場合
@@ -16,6 +22,8 @@ export function middleware(req: NextRequest) {
         httpOnly: false,
         sameSite: "strict",
         path: "/",
+        // 明示的に有効期限を設定（24時間）
+        maxAge: 60 * 60 * 24,
       });
 
       // クエリパラメータを削除してリダイレクト
@@ -26,9 +34,25 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // 既存のクッキーをチェック
+  const authCookie = req.cookies.get(AUTH_USER_TYPE_COOKIE);
+  
+  // 既に認証済みの場合（クッキーが存在する場合）
+  if (authCookie) {
+    const userType = authCookie.value;
+    
+    // 一般ユーザーが管理画面にアクセスしようとした場合
+    if (userType === "user" && url.pathname.startsWith("/admin")) {
+      url.pathname = "/api/auth/unauthorized";
+      return NextResponse.rewrite(url);
+    }
+    
+    // それ以外の場合はアクセスを許可
+    return NextResponse.next();
+  }
+
   // 認証ヘッダーを取得
   const basicAuth = req.headers.get("authorization");
-  const url = req.nextUrl;
 
   // 認証情報がある場合
   if (basicAuth) {
@@ -48,6 +72,8 @@ export function middleware(req: NextRequest) {
           httpOnly: false, // JavaScriptからアクセスできるように変更
           sameSite: "strict",
           path: "/",
+          // 明示的に有効期限を設定（24時間）
+          maxAge: 60 * 60 * 24,
         });
         return response;
       }
@@ -64,6 +90,8 @@ export function middleware(req: NextRequest) {
           httpOnly: false, // JavaScriptからアクセスできるように変更
           sameSite: "strict",
           path: "/",
+          // 明示的に有効期限を設定（24時間）
+          maxAge: 60 * 60 * 24,
         });
 
         // 管理画面へのアクセスを制限

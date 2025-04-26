@@ -4,11 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 const AUTH_USER_TYPE_COOKIE = "auth_user_type";
 
 export async function GET(request: NextRequest) {
-  // レスポンスを作成
+  // レスポンスを作成（成功ステータスコード204を使用）
   const response = new NextResponse(null, {
-    status: 401,
+    status: 204, // No Content - 成功したが返すコンテンツがない
     headers: {
-      "WWW-Authenticate": 'Basic realm="Secure Area", charset="UTF-8"',
       "Content-Type": "text/html; charset=utf-8",
     },
   });
