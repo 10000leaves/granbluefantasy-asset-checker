@@ -317,7 +317,12 @@ export const importCSV = (
       return { success: false, message: "CSVの解析に失敗しました" };
     }
 
-    const importedIds: string[] = [];
+    // アイテム情報を保存する配列（タイプ情報も含む）
+    interface ImportedItem {
+      id: string;
+      type: string;
+    }
+    const importedItems: ImportedItem[] = [];
     const importedUserInfo: Record<string, any> = {};
     const importedWeaponCounts: Record<string, number> = {};
     const importedWeaponAwakenings: Record<string, WeaponAwakenings> = {};
@@ -349,7 +354,8 @@ export const importCSV = (
             !id.startsWith("#") &&
             !id.startsWith("タイプ")
           ) {
-            importedIds.push(id);
+            // タイプ情報も一緒に保存
+            importedItems.push({ id, type });
 
             // 武器の場合は所持数と覚醒情報も取得
             if (type === "weapon") {
@@ -409,7 +415,7 @@ export const importCSV = (
 
         // ユーザー情報セクションの処理
         if (currentSection === "USER_INFO" && row.length >= 6) {
-          const [itemId, itemType, value] = row;
+          const [groupId, groupName, itemId, itemName, itemType, value] = row;
           if (
             itemId &&
             typeof itemId === "string" &&
@@ -431,35 +437,51 @@ export const importCSV = (
     });
 
     // 古いフォーマットの場合のフォールバック処理
-    if (!isValidFormat) {
+    if (!isValidFormat && importedItems.length === 0) {
       results.data.forEach((row: any) => {
         if (Array.isArray(row) && row.length >= 3) {
           const [id] = row;
           if (id && typeof id === "string" && !id.startsWith("#")) {
-            importedIds.push(id);
+            // 古いフォーマットの場合はIDの先頭文字でタイプを判断
+            let type = "character"; // デフォルトはキャラクター
+            if (id.startsWith("weapon_")) {
+              type = "weapon";
+            } else if (id.startsWith("summon_")) {
+              type = "summon";
+            }
+            importedItems.push({ id, type });
           }
         }
       });
     }
 
     // アトムを更新
-    if (importedIds.length > 0 || Object.keys(importedUserInfo).length > 0) {
+    if (importedItems.length > 0 || Object.keys(importedUserInfo).length > 0) {
       // キャラ、武器、召喚石のIDを分類
       const characterIds: string[] = [];
       const weaponIds: string[] = [];
       const summonIds: string[] = [];
 
-      importedIds.forEach((id) => {
-        // IDの先頭文字でタイプを判断
-        if (id.startsWith("character_")) {
+      importedItems.forEach(({ id, type }) => {
+        // タイプ情報を使用してアイテムを分類
+        if (type === "character") {
           characterIds.push(id);
-        } else if (id.startsWith("weapon_")) {
+        } else if (type === "weapon") {
           weaponIds.push(id);
-        } else if (id.startsWith("summon_")) {
+        } else if (type === "summon") {
           summonIds.push(id);
         } else {
-          // タイプが不明な場合はキャラとして扱う
-          characterIds.push(id);
+          // タイプが不明な場合はIDの先頭文字で判断
+          if (id.startsWith("character_")) {
+            characterIds.push(id);
+          } else if (id.startsWith("weapon_")) {
+            weaponIds.push(id);
+          } else if (id.startsWith("summon_")) {
+            summonIds.push(id);
+          } else {
+            // それでも不明な場合はキャラとして扱う
+            characterIds.push(id);
+          }
         }
       });
 
@@ -507,10 +529,10 @@ export const importCSV = (
       }
 
       let message = "";
-      if (importedIds.length > 0 && Object.keys(importedUserInfo).length > 0) {
-        message = `${importedIds.length}個のアイテムと${Object.keys(importedUserInfo).length}個のユーザー情報をインポートしました`;
-      } else if (importedIds.length > 0) {
-        message = `${importedIds.length}個のアイテムをインポートしました`;
+      if (importedItems.length > 0 && Object.keys(importedUserInfo).length > 0) {
+        message = `${importedItems.length}個のアイテムと${Object.keys(importedUserInfo).length}個のユーザー情報をインポートしました`;
+      } else if (importedItems.length > 0) {
+        message = `${importedItems.length}個のアイテムをインポートしました`;
       } else {
         message = `${Object.keys(importedUserInfo).length}個のユーザー情報をインポートしました`;
       }
