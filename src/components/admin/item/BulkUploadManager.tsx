@@ -282,6 +282,10 @@ export function BulkUploadManager() {
         </Button>
       </Box>
 
+      <Typography variant="body2" color="text.secondary" paragraph>
+        大量のデータは処理できないので、10件ずつくらいでアップロードしてください。
+      </Typography>
+
       <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs
           value={tabValue}
