@@ -8,6 +8,7 @@ import {
   InputGroup,
   InputItem,
 } from "@/atoms";
+import { fetchWithCache } from "@/lib/utils/apiCache";
 
 interface UseInputItemsResult {
   loading: boolean;
@@ -41,17 +42,28 @@ export function useInputItems(): UseInputItemsResult {
   const [inputValues, setInputValues] = useAtom(inputValuesAtom);
 
   // 入力グループと項目を取得
-  const fetchInputGroups = async () => {
+  const fetchInputGroups = async (forceRefresh = false) => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await fetch("/api/input-items");
-      if (!response.ok) {
-        throw new Error("Failed to fetch input items");
-      }
-
-      const data = await response.json();
+      // キャッシュキーを生成
+      const cacheKey = "input_groups";
+      
+      // キャッシュを使用してデータを取得
+      const data = await fetchWithCache(
+        cacheKey,
+        async () => {
+          const response = await fetch("/api/input-items");
+          if (!response.ok) {
+            throw new Error("Failed to fetch input items");
+          }
+          return await response.json();
+        },
+        30 * 60 * 1000, // 30分キャッシュ
+        forceRefresh
+      );
+      
       setInputGroups(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : "An error occurred";
@@ -103,6 +115,9 @@ export function useInputItems(): UseInputItemsResult {
       };
 
       setInputGroups([...inputGroups, updatedGroup]);
+      
+      // キャッシュを更新
+      await fetchInputGroups(true);
 
       return updatedGroup;
     } catch (err) {
@@ -152,6 +167,9 @@ export function useInputItems(): UseInputItemsResult {
           return group;
         }),
       );
+      
+      // キャッシュを更新
+      await fetchInputGroups(true);
 
       return newItem;
     } catch (err) {
@@ -203,6 +221,9 @@ export function useInputItems(): UseInputItemsResult {
           };
         }),
       );
+      
+      // キャッシュを更新
+      await fetchInputGroups(true);
 
       return updatedItem;
     } catch (err) {
@@ -237,6 +258,9 @@ export function useInputItems(): UseInputItemsResult {
           };
         }),
       );
+      
+      // キャッシュを更新
+      await fetchInputGroups(true);
 
       return true;
     } catch (err) {
@@ -250,7 +274,7 @@ export function useInputItems(): UseInputItemsResult {
 
   // 入力グループと項目を再取得
   const refreshInputGroups = async () => {
-    await fetchInputGroups();
+    await fetchInputGroups(true);
   };
 
   return {

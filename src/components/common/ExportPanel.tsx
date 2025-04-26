@@ -41,6 +41,9 @@ import {
   selectedSummonItemsAtom,
   weaponCountsAtom,
   weaponAwakeningsAtom,
+  characterNotesAtom,
+  weaponNotesAtom,
+  summonNotesAtom,
 } from "@/atoms";
 import { useInputItems } from "@/hooks/useInputItems";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
@@ -68,6 +71,10 @@ export function ExportPanel({ selectedCount }: ExportPanelProps) {
   const [selectedSummonItems] = useAtom(selectedSummonItemsAtom);
   const [weaponCounts, setWeaponCounts] = useAtom(weaponCountsAtom);
   const [weaponAwakenings, setWeaponAwakenings] = useAtom(weaponAwakeningsAtom);
+  // 備考用のatomを追加
+  const [characterNotes, setCharacterNotes] = useAtom(characterNotesAtom);
+  const [weaponNotes, setWeaponNotes] = useAtom(weaponNotesAtom);
+  const [summonNotes, setSummonNotes] = useAtom(summonNotesAtom);
 
   // ローカルストレージとの連携
   useLocalStorage();
@@ -97,19 +104,30 @@ export function ExportPanel({ selectedCount }: ExportPanelProps) {
 
   // 選択されたアイテムを更新
   useEffect(() => {
-    // 武器に所持数と覚醒情報を追加
-    const weaponsWithCountsAndAwakenings = selectedWeaponItems.map(
-      (weapon) => ({
-        ...weapon,
-        count: weaponCounts[weapon.id] || 0,
-        awakenings: weaponAwakenings[weapon.id] || {},
-      }),
-    );
+    // キャラクターに備考情報を追加
+    const charactersWithNotes = selectedCharacterItems.map((character) => ({
+      ...character,
+      note: characterNotes[character.id] || "",
+    }));
+
+    // 武器に所持数と覚醒情報、備考情報を追加
+    const weaponsWithCountsAndAwakenings = selectedWeaponItems.map((weapon) => ({
+      ...weapon,
+      count: weaponCounts[weapon.id] || 0,
+      awakenings: weaponAwakenings[weapon.id] || {},
+      note: weaponNotes[weapon.id] || "",
+    }));
+
+    // 召喚石に備考情報を追加
+    const summonsWithNotes = selectedSummonItems.map((summon) => ({
+      ...summon,
+      note: summonNotes[summon.id] || "",
+    }));
 
     setSelectedItemsState({
-      characters: selectedCharacterItems,
+      characters: charactersWithNotes,
       weapons: weaponsWithCountsAndAwakenings,
-      summons: selectedSummonItems,
+      summons: summonsWithNotes,
     });
   }, [
     selectedCharacterItems,
@@ -117,6 +135,9 @@ export function ExportPanel({ selectedCount }: ExportPanelProps) {
     selectedSummonItems,
     weaponCounts,
     weaponAwakenings,
+    characterNotes,
+    weaponNotes,
+    summonNotes,
   ]);
 
   // 現在のページに基づいて表示するアイテムを決定
@@ -297,12 +318,12 @@ export function ExportPanel({ selectedCount }: ExportPanelProps) {
             inputValues,
             weaponCounts,
             weaponAwakenings,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
+            setCharacterNotes,
+            setWeaponNotes,
+            setSummonNotes,
+            characterNotes,
+            weaponNotes,
+            summonNotes,
           );
 
           // 結果に基づいてスナックバーを表示

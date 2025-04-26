@@ -10,6 +10,7 @@ import {
   selectedWeaponsAtom,
   selectedSummonsAtom,
 } from "@/atoms";
+import { fetchWithCache } from "@/lib/utils/apiCache";
 
 interface ItemTag {
   categoryId: string;
@@ -112,16 +113,30 @@ export function useItems(category?: string): UseItemsResult<any> {
   const { items, setItems, selectedItems, setSelectedItems } =
     getItemsAndSelected();
 
-  const fetchItems = async () => {
+  const fetchItems = async (forceRefresh = false) => {
     try {
       setLoading(true);
+      
+      // キャッシュキーを生成
+      const cacheKey = category ? `items_${category}` : "items_all";
+      
       // カテゴリが指定されていない場合は全てのカテゴリのアイテムを取得
       const url = category ? `/api/items?category=${category}` : "/api/items";
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error("Failed to fetch items");
-      }
-      const data = await response.json();
+      
+      // キャッシュを使用してデータを取得
+      const data = await fetchWithCache(
+        cacheKey,
+        async () => {
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error("Failed to fetch items");
+          }
+          return await response.json();
+        },
+        30 * 60 * 1000, // 30分キャッシュ
+        forceRefresh
+      );
+      
       setItems(data);
       setError(null);
     } catch (err) {
@@ -161,6 +176,10 @@ export function useItems(category?: string): UseItemsResult<any> {
       const newItem = await response.json();
       // @ts-ignore - 型の互換性を無視
       setItems((prev) => [...prev, newItem]);
+      
+      // キャッシュを更新
+      await fetchItems(true);
+      
       return newItem;
     } catch (err) {
       const message = err instanceof Error ? err.message : "An error occurred";
@@ -192,6 +211,10 @@ export function useItems(category?: string): UseItemsResult<any> {
         // @ts-ignore - 型の互換性を無視
         prev.map((i) => (i.id === item.id ? updatedItem : i)),
       );
+      
+      // キャッシュを更新
+      await fetchItems(true);
+      
       return updatedItem;
     } catch (err) {
       const message = err instanceof Error ? err.message : "An error occurred";
@@ -215,6 +238,10 @@ export function useItems(category?: string): UseItemsResult<any> {
 
       // @ts-ignore - 型の互換性を無視
       setItems((prev) => prev.filter((item) => item.id !== id));
+      
+      // キャッシュを更新
+      await fetchItems(true);
+      
       return true;
     } catch (err) {
       const message = err instanceof Error ? err.message : "An error occurred";
@@ -226,7 +253,7 @@ export function useItems(category?: string): UseItemsResult<any> {
   };
 
   const refreshItems = async (): Promise<void> => {
-    await fetchItems();
+    await fetchItems(true);
   };
 
   return {

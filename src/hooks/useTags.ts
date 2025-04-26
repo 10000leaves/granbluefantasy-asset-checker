@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { fetchWithCache } from "@/lib/utils/apiCache";
 
 export interface TagValue {
   id: string;
@@ -79,19 +80,31 @@ export function useTags(itemType?: string): UseTagsResult {
     {},
   );
 
-  const fetchTags = async () => {
+  const fetchTags = async (forceRefresh = false) => {
     try {
       setLoading(true);
 
-      // タグカテゴリを取得
+      // キャッシュキーを生成
+      const categoryKey = itemType ? `tags_categories_${itemType}` : "tags_categories";
+      const valuesKey = "tags_values";
+
+      // タグカテゴリを取得（キャッシュを使用）
       const categoryUrl = itemType
         ? `/api/tags?itemType=${itemType}`
         : "/api/tags";
-      const categoryResponse = await fetch(categoryUrl);
-      if (!categoryResponse.ok) {
-        throw new Error("Failed to fetch tag categories");
-      }
-      const categoryData = await categoryResponse.json();
+      
+      const categoryData = await fetchWithCache(
+        categoryKey,
+        async () => {
+          const response = await fetch(categoryUrl);
+          if (!response.ok) {
+            throw new Error("Failed to fetch tag categories");
+          }
+          return await response.json();
+        },
+        30 * 60 * 1000, // 30分キャッシュ
+        forceRefresh
+      );
 
       // APIレスポンスのフィールド名を標準化
       const normalizedCategories = categoryData.map((category: any) => ({
@@ -102,12 +115,19 @@ export function useTags(itemType?: string): UseTagsResult {
 
       setTagCategories(normalizedCategories);
 
-      // タグ値を取得
-      const valueResponse = await fetch("/api/tags/values");
-      if (!valueResponse.ok) {
-        throw new Error("Failed to fetch tag values");
-      }
-      const valueData = await valueResponse.json();
+      // タグ値を取得（キャッシュを使用）
+      const valueData = await fetchWithCache(
+        valuesKey,
+        async () => {
+          const response = await fetch("/api/tags/values");
+          if (!response.ok) {
+            throw new Error("Failed to fetch tag values");
+          }
+          return await response.json();
+        },
+        30 * 60 * 1000, // 30分キャッシュ
+        forceRefresh
+      );
 
       // APIレスポンスのフィールド名を標準化
       const normalizedValues = valueData.map((value: any) => ({
@@ -218,6 +238,9 @@ export function useTags(itemType?: string): UseTagsResult {
         [normalizedCategory.id]: [],
       }));
 
+      // キャッシュを更新
+      await fetchTags(true);
+
       return normalizedCategory;
     } catch (err) {
       const message = err instanceof Error ? err.message : "An error occurred";
@@ -258,6 +281,9 @@ export function useTags(itemType?: string): UseTagsResult {
         prev.map((c) => (c.id === category.id ? normalizedCategory : c)),
       );
 
+      // キャッシュを更新
+      await fetchTags(true);
+
       return normalizedCategory;
     } catch (err) {
       const message = err instanceof Error ? err.message : "An error occurred";
@@ -287,6 +313,9 @@ export function useTags(itemType?: string): UseTagsResult {
         delete newSelectedTags[id];
         return newSelectedTags;
       });
+
+      // キャッシュを更新
+      await fetchTags(true);
 
       return true;
     } catch (err) {
@@ -324,6 +353,9 @@ export function useTags(itemType?: string): UseTagsResult {
       };
 
       setTagValues((prev) => [...prev, normalizedValue]);
+
+      // キャッシュを更新
+      await fetchTags(true);
 
       return normalizedValue;
     } catch (err) {
@@ -364,6 +396,9 @@ export function useTags(itemType?: string): UseTagsResult {
         prev.map((v) => (v.id === value.id ? normalizedValue : v)),
       );
 
+      // キャッシュを更新
+      await fetchTags(true);
+
       return normalizedValue;
     } catch (err) {
       const message = err instanceof Error ? err.message : "An error occurred";
@@ -387,6 +422,9 @@ export function useTags(itemType?: string): UseTagsResult {
 
       setTagValues((prev) => prev.filter((v) => v.id !== id));
 
+      // キャッシュを更新
+      await fetchTags(true);
+
       return true;
     } catch (err) {
       const message = err instanceof Error ? err.message : "An error occurred";
@@ -398,7 +436,7 @@ export function useTags(itemType?: string): UseTagsResult {
   };
 
   const refreshTags = async (): Promise<void> => {
-    await fetchTags();
+    await fetchTags(true);
   };
 
   return {
