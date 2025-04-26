@@ -40,7 +40,11 @@ export function ItemList({
   emptyMessage = "アイテムがありません。「アイテムを追加」ボタンをクリックして作成してください。",
 }: ItemListProps) {
   // タグ名を取得
-  const getTagName = (categoryId: string, valueId: string) => {
+  const getTagName = (tag: any) => {
+    // タグの形式によって処理を分岐
+    const categoryId = tag.categoryId || tag.category_id;
+    const valueId = tag.valueId || tag.value_id;
+
     const category = tagCategories.find((cat) => cat.id === categoryId);
     const value = tagValues.find((val) => val.id === valueId);
 
@@ -63,7 +67,7 @@ export function ItemList({
         {displayTags.map((tag: any, index: number) => (
           <Chip
             key={index}
-            label={getTagName(tag.categoryId, tag.valueId)}
+            label={getTagName(tag)}
             size="small"
             color="primary"
             variant="outlined"

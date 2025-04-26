@@ -178,13 +178,25 @@ export const createTagCategoryMap = (
     map[elementCategory.id] = "elements";
   }
 
+  // レアリティカテゴリも特別扱い
+  const rarityCategory = tagCategories.find(
+    (c) => c.name.toLowerCase() === "レアリティ",
+  );
+  if (rarityCategory) {
+    map[rarityCategory.id] = "rarities";
+  }
+
   // その他のカテゴリには動的にキーを割り当て
   const alphabet = "abcdefghijklmnopqrstuvwxyz";
   let index = 0;
 
   tagCategories.forEach((category) => {
-    // 属性カテゴリは既に処理済みなのでスキップ
-    if (category.id === elementCategory?.id) return;
+    // 属性カテゴリとレアリティカテゴリは既に処理済みなのでスキップ
+    if (
+      category.id === elementCategory?.id ||
+      category.id === rarityCategory?.id
+    )
+      return;
 
     // アルファベットの文字を順番に割り当て
     const key = alphabet[index];
@@ -212,7 +224,7 @@ export const generateItemTagData = (
   tagValueMap: Record<string, { categoryId: string; value: string }>,
   tagCategoryMap: Record<string, string>,
 ): Record<string, string[]> => {
-  if (!item.tags) return {};
+  if (!item || !item.tags) return {};
 
   const tagData: Record<string, string[]> = {};
 
@@ -221,13 +233,13 @@ export const generateItemTagData = (
     // 配列形式のタグ
     item.tags.forEach((tag: any) => {
       // タグの形式によって処理を分岐
-      if (tag.categoryId && tag.valueId) {
+      if (tag && tag.categoryId && tag.valueId) {
         // { categoryId, valueId } 形式
         const category = tagCategories.find((c) => c.id === tag.categoryId);
         if (!category) return;
 
-        const tagValue = tagValueMap[tag.valueId]?.value;
-        if (!tagValue) return;
+        const tagValueInfo = tagValueMap[tag.valueId];
+        if (!tagValueInfo || !tagValueInfo.value) return;
 
         // カテゴリに対応するフィルターキーを取得
         const filterKey = tagCategoryMap[category.id];
@@ -239,14 +251,14 @@ export const generateItemTagData = (
         }
 
         // 全てのタグ値を日本語のまま保持
-        tagData[filterKey].push(tagValue);
-      } else if (tag.category_id && tag.value_id) {
+        tagData[filterKey].push(tagValueInfo.value);
+      } else if (tag && tag.category_id && tag.value_id) {
         // { category_id, value_id } 形式
         const category = tagCategories.find((c) => c.id === tag.category_id);
         if (!category) return;
 
-        const tagValue = tagValueMap[tag.value_id]?.value;
-        if (!tagValue) return;
+        const tagValueInfo = tagValueMap[tag.value_id];
+        if (!tagValueInfo || !tagValueInfo.value) return;
 
         // カテゴリに対応するフィルターキーを取得
         const filterKey = tagCategoryMap[category.id];
@@ -258,7 +270,7 @@ export const generateItemTagData = (
         }
 
         // 全てのタグ値を日本語のまま保持
-        tagData[filterKey].push(tagValue);
+        tagData[filterKey].push(tagValueInfo.value);
       }
     });
   } else if (typeof item.tags === "object") {
@@ -282,7 +294,7 @@ export const generateItemTagData = (
       // 値が配列の場合
       if (Array.isArray(values)) {
         (values as string[]).forEach((value) => {
-          tagData[filterKey].push(value);
+          if (value) tagData[filterKey].push(value);
         });
       } else if (typeof values === "string") {
         // 値が文字列の場合
@@ -301,19 +313,28 @@ export const getItemAttributes = (
   item: any,
   tagData: Record<string, string[]>,
 ): { element: string; rarity: string } => {
-  // 属性の取得と日本語から英語への変換
+  // デフォルト値
   let element = "fire";
+  let rarity = "SSR";
+
+  // tagDataが存在することを確認
+  if (!tagData) {
+    return { element, rarity };
+  }
+
+  // 属性の取得と日本語から英語への変換
   if (tagData.elements && tagData.elements.length > 0) {
     const jaValue = tagData.elements[0];
-    // 日本語から英語への変換
-    const enValue = convertElementJaToEn(jaValue);
-    element = enValue;
+    if (jaValue) {
+      // 日本語から英語への変換
+      const enValue = convertElementJaToEn(jaValue);
+      element = enValue;
+    }
   }
 
   // レアリティの取得
-  let rarity = "SSR";
   if (tagData.rarities && tagData.rarities.length > 0) {
-    const rarityValue = tagData.rarities[0].toUpperCase();
+    const rarityValue = tagData.rarities[0]?.toUpperCase();
     if (rarityValue === "SSR" || rarityValue === "SR" || rarityValue === "R") {
       rarity = rarityValue;
     }
