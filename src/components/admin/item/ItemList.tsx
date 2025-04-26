@@ -42,8 +42,8 @@ export function ItemList({
   // タグ名を取得
   const getTagName = (tag: any) => {
     // タグの形式によって処理を分岐
-    const categoryId = tag.categoryId || tag.category_id;
-    const valueId = tag.valueId || tag.value_id;
+    const categoryId = tag.categoryId;
+    const valueId = tag.valueId;
 
     const category = tagCategories.find((cat) => cat.id === categoryId);
     const value = tagValues.find((val) => val.id === valueId);
