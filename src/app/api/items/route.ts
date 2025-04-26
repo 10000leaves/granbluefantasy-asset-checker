@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@/lib/db";
+import { query, deleteImage } from "@/lib/db";
 import {
   validateRequestBody,
   validateQueryParams,
@@ -355,6 +355,23 @@ export async function DELETE(request: NextRequest) {
     await query("BEGIN");
 
     try {
+      // アイテムの画像URLを取得
+      const { rows } = await query(
+        `
+        SELECT image_url
+        FROM items
+        WHERE id = $1
+      `,
+        [id],
+      );
+
+      if (rows.length === 0) {
+        await query("ROLLBACK");
+        return NextResponse.json({ error: "Item not found" }, { status: 404 });
+      }
+
+      const imageUrl = rows[0].image_url;
+
       // タグ関連付けを削除
       await query(
         `
@@ -380,6 +397,19 @@ export async function DELETE(request: NextRequest) {
 
       // トランザクションをコミット
       await query("COMMIT");
+
+      // 画像ファイルを削除
+      if (imageUrl) {
+        try {
+          // Vercelのblobストレージから画像を削除
+          await deleteImage(imageUrl);
+          console.log(`Deleted image: ${imageUrl}`);
+        } catch (err) {
+          console.error(`Error deleting image: ${err}`);
+          // 画像ファイルの削除に失敗してもトランザクションはコミット済みなので、
+          // エラーを返さずに続行する
+        }
+      }
 
       return NextResponse.json({ success: true });
     } catch (err) {
